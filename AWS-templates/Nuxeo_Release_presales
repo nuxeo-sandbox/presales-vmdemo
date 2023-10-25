@@ -274,7 +274,7 @@ EOF
 ln -s ${NUXEO_ENV} ${COMPOSE_DIR}/env
 
 # Add newDNS script
-curl https://raw.githubusercontent.com/nuxeo/presales-vmdemo/lts2021/AWS-templates/newDNS.sh > ${TMP_DIR}/newDNS.sh
+curl https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/lts2021/AWS-templates/newDNS.sh > ${TMP_DIR}/newDNS.sh
 chmod +x ${TMP_DIR}/newDNS.sh
 mv ${TMP_DIR}/newDNS.sh /usr/local/sbin/newDNS.sh
 
@@ -437,7 +437,7 @@ echo "Nuxeo Presales Installation Script: Install Misc. => DONE" | tee -a ${INST
 echo "Nuxeo Presales Installation Script: Setup profile, ubuntu, etc." | tee -a ${INSTALL_LOG}
 
 #fix imagemagick Policy
-#wget https://raw.githubusercontent.com/nuxeo/presales-vmdemo/${NX_BRANCH}/ImageMagick/policy.xml -O /etc/ImageMagick-6/policy.xml
+#wget https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/${NX_BRANCH}/ImageMagick/policy.xml -O /etc/ImageMagick-6/policy.xml
 
 #set up ubuntu user
 cat << EOF >> /home/ubuntu/.profile
