@@ -1,8 +1,3 @@
-# 🛑 Do not use! 🛑
-# 🛑 Use [nuxeo/presales-vmdemo](https://github.com/nuxeo/presales-vmdemo) for now 🛑
-
-
-
 # Description
 AWS resources used by the Nuxeo Presales Team.
 These are provided for inspiration and we encourage developers to use them as code samples and learning resources.
