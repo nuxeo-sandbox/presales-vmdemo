@@ -128,9 +128,7 @@ nuxeo.append.templates.system=${TEMPLATES}
 nuxeo.selection.selectAllEnabled=true
 
 # Mail Configuration
-# Workaround for https://jira.nuxeo.com/browse/NXP-32176
-# mail.transport.password=${MAIL_PASS}
-mail.transport.password=<![CDATA[${MAIL_PASS}]]>
+mail.transport.password=${MAIL_PASS}
 mail.transport.host=smtp.mail.us-east-1.awsapps.com
 mail.transport.port=465
 mail.transport.user=no-reply@nuxeo-demo.awsapps.com
