@@ -79,11 +79,6 @@ echo "Nuxeo Presales Installation Script: Configure Nuxeo" | tee -a ${INSTALL_LO
 # Copy default conf.d files
 cp ${COMPOSE_DIR}/conf.d/* ${CONF_DIR}
 
-# Workaround for TLSv1.1 support in Java 11+
-# See https://github.com/nuxeo-sandbox/nuxeo-presales-docker/wiki/Workaround:-Mail
-cp ${COMPOSE_DIR}/examples/java.security ${COMPOSE_DIR}/init
-cp ${COMPOSE_DIR}/examples/java.security.conf ${CONF_DIR}
-
 # Secrets for instance
 MAIL_PASS=$(aws secretsmanager get-secret-value --secret-id workmail_default_password --region us-west-2 | jq -r '.SecretString|fromjson|.workmail_default_password')
 
@@ -136,6 +131,7 @@ mail.transport.auth=true
 mail.from=no-reply@nuxeo-demo.awsapps.com
 mail.smtp.ssl.enable=true
 mail.transport.protocol=smtps
+mail.transport.ssl.protocol=TLSv1.2
 nuxeo.notification.eMailSubjectPrefix=[Nuxeo]
 
 # S3 Configuration
