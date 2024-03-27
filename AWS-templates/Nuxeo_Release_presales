@@ -419,6 +419,8 @@ if [ -n "${NX_STUDIO}" ]; then
   $COMPOSE_CMD --no-ansi build --progress plain 2>&1 | tee -a ${INSTALL_LOG}
   echo "Pulling other images..." | tee -a ${INSTALL_LOG}
   $COMPOSE_CMD --no-ansi pull | tee -a ${INSTALL_LOG}
+    # Fix up permissions after building as root
+  chown -R ubuntu:ubuntu ${HOME}/.docker
   if [[ "${AUTO_START}" == "true" ]]; then
     echo "Starting Nuxeo stack" | tee -a ${INSTALL_LOG}
     $COMPOSE_CMD --no-ansi up --detach --no-color 2>&1 | tee -a ${INSTALL_LOG}
