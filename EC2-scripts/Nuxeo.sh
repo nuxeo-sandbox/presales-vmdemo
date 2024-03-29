@@ -121,6 +121,7 @@ nuxeo.append.templates.system=${TEMPLATES}
 
 # Webui
 nuxeo.selection.selectAllEnabled=true
+nuxeo.analytics.documentDistribution.disableThreshold=10000
 
 # Mail Configuration
 mail.transport.password=${MAIL_PASS}
