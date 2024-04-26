@@ -37,7 +37,7 @@
         },
         "NEVVersion": {
             "Type": "String",
-            "Default": "2.2.0",
+            "Default": "2.3.0",
             "Description": "https://doc.nuxeo.com/nxdoc/nuxeo-enhanced-viewer-release-notes/"
         },
         "NuxeoSecret": {
