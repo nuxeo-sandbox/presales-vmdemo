@@ -126,7 +126,7 @@
     },
     "NEVVersion": {
       "Type": "String",
-      "Default": "2.2.1",
+      "Default": "2.3.0",
       "Description": "https://doc.nuxeo.com/nxdoc/nuxeo-enhanced-viewer-release-notes/"
     },
     "NEVArenderAddon": {
