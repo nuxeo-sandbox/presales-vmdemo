@@ -16,7 +16,7 @@ data "amazon-ami" "ubuntu" {
   profile = var.profile
   filters = {
     architecture        = "x86_64"
-    name                = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-*"
+    name                = "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-*"
     root-device-type    = "ebs"
     virtualization-type = "hvm"
   }
@@ -29,15 +29,15 @@ locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
 
 source "amazon-ebs" "nuxeo" {
   profile = var.profile
-  ami_name      = "nuxeo-presales-ubuntu-22-04-${local.timestamp}"
-  ami_regions   = ["us-west-1", "us-west-2", "eu-west-1", "ap-northeast-1", "sa-east-1"]
+  ami_name      = "nuxeo-presales-ubuntu-24-04-${local.timestamp}"
+  #ami_regions   = ["us-west-1", "us-west-2", "eu-west-1", "ap-northeast-1", "sa-east-1"]
   instance_type = "t3.large"
   region        = "us-east-1"
   source_ami    = "${data.amazon-ami.ubuntu.id}"
   ssh_username  = "ubuntu"
   subnet_id     = "subnet-0d192be7ed6d2faa2"
   tags = {
-    Name                = "nuxeo-presales-ubuntu-22-04"
+    Name                = "nuxeo-presales-ubuntu-24-04"
     billing-category    = "presales"
     billing-subcategory = "generic"
   }
