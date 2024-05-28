@@ -204,27 +204,33 @@
     "AWSRegionSubnet": {
       "ap-northeast-1": {
         "vpc": "vpc-73016014",
-        "subnet": "subnet-f3daebba"
+        "subnet": "subnet-f3daebba",
+        "cidr": "172.30.0.0/16"
       },
       "eu-west-1": {
         "vpc": "vpc-5420e830",
-        "subnet": "subnet-dbc879bf"
+        "subnet": "subnet-dbc879bf",
+        "cidr": "172.30.0.0/16"
       },
       "us-east-1": {
         "vpc": "vpc-01311a6a321841d60",
-        "subnet": "subnet-0d192be7ed6d2faa2"
+        "subnet": "subnet-0d192be7ed6d2faa2",
+        "cidr": "10.0.255.0/24"
       },
       "us-west-1": {
         "vpc": "vpc-420fa925",
-        "subnet": "subnet-5d71ff06"
+        "subnet": "subnet-5d71ff06",
+        "cidr": "172.30.0.0/16"
       },
       "us-west-2": {
         "vpc": "vpc-0e6cdc3402852ec63",
-        "subnet": "subnet-070006c83fad19822"
+        "subnet": "subnet-070006c83fad19822",
+        "cidr": "172.30.0.0/16"
       },
       "sa-east-1": {
         "vpc": "vpc-0d2362c5f3e332f13",
-        "subnet": "subnet-00c372f7bb8d17f3f"
+        "subnet": "subnet-00c372f7bb8d17f3f",
+        "cidr": "10.0.0.0/16"
       }
     }
   },
@@ -398,7 +404,11 @@
             "IpProtocol": "tcp",
             "FromPort": "22",
             "ToPort": "22",
-            "CidrIp": "0.0.0.0/0"
+            "CidrIp": {
+              "Fn::FindInMap": ["AWSRegionSubnet", {
+                "Ref": "AWS::Region"
+              }, "cidr"]
+            }
           },
           {
             "IpProtocol": "tcp",
