@@ -18,12 +18,6 @@
         "t3.xlarge"
       ]
     },
-    "KeyName": {
-      "Description": "Name of your EC2 KeyPair to enable SSH access",
-      "Type": "String",
-      "MinLength": 1,
-      "ConstraintDescription": "Please specify a key pair"
-    },
     "Customer": {
       "Type": "String",
       "Description": "Prospect name, or 'generic' if this is a generic demo",
@@ -112,48 +106,54 @@
   "Mappings": {
     "AWSRegionArch2AMI": {
       "us-west-1": {
-        "64": "ami-00a4f53670958d5fe"
+        "64": "ami-09580be60a1634480"
       },
       "us-west-2": {
-        "64": "ami-0ee34bf2416d086cf"
+        "64": "ami-0643cfcb29164dad0"
       },
       "us-east-1": {
-        "64": "ami-0d3fc4f4bfc353b68"
+        "64": "ami-07e9e7ea844a1f60a"
       },
       "eu-west-1": {
-        "64": "ami-017f2322ba69910b7"
+        "64": "ami-0010cdefc942790be"
       },
       "ap-northeast-1": {
-        "64": "ami-01d389752933a61ee"
+        "64": "ami-0686cc6a304a48587"
       },
       "sa-east-1": {
-        "64": "ami-056776feb0d8dd4f1"
+        "64": "ami-0346e31e59f9ad410"
       }
     },
     "AWSRegionSubnet": {
       "ap-northeast-1": {
         "vpc": "vpc-73016014",
-        "subnet": "subnet-f3daebba"
+        "subnet": "subnet-f3daebba",
+        "cidr": "172.30.0.0/16"
       },
       "eu-west-1": {
         "vpc": "vpc-5420e830",
-        "subnet": "subnet-dbc879bf"
+        "subnet": "subnet-dbc879bf",
+        "cidr": "172.30.0.0/16"
       },
       "us-east-1": {
         "vpc": "vpc-01311a6a321841d60",
-        "subnet": "subnet-0d192be7ed6d2faa2"
+        "subnet": "subnet-0d192be7ed6d2faa2",
+        "cidr": "10.0.255.0/24"
       },
       "us-west-1": {
         "vpc": "vpc-420fa925",
-        "subnet": "subnet-5d71ff06"
+        "subnet": "subnet-5d71ff06",
+        "cidr": "172.30.0.0/16"
       },
       "us-west-2": {
         "vpc": "vpc-0e6cdc3402852ec63",
-        "subnet": "subnet-070006c83fad19822"
+        "subnet": "subnet-070006c83fad19822",
+        "cidr": "172.30.0.0/16"
       },
       "sa-east-1": {
         "vpc": "vpc-0d2362c5f3e332f13",
-        "subnet": "subnet-00c372f7bb8d17f3f"
+        "subnet": "subnet-00c372f7bb8d17f3f",
+        "cidr": "10.0.0.0/16"
       }
     }
   },
@@ -172,9 +172,6 @@
             ]
           }
         ],
-        "KeyName": {
-          "Ref": "KeyName"
-        },
         "BlockDeviceMappings": [
           {
             "DeviceName": "/dev/sda1",
@@ -277,16 +274,21 @@
             ]
           }
         }
-      },
-      "Metadata": {
-        "AWS::CloudFormation::Designer": {
-          "id": "e3152d23-45c2-4149-bb2a-4b1dae72264d"
-        }
       }
     },
     "NuxeoSecurity": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
+        "GroupName": {
+          "Fn::Sub": [
+            "${name}-sg",
+            {
+              "name": {
+                "Ref": "AWS::StackName"
+              }
+            }
+          ]
+        },
         "VpcId": {
           "Fn::FindInMap": [
             "AWSRegionSubnet",
@@ -302,7 +304,15 @@
             "IpProtocol": "tcp",
             "FromPort": "22",
             "ToPort": "22",
-            "CidrIp": "0.0.0.0/0"
+            "CidrIp": {
+              "Fn::FindInMap": [
+                "AWSRegionSubnet",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "cidr"
+              ]
+            }
           },
           {
             "IpProtocol": "tcp",
@@ -317,11 +327,6 @@
             "CidrIp": "0.0.0.0/0"
           }
         ]
-      },
-      "Metadata": {
-        "AWS::CloudFormation::Designer": {
-          "id": "c9c05daa-ed6e-42b7-9100-358963a600f4"
-        }
       }
     },
     "InstanceProfile": {
@@ -333,16 +338,21 @@
             "Ref": "InstanceRole"
           }
         ]
-      },
-      "Metadata": {
-        "AWS::CloudFormation::Designer": {
-          "id": "b939a11b-a704-4e6a-9ad6-69721bbac922"
-        }
       }
     },
     "InstanceRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
+        "RoleName": {
+          "Fn::Sub": [
+            "${name}-ec-instance-role",
+            {
+              "name": {
+                "Ref": "AWS::StackName"
+              }
+            }
+          ]
+        },
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -360,11 +370,6 @@
           ]
         },
         "Path": "/"
-      },
-      "Metadata": {
-        "AWS::CloudFormation::Designer": {
-          "id": "5f90ca67-c464-4e21-b50f-d565ef688ee3"
-        }
       }
     },
     "InstanceNEVSecretPolicy": {
@@ -424,20 +429,6 @@
               "Resource": [
                 "arn:aws:secretsmanager:us-west-2:311032021612:secret:connect_shared_presales_credential-D1gcYT"
               ]
-            },
-            {
-              "Effect": "Allow",
-              "Action": [
-                "ecr:GetAuthorizationToken",
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:GetRepositoryPolicy",
-                "ecr:DescribeRepositories",
-                "ecr:ListImages",
-                "ecr:DescribeImages",
-                "ecr:BatchGetImage"
-              ],
-              "Resource": "*"
             }
           ]
         },
@@ -445,61 +436,6 @@
           {
             "Ref": "InstanceRole"
           }
-        ]
-      }
-    }
-  },
-  "Metadata": {
-    "AWS::CloudFormation::Designer": {
-      "5f90ca67-c464-4e21-b50f-d565ef688ee3": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": -200,
-          "y": 310
-        },
-        "z": 1,
-        "embeds": []
-      },
-      "b939a11b-a704-4e6a-9ad6-69721bbac922": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": -200,
-          "y": 410
-        },
-        "z": 1,
-        "embeds": []
-      },
-      "c9c05daa-ed6e-42b7-9100-358963a600f4": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": -200,
-          "y": 500
-        },
-        "z": 1,
-        "embeds": []
-      },
-      "e3152d23-45c2-4149-bb2a-4b1dae72264d": {
-        "size": {
-          "width": 60,
-          "height": 60
-        },
-        "position": {
-          "x": -370,
-          "y": 410
-        },
-        "z": 1,
-        "embeds": [],
-        "isassociatedwith": [
-          "c9c05daa-ed6e-42b7-9100-358963a600f4"
         ]
       }
     }
