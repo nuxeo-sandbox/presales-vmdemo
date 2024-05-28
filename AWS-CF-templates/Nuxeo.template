@@ -8,7 +8,7 @@
       "ParameterGroups" : [
         {
           "Label" : { "default" : "General" },
-          "Parameters" : [ "GitBranch", "Customer", "DnsName", "KeyName", "Contact" ]
+          "Parameters" : [ "GitBranch", "Customer", "DnsName", "Contact" ]
         },
         {
           "Label" : { "default" : "Nuxeo Setup" },
@@ -50,12 +50,6 @@
         "m5.large", "m5.xlarge", "m5.2xlarge", "m5.4xlarge",
         "c5.large", "c5.xlarge", "c5.2xlarge", "c5.4xlarge", "c5.8xlarge"
       ]
-    },
-    "KeyName": {
-      "Description": "Name of an existing EC2 KeyPair to enable SSH access",
-      "Type": "String",
-      "MinLength": 1,
-      "ConstraintDescription": "Please specify a key pair"
     },
     "GitBranchPresalesDocker": {
       "Type": "String",
@@ -264,9 +258,6 @@
         "SecurityGroupIds": [{
           "Fn::GetAtt": ["NuxeoSecurity", "GroupId"]
         }],
-        "KeyName": {
-          "Ref": "KeyName"
-        },
         "BlockDeviceMappings": [{
           "DeviceName": "/dev/sda1",
           "Ebs": {
@@ -924,7 +915,6 @@
               }
             }]  },
           "InstanceType": { "Ref": "NEVInstanceType" },
-          "KeyName": { "Ref": "KeyName" },
           "Customer": { "Ref": "Customer" },
           "Contact": { "Ref": "Contact" },
           "NEVVersion": { "Ref": "NEVVersion" },
