@@ -85,17 +85,15 @@
         "t3.large",
         "t3.xlarge",
         "t3.2xlarge",
-        "m4.large",
-        "m4.xlarge",
-        "m5.large",
-        "m5.xlarge",
-        "m5.2xlarge",
-        "m5.4xlarge",
-        "c5.large",
-        "c5.xlarge",
-        "c5.2xlarge",
-        "c5.4xlarge",
-        "c5.8xlarge"
+        "m7a.large",
+        "m7a.xlarge",
+        "m7a.2xlarge",
+        "m7a.4xlarge",
+        "c7a.large",
+        "c7a.xlarge",
+        "c7a.2xlarge",
+        "c7a.4xlarge",
+        "c7a.8xlarge"
       ]
     },
     "GitBranchPresalesDocker": {
