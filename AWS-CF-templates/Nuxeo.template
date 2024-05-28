@@ -245,19 +245,19 @@
         "64": "ami-09580be60a1634480"
       },
       "us-west-2": {
-        "64": "ami-0643cfcb29164dad0"
+        "64": "ami-0f02cc50386018ccb"
       },
       "us-east-1": {
-        "64": "ami-07e9e7ea844a1f60a"
+        "64": "ami-021243b33e59072f6"
       },
       "eu-west-1": {
-        "64": "ami-0010cdefc942790be"
+        "64": "ami-0fefa31d371b65ccd"
       },
       "ap-northeast-1": {
-        "64": "ami-0686cc6a304a48587"
+        "64": "ami-07040aad449e6ee68"
       },
       "sa-east-1": {
-        "64": "ami-0346e31e59f9ad410"
+        "64": "ami-0447ec39c2be4fe31"
       }
     },
     "AWSRegionSubnet": {
