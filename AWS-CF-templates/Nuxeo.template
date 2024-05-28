@@ -475,6 +475,16 @@
     "NuxeoSecurity": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
+        "GroupName": {
+          "Fn::Sub": [
+            "${name}-sg",
+            {
+              "name": {
+                "Ref": "AWS::StackName"
+              }
+            }
+          ]
+        },
         "VpcId": {
           "Fn::FindInMap": [
             "AWSRegionSubnet",
@@ -529,6 +539,16 @@
     "InstanceRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
+        "RoleName": {
+          "Fn::Sub": [
+            "${name}-ec-instance-role",
+            {
+              "name": {
+                "Ref": "AWS::StackName"
+              }
+            }
+          ]
+        },
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -652,6 +672,16 @@
       "Type": "AWS::IAM::Role",
       "Condition": "UseS3",
       "Properties": {
+        "RoleName": {
+          "Fn::Sub": [
+            "${name}-direct-upload-role",
+            {
+              "name": {
+                "Ref": "AWS::StackName"
+              }
+            }
+          ]
+        },
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -679,6 +709,16 @@
     "RekognitionRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
+        "RoleName": {
+          "Fn::Sub": [
+            "${name}-rekognition-role",
+            {
+              "name": {
+                "Ref": "AWS::StackName"
+              }
+            }
+          ]
+        },
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
