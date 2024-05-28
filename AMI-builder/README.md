@@ -1,15 +1,16 @@
 ## Description
 
-[packer.io](https://www.packer.io/) template to automate the creation of AMI images with all the required packages pre-installed
+[packer](https://developer.hashicorp.com/packer) template to automate the creation of AMI images with all the required packages pre-installed
 
 ## How to build
 
-- [install packer](https://learn.hashicorp.com/tutorials/packer/getting-started-install)
-- for nuxeo team members, use okta-aws to set/refresh the AWS credentials on your computer
+- [install packer](https://developer.hashicorp.com/packer/install)
+- for Hyland team members, use `aws sso login --profile <AWS_PROFILE>` to set/refresh the AWS credentials on your computer
 
 ```
 git clone https://github.com/nuxeo-sandbox/presales-vmdemo
 cd AMI-builder
+packer build -var 'profile=<AWS_PROFILE>' .\template.pkr.hcl
 packer build template.json
 ```
 
