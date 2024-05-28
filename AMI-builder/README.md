@@ -10,8 +10,8 @@
 ```
 git clone https://github.com/nuxeo-sandbox/presales-vmdemo
 cd AMI-builder
+packer init
 packer build -var 'profile=<AWS_PROFILE>' .\template.pkr.hcl
-packer build template.json
 ```
 
 - update `AWS-CF-templates/Nuxeo.template` with the new AMI ID for each region
