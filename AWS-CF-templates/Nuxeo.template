@@ -1215,6 +1215,30 @@
         "TimeoutInMinutes": "60"
       }
     }
+  },
+  "Outputs": {
+    "InstanceID": {
+      "Description": "Nuxeo Instance ID",
+      "Value": {
+        "Ref": "NuxeoInstance"
+      }
+    },
+    "SshCommand": {
+      "Description": "The AWS CLI command to ssh the nuxeo instance",
+      "Value": {
+        "Fn::Sub": [
+          "aws ec2-instance-connect ssh --instance-id ${instanceId} --os-user ubuntu --connection-type eice --region ${region}",
+          {
+            "region": {
+              "Ref": "AWS::Region"
+            },
+            "instanceId": {
+              "Ref": "NuxeoInstance"
+            }
+          }
+        ]
+      }
+    }
   }
 }
 

@@ -439,5 +439,29 @@
         ]
       }
     }
+  },
+  "Outputs": {
+    "InstanceID": {
+      "Description": "NEV Instance ID",
+      "Value": {
+        "Ref": "NEVInstance"
+      }
+    },
+    "SshCommand": {
+      "Description": "The AWS CLI command to ssh the nev instance",
+      "Value": {
+        "Fn::Sub": [
+          "aws ec2-instance-connect ssh --instance-id ${instanceId} --os-user ubuntu --connection-type eice --region ${region}",
+          {
+            "region": {
+              "Ref": "AWS::Region"
+            },
+            "instanceId": {
+              "Ref": "NEVInstance"
+            }
+          }
+        ]
+      }
+    }
   }
 }
