@@ -1,35 +1,42 @@
 #!/bin/bash
 
-scriptName=$(basename "$0")
-
-function usage {
-  echo
-  echo "Usage: $scriptName [-p profile] [-r region] <instance_identifier>"
-  echo ""
-  echo "Arguments:"
-  echo "  instance_identifier   The EC2 instance to find; can be Name, dnsName, or host."
-  echo ""
-  echo "Options:"
-  echo "  -p string   AWS CLI profile to use; default is 'default'."
-  echo "  -r string   AWS region. If not specified, will use \$AWS_REGION or region of selected profile. AWS_REGION takes precedence."
+function printHelp {
+  echo "Usage:"
+  echo "./AWS-ssh-tunnelling.sh -n instance_name_or_URL -r region -p profile"
+  echo "-n instance name or url, required"
+  echo "   If a URL, the instance name is still the prefix (we don't use Route53 to find the corresponding instance)"
+  echo "   So, if the instance name is my-demo, you can pass -n my-demo or -n my-demo.cloud.nuxeo.com"
+  echo "-r region, optional."
+  echo "   If not specified, it must be either set in the AWS_REGION env. variable or set in the profile"
+  echo "   (Value set in AWS_REGION is checked before the one stored in the profile)"
+  echo "-p profile, optional (\"default\" if not set)"
   echo ""
   echo "Examples:"
-  echo "  $scriptName my-demo                     Connect to EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
-  echo "  $scriptName my-demo.cloud.nuxeo.com     Same as above."
-  echo "  $scriptName -r eu-east-1 my-demo        Connect to EC2 instance with Name \"mydemo\" in region \"eu-east-1\"."
-  echo "  $scriptName -p custom-profile my-demo   Connect to EC2 instance with Name \"mydemo\" using custom AWS CLI profile."
+  echo "Using default profile and region set in AWS_REGION or in the default profile"
+  echo "./AWS-ssh-tunnelling.sh -n my-demo"
+  echo ""
+  echo "Using default profile and region set in AWS_REGION or in the default profile"
+  echo "./AWS-ssh-tunnelling.sh -n my-demo.cloud.nuxeo.com"
+  echo ""
+  echo "Using default profile, forcing another region"
+  echo "./AWS-ssh-tunnelling.sh -n my-demo-in-eu -r eu-east-1"
+  echo ""
+  echo "Using a profile. region is read in the profile config or in AWS_REGION"
+  echo "./AWS-ssh-tunnelling.sh my-demo -p custom-profile"
 }
 
-instance_identifier=""
+# ==================================================
+# Parse arguments, check for required.
+# ==================================================
+instance_name=""
 region=""
 profile="default"
 
-# ==================================================
-# Handle options.
-# ==================================================
-while getopts ":r:p:" opt;
-do
+while getopts ":n:r:p:" opt; do
   case ${opt} in
+    n)
+      instance_name=$OPTARG
+      ;;
     r)
       region=$OPTARG
       ;;
@@ -37,7 +44,7 @@ do
       profile=$OPTARG
       ;;
     \?)
-      usage
+      printHelp
       exit 1
       ;;
     :)
@@ -46,97 +53,64 @@ do
       ;;
   esac
 done
-shift $((OPTIND - 1))
 
-# ==================================================
-# Handle instance identifier.
-# ==================================================
-# TODO: allow Instance ID; e.g. use a regex to check if it's already an Instance ID
-instance_identifier=$1
-
-# Cleanup if needed (remove cloud.nuxeo.com)
-if [[ $instance_identifier == *".cloud.nuxeo.com" ]]; then
-  instance_identifier=${instance_identifier%.cloud.nuxeo.com}
-fi
-
-# Make sure we have something to search with
-if [ -z "$instance_identifier" ]
+# Check if name is provided
+if [ -z "$instance_name" ]
 then
-  usage
-  echo
-  echo -e "$scriptName: error: the following arguments are required: instance_identifier"
-  echo
+  echo -e "*ERROR* instance_name (-n) is required.\n"
+  printHelp
   exit 2
 fi
 
 # ==================================================
-# Handle region.
+# Cleanup parameters, Get region
 # ==================================================
-# If no region passed, use AWS_REGION
-if [ -z "$region" ]
-then
-  region=$AWS_REGION
+msg="Checking parameters..."
+# Cleanup if needed (remove nuxeo.cloud)
+if [[ $instance_name == *".cloud.nuxeo.com" ]]; then
+  instance_name=${instance_name%.cloud.nuxeo.com}
+  msg=$msg"\n  Instance Name: Removing cloud.nuxeo.com => $instance_name"
+else
+  msg=$msg"\n  Instance Name: $instance_name"
 fi
 
-# If no AWS_REGION, use profile
 if [ -z "$region" ]
 then
-  region=$(aws configure get region --profile $profile)
+  if [ -z "$AWS_REGION" ]
+  then
+    region=$(aws configure get region --profile $profile)
+    msg=$msg"\n  Region: No -r argument, no AWS_REGION defined => Region read from pofile <$profile>: $region"
+  else
+    region=$AWS_REGION
+    msg=$msg"\n  Region: Region read from AWS_REGION: $AWS_REGION"
+  fi
 fi
 
-# If that didn't work, we're screwed...
-if [ -z "$region" ]
-then
-  usage
-  echo
-  echo "$scriptName: error: unable to determine AWS region"
-  echo
-  exit 2
-fi
+msg=$msg"\n  Profile: $profile"
 
-# ==================================================
-# Confirm arguments.
-# ==================================================
-echo
-echo "Instance: $instance_identifier"
-echo "Region: $region"
-echo "Profile: $profile"
+echo -e $msg
 
 # ==================================================
 # Find instance Id
 # ==================================================
-# Try dnsName
+echo -e "\nSearching the id of instance <$instance_name>..."
 instance_id=$(aws ec2 describe-instances \
-    --filters "Name=tag:dnsName,Values=$instance_identifier" \
+    --filters "Name=tag:Name,Values=$instance_name" \
     --query 'Reservations[].Instances[].[InstanceId]' \
     --region $region \
     --output text)
 
-# Try instance Name
 if [ -z "$instance_id" ]
 then
-  instance_id=$(aws ec2 describe-instances \
-    --filters "Name=tag:Name,Values=$instance_identifier" \
-    --query 'Reservations[].Instances[].[InstanceId]' \
-    --region $region \
-    --output text)
-fi
-
-if [ -z "$instance_id" ]
-then
-  echo
-  echo "$scriptName: error: Instance ID not found for \"$instance_identifier\""
-  echo
+  echo -e "Instance ID not found for instance name <$instance_name>:\n    Is it running?\n    Is $region the correct region?\n    No mispelling?"
   exit 3
 fi
 
-echo "Instance ID: $instance_id"
+echo "...found. Instance ID is $instance_id"
 
 # ==================================================
-# Connect
+# Run
 # ==================================================
-echo
-echo "Executing:"
+echo -e "\nOpening the ssh connection via tunneling. Command that we run:"
 echo "aws ec2-instance-connect ssh --instance-id $instance_id --os-user ubuntu --connection-type eice --region $region --profile $profile"
-echo
 aws ec2-instance-connect ssh --instance-id $instance_id --os-user ubuntu --connection-type eice --region $region --profile $profile
