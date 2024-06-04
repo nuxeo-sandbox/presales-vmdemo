@@ -16,3 +16,4 @@ Match host *.cloud.nuxeo.com exec "aws-proxy.sh %r %h ~/.ssh/aws-proxy.%h.%r"
     # Remove ephemeral key
     PermitLocalCommand yes
     LocalCommand rm ~/.ssh/aws-proxy.%h.%r*
+    # LocalCommand aws-proxy-cleanup.sh ~/.ssh/aws-proxy.%h.%r
