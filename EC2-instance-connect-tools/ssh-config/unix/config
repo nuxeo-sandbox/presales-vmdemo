@@ -1,13 +1,18 @@
-# Match host i-* exec "aws-proxy.sh /tmp/aws-proxy.%h.%r %r %h"
-#     IdentityFile /tmp/aws-proxy.%h.%r
-#     ProxyCommand aws ec2-instance-connect open-tunnel --instance-id %h
-#     # Remove ephemeral key
-#     PermitLocalCommand yes
-#     LocalCommand rm /tmp/aws-proxy.%h.%r*
-
-Match host *.cloud.nuxeo.com exec "aws-proxy.sh %r %h /tmp/aws-proxy.%h.%r"
-    IdentityFile /tmp/aws-proxy.%h.%r
-    ProxyCommand aws ec2-instance-connect open-tunnel --instance-id "$(/tmp/aws-proxy.%h.%r.id)"
+# Match commands that use an EC2 Instance ID as the host.
+Match host i-* exec "aws-proxy.sh %r %h ~/.ssh/aws-proxy.%h.%r"
+    IdentityFile ~/.ssh/aws-proxy.%h.%r
+    ProxyCommand aws ec2-instance-connect open-tunnel --instance-id %h
     # Remove ephemeral key
     PermitLocalCommand yes
-    LocalCommand rm /tmp/aws-proxy.%h.%r*
+    LocalCommand rm ~/.ssh/aws-proxy.%h.%r*
+
+# Match commands that are trying to connect to a Nuxeo Presales EC2 instance
+# using the DNS host.
+Match host *.cloud.nuxeo.com exec "aws-proxy.sh %r %h ~/.ssh/aws-proxy.%h.%r"
+    IdentityFile ~/.ssh/aws-proxy.%h.%r
+    # We pass the EC2 Instance ID via a file on disk because env vars are not
+    # supported by ProxyCommand
+    ProxyCommand aws ec2-instance-connect open-tunnel --instance-id `cat ~/.ssh/nxp_ec2_id.txt`
+    # Remove ephemeral key
+    PermitLocalCommand yes
+    LocalCommand rm ~/.ssh/aws-proxy.%h.%r*

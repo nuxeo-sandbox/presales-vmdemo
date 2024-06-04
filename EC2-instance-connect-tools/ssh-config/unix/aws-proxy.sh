@@ -44,13 +44,12 @@ then
   echo  >&2
   echo "$scriptName: error: Instance ID not found for \"$HOST\""  >&2
   echo  >&2
-  exit 3
+  exit 1
 fi
 
-# This value is used by the SSH config entry...
-# export NXPSSHINSTANCEID=$INSTANCE_ID
-EPHEMERAL_EC2_INSTANCE_ID_FILE=$EPHEMERAL_SSH_KEY.id
 # Write instance ID file
+# This value is used by the SSH config entry...
+EPHEMERAL_EC2_INSTANCE_ID_FILE=~/.ssh/nxp_ec2_id.txt
 cat << EOF > $EPHEMERAL_EC2_INSTANCE_ID_FILE
 ${INSTANCE_ID}
 EOF
