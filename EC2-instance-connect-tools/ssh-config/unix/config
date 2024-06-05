@@ -2,3 +2,6 @@
 Match host i-* exec "aws-proxy.sh %r %h ~/.ssh/aws-proxy.%h.%r"
     IdentityFile ~/.ssh/aws-proxy.%h.%r
     ProxyCommand aws ec2-instance-connect open-tunnel --instance-id %h
+    # Remove ephemeral key
+    PermitLocalCommand yes
+    LocalCommand rm ~/.ssh/aws-proxy.%h.%r*
