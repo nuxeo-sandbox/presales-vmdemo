@@ -4,25 +4,33 @@ scriptName=$(basename "$0")
 
 function usage {
   echo
-  echo "Usage: $scriptName [-p profile] [-r region] <instance_identifier>"
-  echo ""
+  echo "Usage: $scriptName [-p profile] [-r region] <instance_identifier> [src] [dest]"
+  echo
   echo "Arguments:"
   echo "  instance_identifier   The EC2 instance; can be ID, Name, dnsName, or host."
-  echo ""
+  echo "  src                   Path of file to copy."
+  echo "  dest                  Destination; if not specified, will use source file name."
+  echo
   echo "Options:"
   echo "  -p string   AWS CLI profile to use; default is 'default'."
   echo "  -r string   AWS region. If not specified, will use \$AWS_REGION, region of selected profile, or 'us-east-1' (in that order)."
-  echo ""
+  echo
   echo "Examples:"
-  echo "  $scriptName my-demo                     Connect to EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
-  echo "  $scriptName my-demo.cloud.nuxeo.com     Same as above."
-  echo "  $scriptName -r eu-east-1 my-demo        Connect to EC2 instance with Name \"mydemo\" in region \"eu-east-1\"."
-  echo "  $scriptName -p custom-profile my-demo   Connect to EC2 instance with Name \"mydemo\" using custom AWS CLI profile."
+  echo "  $scriptName my-demo                           Connect to EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
+  echo "  $scriptName my-demo.cloud.nuxeo.com           Same as above."
+  echo "  $scriptName -r eu-east-1 my-demo              Connect to EC2 instance with Name \"mydemo\" in region \"eu-east-1\"."
+  echo "  $scriptName -p custom-profile my-demo         Connect to EC2 instance with Name \"mydemo\" using custom AWS CLI profile."
+  echo "  $scriptName my-demo foo.txt                   Copy "foo.txt" to EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
+  echo "  $scriptName my-demo.cloud.nuxeo.com foo.txt   Same as above."
+
 }
 
-instance_identifier=""
-region=""
 profile=""
+region=""
+instance_identifier=""
+src=""
+dest=""
+instance_id=""
 
 DEFAULT_REGION="us-east-1"
 DEFAULT_PROFILE="default"
@@ -69,6 +77,35 @@ fi
 # Cleanup if needed (remove cloud.nuxeo.com)
 if [[ $instance_identifier == *".cloud.nuxeo.com" ]]; then
   instance_identifier=${instance_identifier%.cloud.nuxeo.com}
+fi
+
+#===============================================================================
+# Handle source.
+#===============================================================================
+src=$2
+
+
+#===============================================================================
+# Handle dest.
+#===============================================================================
+dest=$2
+
+if [ "$src" ]
+then
+  if [ -z "$dest" ]
+  then
+    dest=$(basename "$src")
+  fi
+
+  # This should not really even be possible...
+  if [ -z "$dest" ]
+  then
+    usage
+    echo
+    echo -e "$scriptName: error: dest is blank"
+    echo
+    exit 2
+  fi
 fi
 
 #===============================================================================
@@ -155,6 +192,11 @@ echo
 echo "Profile: $profile"
 echo "Region: $region"
 echo "Instance: $instance_identifier"
+if [ "$src" ]
+then
+  echo "src: $src"
+  echo "dest: $dest"
+fi
 echo "Instance ID: $instance_id"
 
 #===============================================================================
@@ -162,12 +204,26 @@ echo "Instance ID: $instance_id"
 #===============================================================================
 echo
 echo "Executing:"
-echo "ssh ubuntu@$instance_id"
+
+if [ "$src" ]
+then
+  echo "scp $src ubuntu@$instance_id:$dest"
+  echo
+  scp $src ubuntu@$instance_id:$dest
+else
+  echo "ssh ubuntu@$instance_id"
+  echo
+  ssh ubuntu@$instance_id
+fi
+
 echo
-ssh ubuntu@$instance_id
 
 #===============================================================================
 # Cleanup
 #===============================================================================
-EPHEMERAL_SSH_KEYS=~/.ssh/aws-proxy.$instance_id*
-rm $EPHEMERAL_SSH_KEYS
+# NB: this is hard-coded in aws-proxy.sh and the SSH config
+EPHEMERAL_PRIVATE_SSH_KEY=~/.ssh/aws-proxy.$instance_id.ubuntu
+if [[ -e ${EPHEMERAL_PRIVATE_SSH_KEY} ]]
+then
+  rm $EPHEMERAL_PRIVATE_SSH_KEY*
+fi
