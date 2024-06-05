@@ -16,11 +16,11 @@ function usage {
   echo "  -r string   AWS region. If not specified, will use \$AWS_REGION, region of selected profile, or 'us-east-1' (in that order)."
   echo
   echo "Examples:"
-  echo "  $scriptName my-demo                           Connect to EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
+  echo "  $scriptName my-demo                           SSH to EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
   echo "  $scriptName my-demo.cloud.nuxeo.com           Same as above."
-  echo "  $scriptName -r eu-east-1 my-demo              Connect to EC2 instance with Name \"mydemo\" in region \"eu-east-1\"."
-  echo "  $scriptName -p custom-profile my-demo         Connect to EC2 instance with Name \"mydemo\" using custom AWS CLI profile."
-  echo "  $scriptName my-demo foo.txt                   Copy "foo.txt" to EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
+  echo "  $scriptName -r eu-east-1 my-demo              SSH to EC2 instance with Name \"mydemo\" in region \"eu-east-1\"."
+  echo "  $scriptName -p custom-profile my-demo         SSH to EC2 instance with Name \"mydemo\" using custom AWS CLI profile."
+  echo "  $scriptName my-demo foo.txt                   SCP "foo.txt" to EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
   echo "  $scriptName my-demo.cloud.nuxeo.com foo.txt   Same as above."
 
 }
