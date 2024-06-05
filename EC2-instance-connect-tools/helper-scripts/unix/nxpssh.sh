@@ -14,6 +14,7 @@ function usage {
   echo "Options:"
   echo "  -p string   AWS CLI profile to use; default is 'default'."
   echo "  -r string   AWS region. If not specified, will use \$AWS_REGION, region of selected profile, or 'us-east-1' (in that order)."
+  echo "  -u user     The user for the host OS; default is 'ubuntu'"
   echo
   echo "Examples:"
   echo "  $scriptName my-demo                           SSH to EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
@@ -27,6 +28,7 @@ function usage {
 
 profile=""
 region=""
+user=""
 instance_identifier=""
 src=""
 dest=""
@@ -34,6 +36,7 @@ instance_id=""
 
 DEFAULT_REGION="us-east-1"
 DEFAULT_PROFILE="default"
+DEFAULT_USER="ubuntu"
 
 #===============================================================================
 # Handle options.
@@ -46,6 +49,9 @@ do
       ;;
     p)
       profile=$OPTARG
+      ;;
+    u)
+      user=$OPTARG
       ;;
     \?)
       usage
@@ -150,6 +156,14 @@ then
 fi
 
 #===============================================================================
+# Handle user.
+#===============================================================================
+if [ -z "$user" ]
+then
+  user=$DEFAULT_USER
+fi
+
+#===============================================================================
 # Find instance Id
 #===============================================================================
 # If it's already an instance ID, just use it...
@@ -207,13 +221,13 @@ echo "Executing:"
 
 if [ "$src" ]
 then
-  echo "scp $src ubuntu@$instance_id:$dest"
+  echo "scp $src $user@$instance_id:$dest"
   echo
-  scp $src ubuntu@$instance_id:$dest
+  scp $src $user@$instance_id:$dest
 else
-  echo "ssh ubuntu@$instance_id"
+  echo "ssh $user@$instance_id"
   echo
-  ssh ubuntu@$instance_id
+  ssh $user@$instance_id
 fi
 
 echo
@@ -222,7 +236,7 @@ echo
 # Cleanup
 #===============================================================================
 # NB: this is hard-coded in aws-proxy.sh and the SSH config
-EPHEMERAL_PRIVATE_SSH_KEY=~/.ssh/aws-proxy.$instance_id.ubuntu
+EPHEMERAL_PRIVATE_SSH_KEY=~/.ssh/aws-proxy.$instance_id.$user
 if [[ -e ${EPHEMERAL_PRIVATE_SSH_KEY} ]]
 then
   rm $EPHEMERAL_PRIVATE_SSH_KEY*
