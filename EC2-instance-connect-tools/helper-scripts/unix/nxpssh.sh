@@ -23,7 +23,6 @@ function usage {
   echo "  $scriptName -p custom-profile my-demo         SSH to EC2 instance with Name \"mydemo\" using custom AWS CLI profile."
   echo "  $scriptName my-demo foo.txt                   SCP "foo.txt" to EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
   echo "  $scriptName my-demo.cloud.nuxeo.com foo.txt   Same as above."
-
 }
 
 profile=""
