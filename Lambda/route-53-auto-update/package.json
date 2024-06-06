@@ -8,7 +8,9 @@
     "Michael Vachette"
   ],
   "license": "GPL",
+  "type":"module",
   "dependencies": {
-    "aws-sdk": "^2.555.0"
+    "@aws-sdk/client-ec2": "^3.587.0",
+    "@aws-sdk/client-route-53":"^3.587.0"
   }
 }
