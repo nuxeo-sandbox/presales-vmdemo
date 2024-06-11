@@ -125,35 +125,35 @@
       }
     },
     "AWSRegionSubnet": {
-      "ap-northeast-1": {
-        "vpc": "vpc-73016014",
-        "subnet": "subnet-f3daebba",
-        "cidr": "172.30.0.0/16"
-      },
-      "eu-west-1": {
-        "vpc": "vpc-5420e830",
-        "subnet": "subnet-dbc879bf",
-        "cidr": "172.30.0.0/16"
-      },
       "us-east-1": {
         "vpc": "vpc-01311a6a321841d60",
         "subnet": "subnet-0d192be7ed6d2faa2",
-        "cidr": "10.0.255.0/24"
+        "defaultSG": "sg-062c837c3212332af"
       },
       "us-west-1": {
         "vpc": "vpc-420fa925",
         "subnet": "subnet-5d71ff06",
-        "cidr": "172.30.0.0/16"
+        "defaultSG": "sg-03ed657a"
       },
       "us-west-2": {
         "vpc": "vpc-0e6cdc3402852ec63",
         "subnet": "subnet-070006c83fad19822",
-        "cidr": "172.30.0.0/16"
+        "defaultSG": "sg-0f3a23a4873fb211c"
+      },
+      "ap-northeast-1": {
+        "vpc": "vpc-73016014",
+        "subnet": "subnet-f3daebba",
+        "defaultSG": "sg-1d5b9365"
+      },
+      "eu-west-1": {
+        "vpc": "vpc-5420e830",
+        "subnet": "subnet-dbc879bf",
+        "defaultSG": "sg-d63eb3b1"
       },
       "sa-east-1": {
         "vpc": "vpc-0d2362c5f3e332f13",
         "subnet": "subnet-00c372f7bb8d17f3f",
-        "cidr": "10.0.0.0/16"
+        "defaultSG": "sg-059186871b0fd77b1"
       }
     }
   },
@@ -301,16 +301,17 @@
         "GroupDescription": "Allow ports 22 (SSH), 80 (HTTP) and 443 (HTTPS)",
         "SecurityGroupIngress": [
           {
+            "Description": "SSH access only from EC2 connect endpoint",
             "IpProtocol": "tcp",
             "FromPort": "22",
             "ToPort": "22",
-            "CidrIp": {
+            "SourceSecurityGroupId": {
               "Fn::FindInMap": [
                 "AWSRegionSubnet",
                 {
                   "Ref": "AWS::Region"
                 },
-                "cidr"
+                "defaultSG"
               ]
             }
           },
@@ -325,6 +326,21 @@
             "FromPort": "443",
             "ToPort": "443",
             "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": [
+                "${name}-sg",
+                {
+                  "name": {
+                    "Ref": "AWS::StackName"
+                  }
+                }
+              ]
+            }
           }
         ]
       }
