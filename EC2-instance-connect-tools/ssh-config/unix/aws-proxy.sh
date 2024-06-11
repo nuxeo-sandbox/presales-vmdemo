@@ -7,7 +7,7 @@ scriptName=$(basename "$0")
 
 USER=$1
 EC2_INSTANCE_ID=$2
-# NB: This is hard-coded in the SSH config becuase the ability to use env vars
+# NB: This is hard-coded in the SSH config because the ability to use env vars
 # is restricted.
 EPHEMERAL_SSH_KEY=$3
 
