@@ -1,0 +1,15 @@
+{
+  "name": "scheduled-ec2-instances-start",
+  "version": "1.0.0",
+  "description": "Function to start EC2 instances with a valid startDailyUntil tag",
+  "main": "index.js",
+  "author": "Michael Vachette",
+  "contributors": [
+    "Michael Vachette",
+    "Thibaud Arguillere"
+  ],
+  "license": "GPL",
+  "dependencies": {
+    "aws-sdk": "^2.555.0"
+  }
+}
