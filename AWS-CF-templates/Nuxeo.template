@@ -1182,7 +1182,7 @@
       "Type": "AWS::CloudFormation::Stack",
       "Condition": "CreateNestedNEV",
       "Properties": {
-        "TemplateURL": "https://presales-vmdemo-bucket.s3.amazonaws.com/nuxeo-sandbox/lts2023/NEV.template",
+        "TemplateURL": "https://presales-vmdemo-bucket.s3.amazonaws.com/nuxeo-sandbox/master/AWS-CF-templates/NEV.template",
         "Parameters": {
           "DnsName": {
             "Fn::Sub": [
