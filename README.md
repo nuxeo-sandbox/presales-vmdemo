@@ -22,7 +22,10 @@ Scripts that are executed when a new EC2 instance is launched using the CF templ
 ## Lambda
 Lambda functions used to automate various tasks including:
 * Automatic shutdown of instances
+* Automatic start of instances
 * Automatic update of Route53 records when instances are started or stopped
+
+See dedicated READMEs.
 
 # About Nuxeo
 [Nuxeo](https://www.hyland.com/products/nuxeo-platform), leading Content Services Platform, is reinventing enterprise content management (ECM) and digital asset management (DAM). Nuxeo is fundamentally changing how people work with data and content to realize new value from digital information. Its cloud-native platform has been deployed by large enterprises, mid-sized businesses and government agencies worldwide. Customers like Verizon, Electronic Arts, ABN Amro, and the Department of Defense have used Nuxeo's technology to transform the way they do business.
