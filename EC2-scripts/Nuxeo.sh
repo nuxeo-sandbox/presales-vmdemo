@@ -107,6 +107,10 @@ if [[ "${S3BUCKET}" == "true" || "${S3BUCKET}" == "Create" || "${S3BUCKET}" == "
 fi
 
 # Write system configuration
+
+# This is required for WOPI
+JWT_SECRET=`uuid`
+
 cat << EOF > ${CONF_DIR}/system.conf
 # Host Configuration
 session.timeout=600
@@ -176,6 +180,8 @@ nuxeo.enrichment.aws.transcribe.enabled=true
 # WOPI Configuration
 nuxeo.wopi.discoveryURL=https://onenote.officeapps.live.com/hosting/discovery
 nuxeo.wopi.baseURL=https://wopi.nuxeo.io/${FQDN}/nuxeo/
+# JWT token is required for WOPI
+nuxeo.jwt.secret=${JWT_SECRET}
 
 EOF
 
