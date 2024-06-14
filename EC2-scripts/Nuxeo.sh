@@ -177,7 +177,7 @@ nuxeo.enrichment.aws.transcribe.enabled=true
 
 # WOPI Configuration
 nuxeo.wopi.discoveryURL=https://onenote.officeapps.live.com/hosting/discovery
-nuxeo.wopi.baseURL=https://wopi.nuxeo.io/${FQDN}/nuxeo/
+nuxeo.wopi.baseURL=https://wopi.nuxeocloud.com/${FQDN}/nuxeo/
 # JWT token is required for WOPI
 nuxeo.jwt.secret=${JWT_SECRET}
 
