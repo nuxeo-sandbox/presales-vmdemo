@@ -649,6 +649,15 @@
               "Resource": "*"
             },
             {
+              "Sid": "AllowInference",
+              "Effect": "Allow",
+              "Action": [
+                "bedrock:InvokeModel",
+                "bedrock:InvokeModelWithResponseStream"
+              ],
+              "Resource": "arn:aws:bedrock:*::foundation-model/*"
+            },
+            {
               "Effect": "Allow",
               "Action": "secretsmanager:GetSecretValue",
               "Resource": [
