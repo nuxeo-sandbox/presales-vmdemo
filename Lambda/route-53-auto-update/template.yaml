@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  A lambda application to automatically update route53 records when instances state change
+Transform:
+- AWS::Serverless-2016-10-31
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Resources:       
+  functionRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonRoute53FullAccess
+      Tags: 
+        - Key: billing-category
+          Value: presales
+        - Key: billing-subcategory
+          Value: generic
+      
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  updateRoute53RecordsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: nuxeo-demo-vm-route53-auto-update-fn
+      Description: A Lambda function that update route53 records according to ec2 instances state changes
+      Runtime: nodejs20.x
+      Architectures:
+      - x86_64
+      Handler: src/handlers/updateRoute53Records.updateRoute53Records
+      MemorySize: 128
+      Timeout: 100
+      Role: !GetAtt functionRole.Arn
+      Environment:
+        Variables:
+          HOSTED_ZONE: "Z1Z5JJ6G4B6J7L"
+          DOMAIN : ".cloud.nuxeo.com."
+
+  cloudWatchRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Update Route53 records when EC2 instances are started/stopped
+      Name: nuxeo-demo-vm-route53-auto-update-rule
+      EventPattern: 
+        source: [aws.ec2]
+        detail-type: [EC2 Instance State-change Notification]
+        detail: 
+          state: [running, stopping, shutting-down]
+      State: ENABLED
+      Targets : 
+        - Arn: !GetAtt updateRoute53RecordsFunction.Arn
+          Id : Lambda
+
+  invocationPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:InvokeFunction
+        FunctionName: !Sub ${updateRoute53RecordsFunction}
+        Principal: events.amazonaws.com
+        SourceArn: !GetAtt cloudWatchRule.Arn
+
+  logGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+        LogGroupName: !Sub /aws/lambda/${updateRoute53RecordsFunction}
+        RetentionInDays: 7
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    LoggingConfig:
+      LogFormat: JSON
