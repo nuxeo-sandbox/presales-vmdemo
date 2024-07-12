@@ -1,0 +1,116 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  A lambda application to automatically shutdown EC2 instances using an event scheduler
+Transform:
+- AWS::Serverless-2016-10-31
+
+Mappings : 
+  dailySchedule :
+    us-east-1 : 
+      schedule : "cron(0 7 ? * 2-6 *)"
+    us-west-1 : 
+      schedule : "cron(0 7 ? * 2-6 *)"
+    us-west-2 : 
+      schedule : "cron(0 7 ? * 2-6 *)"
+    eu-west-1 : 
+      schedule : "cron(0 18 ? * 1-5 *)"
+    ap-northeast-1 : 
+      schedule : "cron(0 10 ? * 1-5 *)"
+  weekendSchedule :
+    us-east-1 : 
+      schedule : "cron(0 7 ? * 7-1 *)"
+    us-west-1 : 
+      schedule : "cron(0 7 ? * 7-1 *)"
+    us-west-2 : 
+      schedule : "cron(0 7 ? * 7-1 *)"
+    eu-west-1 : 
+      schedule : "cron(0 18 ? * 6 *)"
+    ap-northeast-1 : 
+      schedule : "cron(0 10 ? * 6 *)"
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Resources:       
+  functionRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+      Tags: 
+        - Key: billing-category
+          Value: presales
+        - Key: billing-subcategory
+          Value: generic
+      
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  lambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: nuxeo-scheduled-ec2-shutdown-fn
+      Description: A lambda function to shutdown EC2 instances
+      Runtime: nodejs20.x
+      Architectures:
+      - x86_64
+      Handler: src/index.handler
+      MemorySize: 128
+      Timeout: 100
+      Role: !GetAtt functionRole.Arn
+
+  dailySchedulerRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Trigger a lambda function to stop EC2 instances daily"
+      Name: "nuxeo-scheduled-ec2-shutdown-daily"
+      ScheduleExpression: !FindInMap [ "dailySchedule", !Ref "AWS::Region", "schedule" ]
+      State: ENABLED
+      Targets :
+        - Arn: !GetAtt lambdaFunction.Arn
+          Id : Lambda
+
+  weekendSchedulerRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Trigger a lambda function to stop all EC2 instances on Friday"
+      Name: "nuxeo-scheduled-ec2-shutdown-weekend"
+      ScheduleExpression: !FindInMap [ "weekendSchedule", !Ref "AWS::Region", "schedule" ]
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt lambdaFunction.Arn
+          Id: Lambda
+
+  dailyInvocationPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:InvokeFunction
+        FunctionName: !Sub ${lambdaFunction}
+        Principal: events.amazonaws.com
+        SourceArn: !GetAtt dailySchedulerRule.Arn
+
+  weekendInvocationPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Sub ${lambdaFunction}
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt weekendSchedulerRule.Arn
+
+  logGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+        LogGroupName: !Sub /aws/lambda/${lambdaFunction}
+        RetentionInDays: 7
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    LoggingConfig:
+      LogFormat: JSON

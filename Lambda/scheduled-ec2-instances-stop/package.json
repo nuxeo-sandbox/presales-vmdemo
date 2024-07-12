@@ -1,14 +1,29 @@
 {
   "name": "scheduled-ec2-instances-stop",
   "version": "1.0.0",
-  "description": "Function to stop all EC2 instances",
-  "main": "index.js",
+  "description": "Function to stop EC2 instances",
   "author": "Michael Vachette",
-  "contributors": [
-    "Michael Vachette"
-  ],
-  "license": "GPL",
-  "dependencies": {
-    "aws-sdk": "^2.555.0"
+  "private": true,
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "jest": {
+    "testMatch": [
+      "**/__tests__/**/*.mjs?(x)"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/.aws-sam/"
+    ],
+    "moduleFileExtensions": [
+      "mjs",
+      "js"
+    ]
+  },
+  "devDependencies": {
+    "@aws-sdk/client-ec2": "^3.614.0",
+    "aws-sdk-client-mock": "^4.0.1",
+    "aws-sdk-client-mock-jest": "^4.0.1",
+    "jest": "^29.2.1"
   }
 }
