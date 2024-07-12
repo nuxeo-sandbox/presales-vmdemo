@@ -30,7 +30,8 @@ Mappings :
 
 # Resources declares the AWS resources that you want to include in the stack
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
-Resources:       
+Resources: 
+
   functionRole:
     Type: AWS::IAM::Role
     Properties: 
@@ -51,6 +52,19 @@ Resources:
         - Key: billing-subcategory
           Value: generic
       
+  ec2StopPolicy: 
+    Type: "AWS::IAM::Policy"
+    Properties: 
+      PolicyName: "nuxeo-ec2-stop-policy"
+      PolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: "Allow"
+            Action: "ec2:StopInstances"
+            Resource: ["arn:aws:ec2:*:*:instance/*"]
+      Roles: 
+        - !Ref functionRole
+
   # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
   lambdaFunction:
     Type: AWS::Serverless::Function
