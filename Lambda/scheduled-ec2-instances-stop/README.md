@@ -30,6 +30,12 @@ sam deploy --s3-bucket eu-west-1-demo-bucket --region eu-west-1
 sam deploy --s3-bucket ap-northeast-1-demo-bucket --region ap-northeast-1
 ```
 
+To manually trigger the lambda function, use the following command
+
+```bash
+sam remote invoke --region <REGION>
+```
+
 # Dev and unit tests
 
 To run the unit tests
