@@ -13,6 +13,7 @@ resource "google_compute_instance" "nuxeoinstance" {
   metadata = {
     enable-oslogin : "TRUE"
     stack-name : var.stack_name
+    startup-script: file("./NuxeoInit.sh")
   }
 
   boot_disk {
