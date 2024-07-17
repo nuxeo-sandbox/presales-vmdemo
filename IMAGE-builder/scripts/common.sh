@@ -26,9 +26,6 @@ a2enmod proxy proxy_http rewrite ssl headers
 systemctl restart apache2
 echo "Please wait a few minutes for you instance installation to complete" > /var/www/html/index.html
 
-# Install latest aws cli using snap
-snap install aws-cli --classic
-
 # Install docker
 # Add Docker's official GPG key:
 install -m 0755 -d /etc/apt/keyrings

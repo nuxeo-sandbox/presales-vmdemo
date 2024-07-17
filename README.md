@@ -5,8 +5,8 @@ Note: The master branch currently deploys Nuxeo LTS 2023. To deploy Nuxeo LTS 20
 
 # Content
 
-## AMI-builder
-A [packer.io](https://www.packer.io/) template to automate the creation of AMI images with all the required OS packages pre-installed. See the [README](AMI-builder/README.md) to get more details about how to use it.
+## IMAGE-builder
+A [packer.io](https://www.packer.io/) template to automate the creation of cloud images with all the required OS packages pre-installed. See the [README](IMAGE-builder/README.md) to get more details about how to use it.
 
 ## AWS-CF-templates
 Contains a [template](AWS-CF-templates/Nuxeo.template) to provision a Nuxeo demo stack, and a [template](AWS-CF-templates/NEV.template) to provision an NEV stack. These templates use the AMI mentioned above.

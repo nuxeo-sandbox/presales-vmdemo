@@ -49,7 +49,7 @@ build {
 
   provisioner "shell" {
     execute_command = "echo 'packer' | sudo -S env {{ .Vars }} {{ .Path }}"
-    script          = "./setup.sh"
+    scripts          = ["./scripts/common.sh", "./scripts/aws.sh"]
   }
 
 }
