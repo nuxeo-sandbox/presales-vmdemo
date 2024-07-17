@@ -2,7 +2,18 @@
 
 AWS resources to schedule EC2 instances daily start (Mon-Fri).
 
-Only instances with a `startDailyUntil` tag set to a valid ISO Date in the future will be started, at 06:00AM UTC
+Only instances with a `startDailyUntil` tag either...
+* Set to a valid ISO Date in the future
+* Or left empty
+
+...will be started, at 06:00AM UTC.
+
+This means:
+* An instance with no `startDailyUntil` tag at all will not be started
+* An instance with a `startDailyUntil` tag set in the past will not be started
+* OTOH,
+  * an instance with an _empty_ `startDailyUntil` tag will be started
+  * (and an instance with a valid tag set in the future will be started)
 
 # Installation
 
