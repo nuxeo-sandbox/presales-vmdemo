@@ -4,8 +4,8 @@
 # You can tail -F /var/log/nuxeo_install.log to see basic install progress
 # You can tail -F /var/log/syslog to see the full startup and check for errors
 
-# If you are looking at env. variable set by the template nd used here,
-# see Nuxeo.template, "NuxeoInstance" > "userData" and its "Fn::Sub" property.
+# Environment variables are passed via the CloudFormation template at
+# Resources.NuxeoInstance.Properties.UserData["Fn::Base64"]["Fn::Sub"]
 
 source /etc/profile.d/load_env.sh
 
