@@ -3,15 +3,21 @@
 # Installation can take time.
 # You can tail -F /var/log/nuxeo_install.log to see basic install progress
 # You can tail -F /var/log/syslog to see the full startup and check for errors
+INSTALL_LOG="/var/log/nuxeo_install.log"
+INSTALL_LOG_PREFIX="NXP Install Script:"
+
+# In GCP the `startup-script` runs every time the instance starts; we only want
+# it to run the first time, so we set a "flag" to stop subsequent executions
+MARKER_FILE="/var/log/first-run-done"
+if [ -f "$MARKER_FILE" ]; then
+  exit 1
+fi
 
 # Instance Metadata
-
 STACK_ID=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/stack-name -H "Metadata-Flavor: Google")
 DNS_NAME=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/stack-name -H "Metadata-Flavor: Google")
 
 # Variables for installation
-INSTALL_LOG="/var/log/nuxeo_install.log"
-
 COMPOSE_REPO="https://github.com/nuxeo-sandbox/nuxeo-presales-docker"
 COMPOSE_DIR="/home/ubuntu/nuxeo-presales-docker"
 CONF_DIR="${COMPOSE_DIR}/conf"
@@ -34,7 +40,7 @@ TMP_DIR="/tmp/nuxeo"
 
 # Start of installation script
 
-echo "Nuxeo Presales Installation Script Starting [${STACK_ID}]" > ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Starting [${STACK_ID}]" > ${INSTALL_LOG}
 
 # set memory settings
 # https://opensearch.org/docs/1.3/install-and-configure/install-opensearch/index/#important-settings
@@ -62,15 +68,15 @@ hostname ${DNS_NAME}
 echo "Domains=gcp.cloud.nuxeo.com" >> /etc/systemd/resolved.conf
 
 # Install Nuxeo
-echo "Nuxeo Presales Installation Script: Install Nuxeo" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Install Nuxeo" | tee -a ${INSTALL_LOG}
 
 # Make directories and clone compose stack
 mkdir -p ${COMPOSE_DIR} ${NUXEO_DATA_DIR} ${NUXEO_LOG_DIR} ${TMP_DIR}
 git clone ${COMPOSE_REPO} ${COMPOSE_DIR}
 mkdir -p ${CONF_DIR}
-echo "Nuxeo Presales Installation Script: Install Nuxeo => DONE" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Install Nuxeo => DONE" | tee -a ${INSTALL_LOG}
 
-echo "Nuxeo Presales Installation Script: Configure Nuxeo" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Configure Nuxeo" | tee -a ${INSTALL_LOG}
 
 # Copy default conf.d files
 cp ${COMPOSE_DIR}/conf.d/* ${CONF_DIR}
@@ -208,12 +214,12 @@ if [ -n "${NX_STUDIO}" ]; then
   chown -R ubuntu:ubuntu ${HOME}/.docker
 
 fi
-echo "Nuxeo Presales Installation Script: Configure Nuxeo => DONE" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Configure Nuxeo => DONE" | tee -a ${INSTALL_LOG}
 
-echo "Nuxeo Presales Installation Script: Install Misc." | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Install Misc." | tee -a ${INSTALL_LOG}
 # Update some defaults
 update-alternatives --set editor /usr/bin/vim.basic
-echo "Nuxeo Presales Installation Script: Install Misc. => DONE" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Install Misc. => DONE" | tee -a ${INSTALL_LOG}
 
 # Configure reverse-proxy
 cat << EOF > /etc/apache2/sites-available/nuxeo.conf
@@ -313,10 +319,10 @@ echo "Restarting Apache"
 systemctl restart apache2
 
 # Enable SSL certs
-echo "Nuxeo Presales Installation Script: Enable Certbot Certificate" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Enable Certbot Certificate" | tee -a ${INSTALL_LOG}
 certbot -q --apache --redirect --hsts --uir --agree-tos -m wwpresalesdemos@hyland.com -d ${FQDN} | tee -a ${INSTALL_LOG}
 
-echo "Nuxeo Presales Installation Script: Setup profile, ubuntu, etc." | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Setup profile, ubuntu, etc." | tee -a ${INSTALL_LOG}
 
 #set up ubuntu user
 cat << EOF >> /home/ubuntu/.profile
@@ -348,7 +354,10 @@ cat << EOF > /home/ubuntu/.vimrc
 " 'filetype' has not already been set
 au BufRead,BufNewFile *.conf setfiletype conf
 EOF
-echo "Nuxeo Presales Installation Script: Setup profile, ubuntu, etc. => DONE" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Setup profile, ubuntu, etc. => DONE" | tee -a ${INSTALL_LOG}
 
-echo "Nuxeo Presales Installation Script Complete" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Complete" | tee -a ${INSTALL_LOG}
+
+# Set a flag so we know the script already ran.
+touch "$MARKER_FILE"
 
