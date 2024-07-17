@@ -30,3 +30,6 @@ target
 dependency-tree.log
 build.properties
 node_modules
+.terraform
+.terraform.lock.hcl
+terraform.tfstate
