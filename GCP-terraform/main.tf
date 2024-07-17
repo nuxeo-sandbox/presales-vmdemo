@@ -1,13 +1,18 @@
 # Create a VM instance from the nuxeo image
 
-# [START compute_instances_create]
-resource "google_compute_instance" "nuxeo-instance" {
+variable "stack_name" {
+  type        = string
+  description = "The name of the demo stack"
+}
+
+resource "google_compute_instance" "nuxeoinstance" {
   project      = "nuxeo-presales-apis"
-  name         = "my-demo-instance"
+  name         = "${var.stack_name}-instance"
   machine_type = "e2-standard-2"
   zone         = "us-central1-a"
   metadata = {
     enable-oslogin : "TRUE"
+    stack-name : var.stack_name
   }
 
   boot_disk {
@@ -21,4 +26,3 @@ resource "google_compute_instance" "nuxeo-instance" {
     access_config {}
   }
 }
-# [END compute_instances_create]
