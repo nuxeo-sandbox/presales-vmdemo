@@ -2,23 +2,30 @@
 
 [terraform](https://developer.hashicorp.com/terraform) template to automate the creation of a Nuxeo demo instance on GCP
 
-# How to build
+# How to init
 
 [install terraform](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/install-cli)
 
 For Hyland team members, use `gcloud auth application-default login` to set/refresh the GCP credentials on your computer
 
-```
+```bash
 git clone https://github.com/nuxeo-sandbox/presales-vmdemo
 cd GCP-terraform
 terraform init
+```
+
+# How to deploy a stack
+
+```bash
+terraform workspace new <stack_name>
 terraform plan -var="stack_name=<my stack name>" -var="nx_studio=<my studio project>"
 terraform apply -var="stack_name=<my stack name>" -var="nx_studio=<my studio project>"
 ```
 
 # How to destroy resources
 
-```
+```bash
+terraform workspace select <stack_name>
 terraform apply -var="stack_name=<my stack name>" -var="nx_studio=<my studio project>" --destroy
 ```
 
