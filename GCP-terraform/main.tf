@@ -5,6 +5,11 @@ variable "stack_name" {
   description = "The name of the demo stack"
 }
 
+variable "nx_studio" {
+  type        = string
+  description = "The nuxeo studio project to deploy"
+}
+
 resource "google_compute_instance" "nuxeo_instance" {
   project      = "nuxeo-presales-apis"
   name         = var.stack_name
@@ -27,6 +32,8 @@ resource "google_compute_instance" "nuxeo_instance" {
   metadata = {
     enable-oslogin : "TRUE"
     stack-name : var.stack_name
+    nx-studio: var.nx_studio
+    auto-start: "true"
     startup-script: file("./NuxeoInit.sh")
   }
   tags = ["http-server","https-server"]

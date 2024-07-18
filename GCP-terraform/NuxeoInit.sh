@@ -16,6 +16,8 @@ fi
 # Instance Metadata
 STACK_ID=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/stack-name -H "Metadata-Flavor: Google")
 DNS_NAME=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/stack-name -H "Metadata-Flavor: Google")
+NX_STUDIO=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nx-studio -H "Metadata-Flavor: Google")
+AUTO_START=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/auto-start -H "Metadata-Flavor: Google")
 
 # Variables for installation
 COMPOSE_REPO="https://github.com/nuxeo-sandbox/nuxeo-presales-docker"
@@ -121,6 +123,7 @@ mail.transport.ssl.protocol=TLSv1.2
 nuxeo.notification.eMailSubjectPrefix=[Nuxeo]
 
 # BLOB Configuration
+nuxeo.gcp.credentials=/opt/nuxeo/google-credential.json
 nuxeo.gcp.storage.bucket=${BUCKET}
 nuxeo.gcp.storage.bucket_prefix=${BUCKET_PREFIX}
 nuxeo.gcp.project=nuxeo-presales-apis
@@ -141,6 +144,11 @@ export HOME="/home/ubuntu"
 
 # Get credentials for Studio & Repository
 gcloud secrets versions access latest --secret nuxeo-presales-connect --project nuxeo-presales-apis > /root/creds.json
+
+# Get gcloud credentials for nuxeo
+gcloud secrets versions access latest --secret instance-credentials --project nuxeo-presales-apis > ${COMPOSE_DIR}/google-credential.json
+chmod 664 ${COMPOSE_DIR}/google-credential.json
+sed -i '/google-credential.json/s/^#//g' ${COMPOSE_DIR}/build_nuxeo/Dockerfile
 
 # Log in to docker
 DOCKER_USER=$(jq -r '.docker_presales_user' < /root/creds.json)

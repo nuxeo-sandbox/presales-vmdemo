@@ -12,14 +12,14 @@ For Hyland team members, use `gcloud auth application-default login` to set/refr
 git clone https://github.com/nuxeo-sandbox/presales-vmdemo
 cd GCP-terraform
 terraform init 
-terraform plan -var="stack_name=<my stack name>"
-terraform apply -var="stack_name=<my stack name>"
+terraform plan -var="stack_name=<my stack name>" -var="nx_studio=<my studio project>"
+terraform apply -var="stack_name=<my stack name>" -var="nx_studio=<my studio project>"
 ```
 
 ## how to destroy resources
 
 ```
-terraform apply -var="stack_name=<my stack name>" --destroy
+terraform apply -var="stack_name=<my stack name>" -var="nx_studio=<my studio project>" --destroy
 ```
 
 ## About Nuxeo
