@@ -7,7 +7,7 @@ variable "stack_name" {
 
 resource "google_compute_instance" "nuxeo_instance" {
   project      = "nuxeo-presales-apis"
-  name         = "${var.stack_name}-instance"
+  name         = var.stack_name
   machine_type = "e2-standard-2"
   zone         = "us-central1-a"
   service_account {
