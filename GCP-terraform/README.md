@@ -1,6 +1,6 @@
 # Description
 
-[terraform](https://developer.hashicorp.com/packer) template to automate the creation of a Nuxeo demo instance on GCP
+[terraform](https://developer.hashicorp.com/terraform) template to automate the creation of a Nuxeo demo instance on GCP
 
 # How to build
 
