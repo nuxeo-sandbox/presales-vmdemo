@@ -41,3 +41,12 @@ resource "google_compute_instance" "nuxeo_instance" {
     access_config {}
   }
 }
+
+resource "google_dns_record_set" "nuxeo_instance_dns_record" {
+  project      = "nuxeo-presales-apis"
+  managed_zone = "gcp"
+  name         = "${var.stack_name}.gcp.cloud.nuxeo.com."
+  type         = "A"
+  rrdatas      = ["${google_compute_instance.nuxeo_instance.network_interface.0.access_config.0.nat_ip}"]
+  ttl          = 300
+}
