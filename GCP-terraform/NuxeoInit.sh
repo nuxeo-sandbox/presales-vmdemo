@@ -84,7 +84,7 @@ echo "${INSTALL_LOG_PREFIX} Configure Nuxeo" | tee -a ${INSTALL_LOG}
 cp ${COMPOSE_DIR}/conf.d/* ${CONF_DIR}
 
 BUCKET="nuxeo-demo-shared-bucket-us"
-BUCKET_PREFIX="/${STACK_ID}/"
+BUCKET_PREFIX="${STACK_ID}/"
 
 # Make sure we always have a UI installed
 AUTO_PACKAGES="nuxeo-web-ui google-storage platform-explorer"
