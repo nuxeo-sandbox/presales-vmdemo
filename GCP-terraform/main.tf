@@ -29,6 +29,7 @@ resource "google_compute_instance" "nuxeo_instance" {
     stack-name : var.stack_name
     startup-script: file("./NuxeoInit.sh")
   }
+  tags = ["http-server","https-server"]
 
   boot_disk {
     initialize_params {
