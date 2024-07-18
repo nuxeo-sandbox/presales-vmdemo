@@ -85,7 +85,7 @@ BUCKET="nuxeo-demo-shared-bucket-us"
 BUCKET_PREFIX="/${STACK_ID}/"
 
 # Make sure we always have a UI installed
-AUTO_PACKAGES="nuxeo-web-ui gcp-storage platform-explorer"
+AUTO_PACKAGES="nuxeo-web-ui google-storage platform-explorer"
 
 # Write system configuration
 
