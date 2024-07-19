@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket  = "nuxeo-demo-shared-bucket-us"
+    bucket  = "nuxeo-stacks-terraform-state-backend"
     prefix  = "terraform/state"
   }
 }
