@@ -2,7 +2,7 @@
 
 [terraform](https://developer.hashicorp.com/terraform) template to automate the creation of a Nuxeo demo instance on GCP
 
-# How to init
+# How to init your environment
 
 [install terraform](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/install-cli)
 
@@ -18,11 +18,12 @@ terraform init
 
 ```bash
 terraform workspace new <stack_name>
-terraform plan -var="stack_name=<my stack name>" -var="nx_studio=<my studio project>"
 terraform apply -var="stack_name=<my stack name>" -var="nx_studio=<my studio project>"
 ```
 
 # How to destroy resources
+
+run `terraform workspace list` to find the stack name.
 
 ```bash
 terraform workspace select <stack_name>
