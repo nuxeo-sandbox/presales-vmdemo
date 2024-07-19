@@ -18,7 +18,7 @@ terraform init
 
 ```bash
 terraform workspace new <stack_name>
-terraform apply -var="stack_name=<my stack name>" -var="nx_studio=<my studio project>"
+terraform apply -var="stack_name=<my stack name>" -var="nx_studio=<my studio project>" -var="with_nev=false"
 ```
 
 # How to destroy resources
@@ -27,7 +27,7 @@ run `terraform workspace list` to find the stack name.
 
 ```bash
 terraform workspace select <stack_name>
-terraform apply -var="stack_name=<my stack name>" -var="nx_studio=<my studio project>" --destroy
+terraform apply -var="stack_name=<my stack name>" -var="nx_studio=<my studio project>" -var="with_nev=false" --destroy
 ```
 
 # About Nuxeo
