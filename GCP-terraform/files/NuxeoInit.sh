@@ -18,6 +18,9 @@ STACK_ID=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attr
 DNS_NAME=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/stack-name -H "Metadata-Flavor: Google")
 NX_STUDIO=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nx-studio -H "Metadata-Flavor: Google")
 AUTO_START=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/auto-start -H "Metadata-Flavor: Google")
+NUXEO_SECRET=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nuxeo-secret -H "Metadata-Flavor: Google")
+MAKE_NEV=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/with-nev -H "Metadata-Flavor: Google")
+
 
 # Variables for installation
 COMPOSE_REPO="https://github.com/nuxeo-sandbox/nuxeo-presales-docker"
@@ -89,6 +92,11 @@ BUCKET_PREFIX="${STACK_ID}/"
 # Make sure we always have a UI installed
 AUTO_PACKAGES="nuxeo-web-ui google-storage platform-explorer"
 
+if [[ ${MAKE_NEV} == "true" ]]
+then
+   AUTO_PACKAGES="${AUTO_PACKAGES} nuxeo-arender"
+fi
+
 # Write system configuration
 
 # This is required for WOPI
@@ -135,6 +143,30 @@ nuxeo.wopi.baseURL=https://wopi.nuxeocloud.com/${FQDN}/nuxeo/
 nuxeo.jwt.secret=${JWT_SECRET}
 
 EOF
+
+if [[ ${MAKE_NEV} == "true" ]]
+then
+  cat << EOF > ${CONF_DIR}/arender.conf
+# ARender Configuration
+arender.server.previewer.host=https://${DNS_NAME}-nev.gcp.cloud.nuxeo.com
+nuxeo.arender.oauth2.client.create=true
+nuxeo.arender.oauth2.client.id=arender
+nuxeo.arender.oauth2.client.secret=${NUXEO_SECRET}
+nuxeo.arender.oauth2.client.redirectURI=/login/oauth2/code/nuxeo
+
+EOF
+else
+  cat << EOF >> ${CONF_DIR}/system.conf
+# ARender Configuration
+# arender.server.previewer.host=https://arender-my-super-demo-nev.gcp.cloud.nuxeo.com
+# nuxeo.arender.oauth2.client.create=true
+# nuxeo.arender.oauth2.client.id=arender
+# nuxeo.arender.oauth2.client.secret=<auto-created, but it must match what you entered above>
+# nuxeo.arender.oauth2.client.redirectURI=/login/oauth2/code/nuxeo
+
+EOF
+fi
+
 
 # Register the nuxeo instance
 echo "$(date) Configure Studio Project [${NX_STUDIO}]" | tee -a ${INSTALL_LOG}

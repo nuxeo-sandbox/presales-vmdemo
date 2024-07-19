@@ -1,31 +1,19 @@
-# Create a VM instance from the nuxeo image
-
 variable "stack_name" {
   type        = string
-  description = "The name of the demo stack"
+  description = "The name of the nev demo stack"
 }
 
-variable "nx_studio" {
+variable "nuxeo_url" {
   type        = string
-  description = "The nuxeo studio project to deploy"
+  description = "The url of the nuxeo application"
 }
 
-variable "with_nev" {
-  type        = bool
-  description = "Deploy Nuxeo Enhanced Viewer as part of the stack"
-  default = false
+variable "nuxeo_secret" {
+  type        = string
+  description = "The shared secret between nuxeo and nev"
 }
 
-# Nuxeo Instance resources
-
-resource "random_password" "nuxeo_secret" {
-  length           = 32
-  special          = true
-  override_special = "!#$%&*()-_=+[]{}<>:?"
-}
-
-
-resource "google_compute_instance" "nuxeo_instance" {
+resource "google_compute_instance" "nev_instance" {
   project      = "nuxeo-presales-apis"
   name         = var.stack_name
   machine_type = "e2-standard-2"
@@ -47,11 +35,10 @@ resource "google_compute_instance" "nuxeo_instance" {
   metadata = {
     enable-oslogin : "TRUE"
     stack-name : var.stack_name
-    nx-studio: var.nx_studio
-    with-nev: var.with_nev
-    nuxeo-secret: random_password.nuxeo_secret.result
     auto-start: "true"
-    startup-script: file("./files/NuxeoInit.sh")
+    startup-script: file("./files/NevInit.sh")
+    nuxeo-url: var.nuxeo_url
+    nuxeo-secret: var.nuxeo_secret
   }
   tags = ["http-server","https-server"]
 
@@ -67,20 +54,11 @@ resource "google_compute_instance" "nuxeo_instance" {
   }
 }
 
-resource "google_dns_record_set" "nuxeo_instance_dns_record" {
+resource "google_dns_record_set" "nev_instance_dns_record" {
   project      = "nuxeo-presales-apis"
   managed_zone = "gcp"
   name         = "${var.stack_name}.gcp.cloud.nuxeo.com."
   type         = "A"
-  rrdatas      = ["${google_compute_instance.nuxeo_instance.network_interface.0.access_config.0.nat_ip}"]
+  rrdatas      = ["${google_compute_instance.nev_instance.network_interface.0.access_config.0.nat_ip}"]
   ttl          = 300
-}
-
-# Nuxeo Enhanced Viewer Resources
-module "nev" {
-  count = var.with_nev ? 1 : 0
-  source = "./modules/nev"
-  stack_name = "${var.stack_name}-nev"
-  nuxeo_url = "https://${var.stack_name}.gcp.cloud.nuxeo.com"
-  nuxeo_secret= random_password.nuxeo_secret.result
 }
