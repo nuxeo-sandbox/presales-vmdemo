@@ -15,13 +15,11 @@ fi
 
 # Instance Metadata
 STACK_ID=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/stack-name -H "Metadata-Flavor: Google")
-DNS_NAME=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/stack-name -H "Metadata-Flavor: Google")
 DNS_NAME=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/dns-name -H "Metadata-Flavor: Google")
 NX_STUDIO=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nx-studio -H "Metadata-Flavor: Google")
 AUTO_START=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/auto-start -H "Metadata-Flavor: Google")
 NUXEO_SECRET=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nuxeo-secret -H "Metadata-Flavor: Google")
 MAKE_NEV=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/with-nev -H "Metadata-Flavor: Google")
-
 
 # Variables for installation
 COMPOSE_REPO="https://github.com/nuxeo-sandbox/nuxeo-presales-docker"
@@ -44,8 +42,7 @@ LTS_IMAGE="docker-private.packages.nuxeo.com/nuxeo/nuxeo:2023"
 
 TMP_DIR="/tmp/nuxeo"
 
-# Start of installation script
-
+# Start of installation steps
 echo "${INSTALL_LOG_PREFIX} Starting [${STACK_ID}]" > ${INSTALL_LOG}
 
 # set memory settings

@@ -3,6 +3,8 @@
 # Installation can take time.
 # You can tail -F /var/log/nev_install.log to see basic install progress
 # You can tail -F /var/log/syslog to see the full startup and check for errors
+INSTALL_LOG="/var/log/nev_install.log"
+INSTALL_LOG_PREFIX="NXP Install Script:"
 
 # In GCP the `startup-script` runs every time the instance starts; we only want
 # it to run the first time, so we set a "flag" to stop subsequent executions
@@ -11,18 +13,12 @@ if [ -f "$MARKER_FILE" ]; then
   exit 1
 fi
 
-INSTALL_LOG="/var/log/nev_install.log"
-
-# Start of installation script
 # Instance Metadata
 STACK_ID=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/stack-name -H "Metadata-Flavor: Google")
 DNS_NAME=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/dns-name -H "Metadata-Flavor: Google")
 AUTO_START=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/auto-start -H "Metadata-Flavor: Google")
 NUXEO_SECRET=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nuxeo-secret -H "Metadata-Flavor: Google")
 NUXEO_URL=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nuxeo-url -H "Metadata-Flavor: Google")
-NEV_VERSION="2.3.1"
-
-echo "Nuxeo Presales Installation Script (NPIS): Starting [${STACK_ID}]" > ${INSTALL_LOG}
 NEV_VERSION=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nev-version -H "Metadata-Flavor: Google")
 
 # Variables for installation
@@ -34,11 +30,14 @@ NEV_ENV="${COMPOSE_DIR}/.env"
 # Check DNS Name
 if [ -z "${DNS_NAME}" ]; then
   DNS_NAME=${STACK_ID}
-  echo "Warning: DNS Name is not set, using stack id: ${STACK_ID}" | tee -a ${INSTALL_LOG}
+  echo "WARNING: DNS Name is not set, using stack id: ${STACK_ID}" | tee -a ${INSTALL_LOG}
 fi
 
 # Fully qualified domain name
 FQDN="${DNS_NAME}.gcp.cloud.nuxeo.com"
+
+# Start of installation steps
+echo "${INSTALL_LOG_PREFIX} Starting [${STACK_ID}]" > ${INSTALL_LOG}
 
 # Set the hostname & domain
 echo "${DNS_NAME}" > /etc/hostname
@@ -46,14 +45,14 @@ hostname ${DNS_NAME}
 echo "Domains=gcp.cloud.nuxeo.com" >> /etc/systemd/resolved.conf
 
 #== Install NEV Tooling ========================================================
-echo "NPIS: Install NEV Tooling" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Install NEV Tooling" | tee -a ${INSTALL_LOG}
 
 # Make directories and clone compose stack
 mkdir -p ${COMPOSE_DIR}
 git clone ${COMPOSE_REPO} ${COMPOSE_DIR}
 
 #== Install NEV ================================================================
-echo "NPIS: Install NEV" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Install NEV" | tee -a ${INSTALL_LOG}
 
 # Home required by 'docker'
 export HOME="/home/ubuntu"
@@ -89,20 +88,20 @@ chown -R ubuntu:ubuntu ${COMPOSE_DIR} ${HOME}/.docker
 cd ${COMPOSE_DIR}
 
 #  Pull images
-echo "NPIS: Pulling images..." | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Pulling images..." | tee -a ${INSTALL_LOG}
 docker compose --ansi never pull | tee -a ${INSTALL_LOG}
 
 if [[ "${AUTO_START}" == "true" ]]; then
-  echo "NPIS: Start NEV..." | tee -a ${INSTALL_LOG}
+  echo "${INSTALL_LOG_PREFIX} Start NEV..." | tee -a ${INSTALL_LOG}
   docker compose --ansi never up --detach --no-color 2>&1 | tee -a ${INSTALL_LOG}
 fi
 
-echo "NPIS: Install Misc." | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Install Misc." | tee -a ${INSTALL_LOG}
 # Update some defaults
 update-alternatives --set editor /usr/bin/vim.basic
 
 # Configure reverse-proxy
-echo "NPIS: Configure reverse-proxy" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Configure reverse-proxy" | tee -a ${INSTALL_LOG}
 
 cat << EOF > /etc/apache2/sites-available/nev.conf
 <VirtualHost _default_:80>
@@ -145,10 +144,10 @@ a2ensite nev
 apache2ctl -k graceful
 
 # Enable SSL certs
-echo "NPIS: Enable Certbot Certificate" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Enable Certbot Certificate" | tee -a ${INSTALL_LOG}
 certbot --apache --redirect --hsts --uir --agree-tos -m wwpresalesdemos@hyland.com -d ${FQDN} | tee -a ${INSTALL_LOG}
 
-echo "NPIS: Setup profile, ubuntu, etc." | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Setup profile, ubuntu, etc." | tee -a ${INSTALL_LOG}
 
 #set up ubuntu user
 cat << EOF >> /home/ubuntu/.profile
@@ -176,7 +175,7 @@ cat << EOF > /home/ubuntu/.vimrc
 au BufRead,BufNewFile *.conf setfiletype conf
 EOF
 
-echo "NPIS: Complete" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Complete" | tee -a ${INSTALL_LOG}
 
 # Set a flag so we know the script already ran.
 touch "$MARKER_FILE"
