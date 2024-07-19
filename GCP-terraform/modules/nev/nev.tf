@@ -4,9 +4,9 @@ variable "stack_name" {
 }
 
 variable "dns_name" {
-  type = string
+  type        = string
   description = "DNS name (i.e. dns_name.gcp.cloud.nuxeo.com)."
-  default = ""
+  default     = ""
 }
 
 # DNS name defaults to stack_name if nothing is set
@@ -15,9 +15,9 @@ locals {
 }
 
 variable "nev_version" {
-  type = string
+  type        = string
   description = "Version of NEV to deploy."
-  default = "2.3.1"
+  default     = "2.3.1"
 }
 
 variable "nuxeo_url" {
