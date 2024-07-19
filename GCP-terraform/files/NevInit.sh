@@ -23,6 +23,7 @@ NUXEO_URL=$(curl http://metadata.google.internal/computeMetadata/v1/instance/att
 NEV_VERSION="2.3.1"
 
 echo "Nuxeo Presales Installation Script (NPIS): Starting [${STACK_ID}]" > ${INSTALL_LOG}
+NEV_VERSION=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nev-version -H "Metadata-Flavor: Google")
 
 # Variables for installation
 COMPOSE_REPO="https://github.com/nuxeo-sandbox/nuxeo-presales-nev"
