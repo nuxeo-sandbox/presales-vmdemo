@@ -16,6 +16,7 @@ fi
 # Instance Metadata
 STACK_ID=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/stack-name -H "Metadata-Flavor: Google")
 DNS_NAME=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/stack-name -H "Metadata-Flavor: Google")
+DNS_NAME=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/dns-name -H "Metadata-Flavor: Google")
 NX_STUDIO=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nx-studio -H "Metadata-Flavor: Google")
 AUTO_START=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/auto-start -H "Metadata-Flavor: Google")
 NUXEO_SECRET=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nuxeo-secret -H "Metadata-Flavor: Google")

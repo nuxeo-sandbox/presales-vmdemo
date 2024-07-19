@@ -16,6 +16,7 @@ INSTALL_LOG="/var/log/nev_install.log"
 # Start of installation script
 # Instance Metadata
 STACK_ID=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/stack-name -H "Metadata-Flavor: Google")
+DNS_NAME=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/dns-name -H "Metadata-Flavor: Google")
 AUTO_START=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/auto-start -H "Metadata-Flavor: Google")
 NUXEO_SECRET=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nuxeo-secret -H "Metadata-Flavor: Google")
 NUXEO_URL=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nuxeo-url -H "Metadata-Flavor: Google")
