@@ -34,3 +34,4 @@ node_modules
 .terraform.lock.hcl
 terraform.tfstate
 GCP-terraform/terraform.tfstate.backup
+Local

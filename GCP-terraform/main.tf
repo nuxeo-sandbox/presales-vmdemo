@@ -2,18 +2,18 @@
 
 variable "stack_name" {
   type        = string
-  description = "The name of the demo stack"
+  description = "Stack name (used for Compute Instance Name and DNS if not set)"
 }
 
 variable "nx_studio" {
   type        = string
-  description = "The nuxeo studio project to deploy"
+  description = "Nuxeo Studio Poject ID"
 }
 
 variable "with_nev" {
   type        = bool
-  description = "Deploy Nuxeo Enhanced Viewer as part of the stack"
-  default = false
+  description = "Deploy NEV? [true|false]"
+  default     = false
 }
 
 # Nuxeo Instance resources
