@@ -175,3 +175,7 @@ au BufRead,BufNewFile *.conf setfiletype conf
 EOF
 
 echo "NPIS: Complete" | tee -a ${INSTALL_LOG}
+
+# Set a flag so we know the script already ran.
+touch "$MARKER_FILE"
+
