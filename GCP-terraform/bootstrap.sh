@@ -115,6 +115,7 @@ then
   echo "NEV version:     ${NEV_VERSION}"
 fi
 echo "Workspace name:  ${WORKSPACE_NAME}"
+echo
 
 # ==============================================================================
 # Do the things
