@@ -7,8 +7,8 @@ functions.http('handlerHttp', async (req, res) => {
 
   const payload = req.body.protoPayload;
 
-  if (payload.serviceName !== 'compute.googleapis.com' || payload.methodName !== 'v1.compute.instances.stop') {
-    return res.send(`Skipped!`);
+  if (payload.serviceName !== 'compute.googleapis.com' || payload.methodName !== 'v1.compute.instances.start') {
+    return res.send(`Wrong event, Skipped!`);
   }
 
   const resource = req.body.resource;
@@ -26,17 +26,18 @@ functions.http('handlerHttp', async (req, res) => {
     zone: zoneId
   });
 
-  //console.log('Instances found:');
-  //console.log(response);
-
   if (response.length < 0) {
-    return res.send(`No instance!`);
+    return res.send(`No instance Found for ${instance_id}!`);
   }
 
   const instance = response[0];
 
-  if (instance.status !== "TERMINATED") {
-    console.log(`The instance ${instanceId} is not down: ${instance.status}`)
+  //console.log(instance);
+
+  const externalIp = instance.networkInterfaces[0].accessConfigs[0].natIP;
+
+  if (instance.status !== "RUNNING") {
+    console.log(`The instance ${instanceId} is not up: ${instance.status}`)
     return res.send(`Skipped!`);
   }
 
@@ -49,20 +50,20 @@ functions.http('handlerHttp', async (req, res) => {
   const dnsZone = dns.zone('gcp');
 
   // get record
-  const records = await dnsZone.getRecords({
+  /*const records = await dnsZone.getRecords({
     name: `${dnsname}.gcp.cloud.nuxeo.com.`,
     type: 'A'
   })
 
-  console.log(records[0][0].data);
+  console.log(records[0][0].data);*/
 
-  const recordDeletePayload = dnsZone.record('a', { name: `${dnsname}.gcp.cloud.nuxeo.com.`, data: records[0][0].data[0], ttl: 300 });
+  const recordPayload = dnsZone.record('a', { name: `${dnsname}.gcp.cloud.nuxeo.com.`, data: externalIp, ttl: 300 });
 
-  console.log(recordDeletePayload);
+  //console.log(recordPayload);
 
-  const deleteRecordResponse = await dnsZone.deleteRecords(recordDeletePayload);
+  const addRecordResponse = await dnsZone.addRecords(recordPayload);
 
-  console.log(response);
+  //console.log(response);
 
   return res.send(`Done!`);
 });
