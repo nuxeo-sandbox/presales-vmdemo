@@ -46,24 +46,26 @@ async function listInstancesToStop(projectId, zoneName) {
 
   const instancesClient = new compute.InstancesClient();
 
-  // Create the request to list instances with the specified label
+  // Create the request to list running instances
   const request = {
     project: projectId,
     zone: zoneName,
-    filter: "labels." + KEEP_ALIVE_TAG + "=* AND status = RUNNING"
+    filter: "status = RUNNING"
   };
   //console.log(JSON.stringify(request, null, 2));
 
   // Use the listAsync method to list instances
   const foundInstances = instancesClient.listAsync(request);
 
-  let instancesToStop = [];
   // Iterate over the iterable object to get the instances
+  let instancesToStop = [];
   for await (const instance of foundInstances) {
     //console.log(`Instance name: ${instance.name}`);
     let tag = "" + instance.labels[KEEP_ALIVE_TAG];
-    console.log(`${instance.name}, ${KEEP_ALIVE_TAG}: ${instance.labels[KEEP_ALIVE_TAG]}`)
-    if(tag) {// Should not happen that the tag is empty or null, we did filter above, but well.
+    //console.log(`${instance.name}, ${KEEP_ALIVE_TAG}: ${instance.labels[KEEP_ALIVE_TAG]}`)
+    if(!tag) {
+      instancesToStop.push(instance.name);
+    } else {
       // If this is a date, check to see if it is in the past
       // We compare strings to avoid issues with time.
       if (/([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))/.test(tag)) {
