@@ -89,7 +89,7 @@ if ${nx_use_nev}
 then
   # Default is 2.3.1
   NEV_DEFAULT=2.3.1
-  NEV_VERSION="${NEV_VERSION:-}"
+  NEV_VERSION="${NX_NEV_VERSION:-}"
   if [ -z "${NEV_VERSION}" ]
   then
     read -p "NEV Version: [${NEV_DEFAULT}]: " NEV_VERSION
