@@ -1,6 +1,6 @@
 # Description
 
-A GCP cloud function to automatically add DNS records when an compute instance goes online
+A GCP cloud function to automatically remove DNS records when an compute instance goes offline
 
 # Installation
 
@@ -12,7 +12,7 @@ Install tooling:
 
 ```bash
 git clone -b gcp https://github.com/nuxeo-sandbox/presales-vmdemo
-cd presales-vmdemo/GCP-functions/add-dns-record-compute-engine-instance
+cd presales-vmdemo/GCP-functions/remove-dns-record-compute-engine-instance
 terraform init
 terraform apply
 ```
@@ -34,7 +34,7 @@ npm-watch start
 
 The local server supports hotreload when modifications are made to the function source.
 
-To test the function, send an http request to the local npm server with the test payload
+To test the function, send a http request to the local npm server with the test payload
 
 ```bash
 curl localhost:8080 \
@@ -44,7 +44,7 @@ curl localhost:8080 \
  -d '{
     "protoPayload": {
       "serviceName": "compute.googleapis.com",
-      "methodName": "v1.compute.instances.start"
+      "methodName": "v1.compute.instances.stop"
     },
     "resource": {
      "type": "gce_instance",
@@ -68,10 +68,10 @@ terraform apply
 Once deployed, a function run can be triggered manually
 
 ```bash
-gcloud functions call add-dns-record-gce --data '{
+gcloud functions call remove-dns-record-gce --data '{
     "protoPayload": {
       "serviceName": "compute.googleapis.com",
-      "methodName": "v1.compute.instances.start"
+      "methodName": "v1.compute.instances.stop"
     },
     "resource": {
      "type": "gce_instance",
@@ -87,7 +87,7 @@ gcloud functions call add-dns-record-gce --data '{
 The function run logs can be accessed with 
 
 ```bash
-gcloud functions logs read add-dns-record-gce --gen2
+gcloud functions logs read remove-dns-record-gce --gen2
 ```
 
 # About Nuxeo

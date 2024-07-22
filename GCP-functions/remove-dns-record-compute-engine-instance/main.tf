@@ -13,7 +13,7 @@ variable "function_name" {
 }
 
 
-data "archive_file" "default" {
+data "archive_file" "zip" {
   type        = "zip"
   output_path = "/tmp/function-source.zip"
   source {
@@ -27,10 +27,11 @@ data "archive_file" "default" {
 }
 
 resource "google_storage_bucket_object" "object" {
-  name   = "${var.function_name}/function-source.zip"
-  bucket = "gcf-v2-sources-1007087250969-us-central1"
-  source = data.archive_file.default.output_path # Add path to the zipped function source code
+  name   = "${var.function_name}/source-${data.archive_file.zip.output_md5}.zip"
+  bucket = "gcf-v2-uploads-1007087250969-us-central1"
+  source = data.archive_file.zip.output_path # Add path to the zipped function source code
 }
+
 
 resource "google_service_account" "service_account" {
   project      = "nuxeo-presales-apis"
@@ -67,7 +68,7 @@ resource "google_cloudfunctions2_function" "default" {
     entry_point = "handlerHttp" # Set the entry point
     source {
       storage_source {
-        bucket = "gcf-v2-sources-1007087250969-us-central1"
+        bucket = google_storage_bucket_object.object.bucket
         object = google_storage_bucket_object.object.name
       }
     }

@@ -1,6 +1,6 @@
 # Description
 
-A GCP cloud function to automatically add DNS records when an compute instance goes online
+A GCP cloud function to automatically shutdown instances using a [GCP Cloud Scheduler](https://console.cloud.google.com/cloudscheduler)
 
 # Installation
 
@@ -12,7 +12,7 @@ Install tooling:
 
 ```bash
 git clone -b gcp https://github.com/nuxeo-sandbox/presales-vmdemo
-cd presales-vmdemo/GCP-functions/add-dns-record-compute-engine-instance
+cd presales-vmdemo/GCP-functions/scheduled-shutdown-compute-engine-instance
 terraform init
 terraform apply
 ```
@@ -34,27 +34,15 @@ npm-watch start
 
 The local server supports hotreload when modifications are made to the function source.
 
-To test the function, send an http request to the local npm server with the test payload
+To test the function, send a http request to the local npm server with the test payload
 
 ```bash
 curl localhost:8080 \
  -X POST \
  -H "Content-Type: application/json" \
- -H "ce-type: google.cloud.pubsub.topic.v1.messagePublished" \
  -d '{
-    "protoPayload": {
-      "serviceName": "compute.googleapis.com",
-      "methodName": "v1.compute.instances.start"
-    },
-    "resource": {
-     "type": "gce_instance",
-     "labels":{
-      "instance_id": "22880703951",
-      "zone": "us-central1-a",
-      "project_id": "nuxeo-presales-apis"
-     }
-    }
-  }'
+      "jobName":"daily-gce-instance-shutdown"
+    }'
 ```
 
 ## Deploy changes 
@@ -68,26 +56,15 @@ terraform apply
 Once deployed, a function run can be triggered manually
 
 ```bash
-gcloud functions call add-dns-record-gce --data '{
-    "protoPayload": {
-      "serviceName": "compute.googleapis.com",
-      "methodName": "v1.compute.instances.start"
-    },
-    "resource": {
-     "type": "gce_instance",
-     "labels": {
-      "instance_id": "228807926809951",
-      "zone": "us-central1-a",
-      "project_id": "nuxeo-presales-apis"
-     }
-    }
-  }'
+gcloud functions call scheduled-shutdown-gce --data '{
+    "jobName":"daily-gce-instance-shutdown"
+}'
 ```
 
 The function run logs can be accessed with 
 
 ```bash
-gcloud functions logs read add-dns-record-gce --gen2
+gcloud functions logs read scheduled-shutdown-gce --gen2
 ```
 
 # About Nuxeo
