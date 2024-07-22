@@ -61,6 +61,12 @@ gcloud functions call scheduled-shutdown-gce --data '{
 }'
 ```
 
+The scheduler can also be triggered to test the end-to-end feature
+
+```bash
+gcloud scheduler jobs run daily-gce-instance-shutdown  --location=us-central1
+```
+
 The function run logs can be accessed with 
 
 ```bash
