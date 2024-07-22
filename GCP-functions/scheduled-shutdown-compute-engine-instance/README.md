@@ -29,6 +29,7 @@ Start the npm server
 
 ```bash
 cd src
+npm install
 npm-watch start
 ```
 
