@@ -10,6 +10,9 @@ For Hyland team members, use `gcloud auth application-default login` to set/refr
 
 Install tooling:
 
+> [!IMPORTANT]
+> When ready to merge with master, remove the branch info
+
 ```bash
 git clone -b gcp https://github.com/nuxeo-sandbox/presales-vmdemo
 cd presales-vmdemo/GCP-terraform
@@ -18,7 +21,9 @@ terraform init
 
 # Create Resources
 
-## Bootstrap
+You can use the bootstrap script to automate resource creation, or handle it manually using the Terraform CLI. Note that in either case we use [Workspaces](https://developer.hashicorp.com/terraform/language/state/workspaces) to separate our instances.
+
+## Bootstrap Script
 
 Use the included script to automate the setup:
 
@@ -31,6 +36,18 @@ You may supply param values via environment vars, e.g.:
 ```bash
 NX_STACK_NAME=my-stack NX_STUDIO_PROJECT=my-studio-project NX_USE_NEV=false NX_DNS_NAME=my-dns-name NX_NEV_VERSION=2023.2.1 ./bootstrap.sh
 ```
+
+Available variables:
+
+Var | Purpose | Default
+--- | --- | ---
+NX_STACK_NAME | Used for Compute Instance ID | n/a
+NX_DNS_NAME | URL e.g. "NX_DNS_NAME.gcp.cloud.nuxeo.com" | NX_STACK_NAME
+NX_STUDIO_PROJECT | Nuxeo Studio Project ID | n/a
+NX_AUTO_START | Start Nuxeo stack after instance creation | true
+NX_USE_NEV | Deploy NEV? | false
+NX_NEV_VERSION | Version of NEV to deploy | 2.3.1
+
 
 Don't forget to make the script executable if needed:
 
