@@ -81,7 +81,7 @@ resource "google_cloud_scheduler_job" "job" {
   region      = "us-central1"
   name        = "daily-gce-instance-shutdown"
   description = "test job"
-  schedule    = "0 9 * * *"
+  schedule    = "0 2 * * *"
 
   http_target {
     http_method = "POST"

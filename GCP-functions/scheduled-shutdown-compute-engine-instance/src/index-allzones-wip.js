@@ -25,13 +25,19 @@ functions.http('handlerHttp', async (req, res) => {
     return res.send(msg);
   }
 
-  // Stop instances for this zone
-  let instancesToStop = await listInstancesToStop(projectId, zone);
-  if(instancesToStop && instancesToStop.length) {
-    console.log(`instancesToStop in ${zone}: ${instancesToStop.length}.`);
-    await stopInstances(instancesToStop, projectId, zone)
+  const zoneNames = await listAllZones(projectId);
+  if (zoneNames.length > 0) {
+    for (const zoneName of zoneNames) {
+      console.log(`Checking instances in ${zoneName}...`);
+      let instancesToStop = await listInstancesWithLabel(projectId, zoneName);
+      console.log(`instancesToStop in ${zoneName}: ${instancesToStop.length}`);
+
+      // Stop the instances
+      await stopInstances(instancesToStop, projectId, zoneName);
+    }
   } else {
-    console.log(`No instance to stop in ${zone}`);
+    console.log('No zones found.');
+    return res.send('daily-gce-instance-shutdown: No zones found???');
   }
 
   const msg = `daily-gce-instance-shutdown: Done. Instance(s) stopped: ${countOfStopped}\n`;

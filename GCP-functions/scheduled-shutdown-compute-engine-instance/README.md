@@ -2,6 +2,16 @@
 
 A GCP cloud function to automatically shutdown instances using a [GCP Cloud Scheduler](https://console.cloud.google.com/cloudscheduler)
 
+The function stops all running instances in the zone passed in the request (see the "Test Locally" example below). It will keep alive only the instances having a `nuxeo-keep-alive` label which:
+
+* Is set to `true`
+* Or is an ISO date >= now (aka when the function runs)
+
+> [!WARNING]
+> Differences with AWS: We test a _label_, not a _tag_, and GCP does not allow camelcase for names, only lower case, etc. (so we have for now nuxeoKeepAlive on AWS and nuxeo-keep-alive on GCP)
+
+
+
 # Installation
 
 Install [terraform CLI](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/install-cli).
@@ -35,14 +45,16 @@ npm-watch start
 
 The local server supports hotreload when modifications are made to the function source.
 
-To test the function, send a http request to the local npm server with the test payload
+To test the function, send a http request to the local npm server with the required test payload
 
 ```bash
 curl localhost:8080 \
  -X POST \
  -H "Content-Type: application/json" \
  -d '{
-      "jobName":"daily-gce-instance-shutdown"
+      "jobName":"daily-gce-instance-shutdown",
+      "zone": "us-central1-a",
+      "projectId": "nuxeo-presales-apis"
     }'
 ```
 
@@ -58,7 +70,9 @@ Once deployed, a function run can be triggered manually
 
 ```bash
 gcloud functions call scheduled-shutdown-gce --data '{
-    "jobName":"daily-gce-instance-shutdown"
+    "jobName":"daily-gce-instance-shutdown",
+    "zone": "us-central1-a",
+    "projectId": "nuxeo-presales-apis"
 }'
 ```
 
