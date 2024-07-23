@@ -2,10 +2,11 @@ const functions = require('@google-cloud/functions-framework');
 const compute = require('@google-cloud/compute');
 
 const JOB_NAME = "daily-gce-instance-shutdown";
-const KEEP_ALIVE_TAG = "nuxeo-keep-alive"; //"nuxeoKeepAlive" => "nly hyphens (-), underscores (_), lowercase characters, ..."
+const KEEP_ALIVE_TAG = "nuxeo-keep-alive"; //"nuxeoKeepAlive" => "only hyphens (-), underscores (_), lowercase characters, ..."
 
 let countOfStopped = 0;
 
+// Main entry point
 functions.http('handlerHttp', async (req, res) => {
 
   const jobName = req.body.jobName;
@@ -38,10 +39,9 @@ functions.http('handlerHttp', async (req, res) => {
   console.log(msg);
   return res.send(msg);
   
-
 });
 
-// Function to list instances with a specific label
+
 async function listInstancesToStop(projectId, zoneName) {
 
   const instancesClient = new compute.InstancesClient();
@@ -53,11 +53,9 @@ async function listInstancesToStop(projectId, zoneName) {
     filter: "status = RUNNING"
   };
   //console.log(JSON.stringify(request, null, 2));
-
-  // Use the listAsync method to list instances
   const foundInstances = instancesClient.listAsync(request);
 
-  // Iterate over the iterable object to get the instances
+  // Get the instances (using for...of to handle asynchronicity)
   let instancesToStop = [];
   for await (const instance of foundInstances) {
     //console.log(`Instance name: ${instance.name}`);
@@ -84,6 +82,7 @@ async function listInstancesToStop(projectId, zoneName) {
 }
 
 // Function to stop instances
+// Warning: instances is an array of just instance names, as returned bylistInstancesToStop
 async function stopInstances(instances, projectId, zoneName) {
   const instancesClient = new compute.InstancesClient();
 
@@ -91,15 +90,15 @@ async function stopInstances(instances, projectId, zoneName) {
     const stopRequest = {
       project: projectId,
       zone: zoneName,
-      instance: instance.name,
+      instance: instance,
     };
 
-    console.log(`Stopping instance ${instance.name}...`);
+    console.log(`Stopping instance ${instance}...`);
     return instancesClient.stop(stopRequest).then(() => {
-      console.log(`Instance ${instance.name} has been stopped.`);
+      console.log(`Instance ${instance} has been stopped.`);
       countOfStopped += 1;
     }).catch(error => {
-      console.error(`Error stopping instance ${instance.name}:`, error);
+      console.error(`Error stopping instance ${instance}:`, error);
     });
   });
 
@@ -108,6 +107,7 @@ async function stopInstances(instances, projectId, zoneName) {
 }
 
 // Function to list all zone names in a project
+// (not used for now, code as backup while implementing)
 async function listAllZones(projectId) {
   const zonesClient = new compute.ZonesClient();
 
