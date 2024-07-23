@@ -89,18 +89,18 @@ if ${nx_use_nev}
 then
   # Default is 2.3.1
   NEV_DEFAULT=2.3.1
-  NEV_VERSION="${NX_NEV_VERSION:-}"
-  if [ -z "${NEV_VERSION}" ]
+  nev_version="${NX_NEV_VERSION:-}"
+  if [ -z "${nev_version}" ]
   then
-    read -p "NEV Version: [${NEV_DEFAULT}]: " NEV_VERSION
-    NEV_VERSION=${NEV_VERSION:-${NEV_DEFAULT}}
+    read -p "NEV Version: [${NEV_DEFAULT}]: " nev_version
+    nev_version=${nev_version:-${NEV_DEFAULT}}
   fi
 fi
 
 # ==============================================================================
 # Other params
 # ==============================================================================
-WORKSPACE_NAME=${nx_stack_name}
+workspace_name=${nx_stack_name}
 
 # ==============================================================================
 # Summarize inputs and parameters
@@ -112,20 +112,25 @@ echo "DNS name:        ${nx_dns_name}"
 echo "Deploy NEV?      ${nx_use_nev}"
 if ${nx_use_nev}
 then
-  echo "NEV version:     ${NEV_VERSION}"
+  echo "NEV version:     ${nev_version}"
 fi
-echo "Workspace name:  ${WORKSPACE_NAME}"
+echo "Workspace name:  ${workspace_name}"
+echo
+
+read -p "Deploy this stack? (yes/no) [yes]: " response
+response=${response:-yes}
+if [[ "$response" != "yes" ]]
+then
+  exit 0
+fi
+
 echo
 
 # ==============================================================================
 # Do the things
 # ==============================================================================
-read -p "Deploy this stack? (yes/no) [yes]: " response
-response=${response:-yes}
-if [[ "$response" == "yes" ]]; then
-  terraform init
-  # Create workspace
-  terraform workspace new ${WORKSPACE_NAME}
-  #Apply config
-  terraform apply -var="stack_name=${nx_stack_name}" -var="nx_studio=${nx_studio_project}" -var="with_nev=${nx_use_nev}" -var="dns_name=${nx_dns_name}"
-fi
+terraform init
+# Create workspace
+terraform workspace new ${workspace_name}
+# Apply config
+terraform apply -var="stack_name=${nx_stack_name}" -var="nx_studio=${nx_studio_project}" -var="with_nev=${nx_use_nev}" -var="dns_name=${nx_dns_name}"
