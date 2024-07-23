@@ -120,9 +120,12 @@ echo
 # ==============================================================================
 # Do the things
 # ==============================================================================
-terraform init
-# Create workspace
-terraform workspace new ${WORKSPACE_NAME}
-# Apply config
-terraform apply -var="stack_name=${nx_stack_name}" -var="nx_studio=${nx_studio_project}" -var="with_nev=${nx_use_nev}" -var="dns_name=${nx_dns_name}"
-
+read -p "Deploy this stack? (yes/no) [yes]: " response
+response=${response:-yes}
+if [[ "$response" == "yes" ]]; then
+  terraform init
+  # Create workspace
+  terraform workspace new ${WORKSPACE_NAME}
+  #Apply config
+  terraform apply -var="stack_name=${nx_stack_name}" -var="nx_studio=${nx_studio_project}" -var="with_nev=${nx_use_nev}" -var="dns_name=${nx_dns_name}"
+fi
