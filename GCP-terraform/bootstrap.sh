@@ -103,7 +103,7 @@ fi
 workspace_name=${nx_stack_name}
 
 # ==============================================================================
-# Summarize inputs and parameters
+# Summarize
 # ==============================================================================
 echo
 echo "Stack name:      ${nx_stack_name}"
@@ -115,9 +115,16 @@ then
   echo "NEV version:     ${nev_version}"
 fi
 echo "Workspace name:  ${workspace_name}"
-echo
 
-read -p "Deploy this stack? (yes/no) [yes]: " response
+echo
+echo "Here's what will be executed:"
+echo
+echo "> terraform init"
+echo "> terraform workspace new ${workspace_name}"
+echo "> terraform apply -var=\"stack_name=${nx_stack_name}\" -var=\"nx_studio=${nx_studio_project}\" -var=\"with_nev=${nx_use_nev}\" -var=\"dns_name=${nx_dns_name}\""
+
+echo
+read -p "Ready? (yes/no) [yes]: " response
 response=${response:-yes}
 if [[ "$response" != "yes" ]]
 then
