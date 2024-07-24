@@ -111,6 +111,19 @@ fi
 # ==============================================================================
 workspace_name=${nx_stack_name}
 
+# params are printed to the screen and passed to Terraform
+params=(
+  -var="stack_name=${nx_stack_name}"
+  -var="nx_studio=${nx_studio_project}"
+  -var="with_nev=${nx_use_nev}"
+  -var="dns_name=${nx_dns_name}"
+  -var="nuxeo_keep_alive=${nx_keep_alive}"
+)
+if ${nx_use_nev}
+then
+  params+=( -var="nev_version=${nev_version}" )
+fi
+
 # ==============================================================================
 # Summarize
 # ==============================================================================
@@ -131,12 +144,12 @@ echo "Here's what will be executed:"
 echo
 echo "> terraform init"
 echo "> terraform workspace new ${workspace_name}"
-echo "> terraform apply -var=\"stack_name=${nx_stack_name}\" -var=\"nx_studio=${nx_studio_project}\" -var=\"with_nev=${nx_use_nev}\" -var=\"dns_name=${nx_dns_name}\"  -var=\"nuxeo_keep_alive=${nx_keep_alive}\""
+echo "> terraform apply ${params[@]}"
 
 echo
-read -p "Ready? (yes|no) [yes]: " response
-response=${response:-yes}
-if [[ "$response" != "yes" ]]
+read -p "Ready? (y|n) [y]: " response
+response=${response:-y}
+if [[ "$response" != "y" ]]
 then
   exit 0
 fi
@@ -146,8 +159,10 @@ echo
 # ==============================================================================
 # Do the things
 # ==============================================================================
+
+
 terraform init
 # Create workspace
 terraform workspace new ${workspace_name}
 # Apply config
-terraform apply -var="stack_name=${nx_stack_name}" -var="nx_studio=${nx_studio_project}" -var="with_nev=${nx_use_nev}" -var="dns_name=${nx_dns_name}" -var="nuxeo_keep_alive=${nx_keep_alive}"
+terraform apply ${params[@]}

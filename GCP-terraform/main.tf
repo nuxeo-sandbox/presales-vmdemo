@@ -27,6 +27,12 @@ variable "with_nev" {
   default     = false
 }
 
+variable "nev_version" {
+  type        = string
+  description = "Version of NEV to deploy."
+  default     = "2.3.1"
+}
+
 variable "auto_start" {
   type        = bool
   description = "Automatically start Nuxeo?"
@@ -108,6 +114,7 @@ resource "google_dns_record_set" "nuxeo_instance_dns_record" {
 module "nev" {
   count = var.with_nev ? 1 : 0
   source = "./modules/nev"
+  nev_version = "${var.nev_version}"
   stack_name = "${var.stack_name}-nev"
   dns_name = "${local.dns_name}-nev"
   nuxeo_url = "https://${local.dns_name}.gcp.cloud.nuxeo.com"
