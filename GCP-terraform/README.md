@@ -97,6 +97,13 @@ terraform apply --destroy
 
 Note: `terraform apply --destroy` will prompt for variable values, but the values aren't used. You can just press enter or, if the value can't be null, you can enter junk. Cf. https://github.com/hashicorp/terraform/issues/23552 and https://github.com/hashicorp/terraform/pull/29291
 
+If you're done with this project, delete the Workspace:
+
+```bash
+terraform workspace select default # You have to switch to a different Workspace before you delete
+terraform workspace delete <stack_name>
+```
+
 # About Nuxeo
 
 [Hyland](https://www.hyland.com), developer of the leading Content Services Platform, is reinventing enterprise content management (ECM) and digital asset management (DAM). [Nuxeo](https://www.hyland.com/en/products/nuxeo-platform) is fundamentally changing how people work with data and content to realize new value from digital information. Its cloud-native platform has been deployed by large enterprises, mid-sized businesses and government agencies worldwide. Customers like Verizon, Electronic Arts, ABN Amro, and the Department of Defense have used Nuxeo's technology to transform the way they do business. Founded in 2008, the company is based in New York with offices across the United States, Europe, and Asia.
