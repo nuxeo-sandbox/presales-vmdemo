@@ -227,7 +227,10 @@ async function listInstancesToStop(projectId) {
 
             let logInfo = `\n  Running instance: ${instance.name}, ${KEEP_ALIVE_LABEL}: ${label} -> ${labelUpdated}\n    Now UTC:   ${nowUTCDate}, ${nowUTCTime}\n    Label UTC: ${labelUTCDate}, ${labelUTCTime}\n`;
             let originalLength = instancesToStop.length;
-            if(nowUTCDate > labelUTCDate) {
+
+            if(label === "true"){
+              // Do nothing...
+            } else if(nowUTCDate > labelUTCDate) {
               instancesToStop.push({"instanceName": instance.name, "zone": zoneName});
             } else if(nowUTCDate === labelUTCDate) {
               if(nowUTCTime > labelUTCTime) {
