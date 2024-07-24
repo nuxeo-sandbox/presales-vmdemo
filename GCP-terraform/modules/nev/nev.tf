@@ -30,6 +30,12 @@ variable "nuxeo_secret" {
   description = "The shared secret between nuxeo and nev"
 }
 
+variable "nuxeo_keep_alive" {
+  type        = string
+  description = "Control auto shutdown"
+  default     = "20h00m" # 8:00 PM relative to the zone
+}
+
 resource "google_compute_instance" "nev_instance" {
   project      = "nuxeo-presales-apis"
   name         = var.stack_name
@@ -60,6 +66,10 @@ resource "google_compute_instance" "nev_instance" {
     nuxeo-secret: var.nuxeo_secret
   }
   tags = ["http-server","https-server"]
+
+  labels = {
+    "nuxeo-keep-alive": var.nuxeo_keep_alive
+  }
 
   boot_disk {
     initialize_params {

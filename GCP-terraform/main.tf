@@ -112,4 +112,5 @@ module "nev" {
   dns_name = "${local.dns_name}-nev"
   nuxeo_url = "https://${local.dns_name}.gcp.cloud.nuxeo.com"
   nuxeo_secret= random_password.nuxeo_secret.result
+  nuxeo_keep_alive = "${var.nuxeo_keep_alive}"
 }
