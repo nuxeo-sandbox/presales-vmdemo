@@ -33,6 +33,12 @@ variable "auto_start" {
   default     = true
 }
 
+variable "nuxeo_keep_alive" {
+  type        = string
+  description = "Control auto shutdown"
+  default     = "20h00m" # 8:00 PM relative to the zone
+}
+
 # Nuxeo Instance resources
 
 resource "random_password" "nuxeo_secret" {
@@ -74,7 +80,7 @@ resource "google_compute_instance" "nuxeo_instance" {
   tags = ["http-server","https-server"]
 
   labels = {
-    "nuxeo-keep-alive": "20h00m"
+    "nuxeo-keep-alive": var.nuxeo_keep_alive
   }
 
   boot_disk {
