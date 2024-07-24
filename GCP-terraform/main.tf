@@ -73,6 +73,10 @@ resource "google_compute_instance" "nuxeo_instance" {
   }
   tags = ["http-server","https-server"]
 
+  labels = {
+    "nuxeo-keep-alive": "20h00m"
+  }
+
   boot_disk {
     initialize_params {
       image = "nuxeo-presales-ubuntu-24-04-20240717020314"
