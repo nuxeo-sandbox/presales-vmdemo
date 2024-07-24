@@ -5,11 +5,34 @@ A GCP cloud function to automatically shutdown instances using a [GCP Cloud Sche
 The function stops all running instances in the zone passed in the request (see the "Test Locally" example below). It will keep alive only the instances having a `nuxeo-keep-alive` label which:
 
 * Is set to `true`
-* Or is an ISO date >= now (aka when the function runs)
+* Or its value converted to a date is >= now (aka when the function runs). See below "Formating the nuxeo-keep-alive label"
 
-> [!WARNING]
-> Differences with AWS: We test a _label_, not a _tag_, and GCP does not allow camelcase for names, only lower case, etc. (so we have for now nuxeoKeepAlive on AWS and nuxeo-keep-alive on GCP)
 
+### Formating the `nuxeo-keep-alive` label
+
+_<GCP does not allows "Only hyphens (-), underscores (_), lowercase characters, and numbers are allowed [...]>_
+
+This goes for both the label and its value => we cannot use an ISO format for the label.
+
+The possible values for `nuxeo-keep-alive` are:
+
+* `true` => never stop this instance
+* A date and time formatted as `YYY-MM-DDtHHhMMm`, with no timezone
+  * Example with `2024-07-31t21h00m`
+    * => Deployed in us-east1, the instance will be stopped as soon as the function runs after 2024-07-31 at 9pm in America/New_York
+    * => Deployed in europe-west9, the instance will be stopped as soon as the function runs after 2024-07-31 at 9pm in Europe/Paris
+* Just a time, formatted as `HHhMMm`, with no timezone
+  * Everytime the function runs, it whill check this time. If current time (aligned to the timezone of the region the instance runs) is greater than this value, the instance is stopped.
+  * Example with `21h00m`:
+    * => Deployed in us-east1, the instance will be stopped as soon as the function runs 9pm in America/New_York
+    * => Deployed in europe-west9, the instance will be stopped as soon as the function runs after 9pm in Europe/Paris
+
+
+If an instance does not have the `nuxeo-keep-alive` label, of the label is not a date/time formatted as exepected and is no true:
+
+* An error is logged
+* The instance is not stopped
+* _(TODO: Send a notification)_
 
 
 # Installation
