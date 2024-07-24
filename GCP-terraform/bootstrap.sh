@@ -97,6 +97,15 @@ then
   fi
 fi
 
+# nuxeo-keep-alive
+NX_KEEP_ALIVE_DEFAULT="20h00m"
+nx_keep_alive="${NX_KEEP_ALIVE:-}"
+if [ -z "${nx_keep_alive}" ]
+then
+  read -p "Keep alive until (YYYY-MM-DDtHHhMMm|HHhMMm) [${NX_KEEP_ALIVE_DEFAULT}]: " nx_keep_alive
+  nx_keep_alive=${nx_keep_alive:-${NX_KEEP_ALIVE_DEFAULT}}
+fi
+
 # ==============================================================================
 # Other params
 # ==============================================================================
@@ -106,25 +115,26 @@ workspace_name=${nx_stack_name}
 # Summarize
 # ==============================================================================
 echo
-echo "Stack name:      ${nx_stack_name}"
-echo "Studio project:  ${nx_studio_project}"
-echo "DNS name:        ${nx_dns_name}"
-echo "Deploy NEV?      ${nx_use_nev}"
+echo "Stack name:       ${nx_stack_name}"
+echo "Studio project:   ${nx_studio_project}"
+echo "DNS name:         ${nx_dns_name}"
+echo "Deploy NEV?       ${nx_use_nev}"
 if ${nx_use_nev}
 then
-  echo "NEV version:     ${nev_version}"
+  echo "NEV version:      ${nev_version}"
 fi
-echo "Workspace name:  ${workspace_name}"
+echo "Keep alive until: ${nx_keep_alive}"
+echo "Workspace name:   ${workspace_name}"
 
 echo
 echo "Here's what will be executed:"
 echo
 echo "> terraform init"
 echo "> terraform workspace new ${workspace_name}"
-echo "> terraform apply -var=\"stack_name=${nx_stack_name}\" -var=\"nx_studio=${nx_studio_project}\" -var=\"with_nev=${nx_use_nev}\" -var=\"dns_name=${nx_dns_name}\""
+echo "> terraform apply -var=\"stack_name=${nx_stack_name}\" -var=\"nx_studio=${nx_studio_project}\" -var=\"with_nev=${nx_use_nev}\" -var=\"dns_name=${nx_dns_name}\"  -var=\"nuxeo_keep_alive=${nx_keep_alive}\""
 
 echo
-read -p "Ready? (yes/no) [yes]: " response
+read -p "Ready? (yes|no) [yes]: " response
 response=${response:-yes}
 if [[ "$response" != "yes" ]]
 then
@@ -140,4 +150,4 @@ terraform init
 # Create workspace
 terraform workspace new ${workspace_name}
 # Apply config
-terraform apply -var="stack_name=${nx_stack_name}" -var="nx_studio=${nx_studio_project}" -var="with_nev=${nx_use_nev}" -var="dns_name=${nx_dns_name}"
+terraform apply -var="stack_name=${nx_stack_name}" -var="nx_studio=${nx_studio_project}" -var="with_nev=${nx_use_nev}" -var="dns_name=${nx_dns_name}" -var="nuxeo_keep_alive=${nx_keep_alive}"

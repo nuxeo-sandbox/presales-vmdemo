@@ -47,6 +47,7 @@ NX_STUDIO_PROJECT | Nuxeo Studio Project ID | n/a
 NX_AUTO_START | Start Nuxeo stack after instance creation | true
 NX_USE_NEV | Deploy NEV? | false
 NX_NEV_VERSION | Version of NEV to deploy | 2.3.1
+NX_KEEP_ALIVE | Control auto shutdown | 20h00m
 
 
 Don't forget to make the script executable if needed:
@@ -74,6 +75,7 @@ nx_studio | Nuxeo Studio Project ID | n/a
 auto_start | Start Nuxeo stack after instance creation | true
 with_nev | Deploy NEV? | false
 nev_version | Version of NEV to deploy | 2.3.1
+nuxeo_keep_alive | Control auto shutdown | 20h00m
 
 
 NB: `params` are not required, Terraform will prompt you to enter values, but you must pass them to override anything that has a default value.
