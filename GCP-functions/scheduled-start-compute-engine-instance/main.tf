@@ -81,7 +81,7 @@ resource "google_cloud_scheduler_job" "job" {
   region      = "us-central1"
   name        = "daily-gce-instance-start"
   description = "Job to start instances depending on their start-daily-until label."
-  schedule    = "0 9 * * *"
+  schedule    = "0 * * * *"
 
   http_target {
     http_method = "POST"
