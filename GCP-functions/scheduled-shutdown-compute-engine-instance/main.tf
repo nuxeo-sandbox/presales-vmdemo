@@ -80,7 +80,7 @@ resource "google_cloud_scheduler_job" "job" {
   project      = "nuxeo-presales-apis"
   region      = "us-central1"
   name        = "daily-gce-instance-shutdown"
-  description = "test job"
+  description = "Job to stop instances depending on their nuxeo-keep-alive tag."
   schedule    = "0 * * * *"
 
   http_target {
