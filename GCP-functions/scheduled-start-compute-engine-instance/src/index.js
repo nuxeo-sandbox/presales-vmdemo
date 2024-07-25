@@ -147,9 +147,7 @@ async function listInstancesToStart(projectId) {
             let logInfo = `\n  Stopped instance: ${instance.name}, ${START_DAILY_UNTIL_LABEL}: ${label} -> ${labelUpdated}\n    Now UTC:   ${nowUTCDate}, ${nowUTCTime}\n    Label UTC: ${labelUTCDate}, ${labelUTCTime}\n`;
             let originalLength = instancesToStart.length;
 
-            if(nowUTCDate < labelUTCDate) {
-              instancesToStart.push({"instanceName": instance.name, "zone": zoneName});
-            } else if(nowUTCDate === labelUTCDate) {
+            if(nowUTCDate <= labelUTCDate) {
               if(nowUTCTime >= labelUTCTime) {
                 instancesToStart.push({"instanceName": instance.name, "zone": zoneName});
               }
