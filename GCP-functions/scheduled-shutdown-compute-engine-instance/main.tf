@@ -86,7 +86,7 @@ resource "google_cloud_scheduler_job" "job" {
   http_target {
     http_method = "POST"
     uri         = google_cloudfunctions2_function.default.url
-    body        = base64encode("{\"jobName\":\"daily-gce-instance-shutdown\",\"zone\":\"us-central1-a\",\"projectId\":\"nuxeo-presales-apis\"}")
+    body        = base64encode("{\"jobName\":\"daily-gce-instance-shutdown\",\"projectId\":\"nuxeo-presales-apis\"}")
     headers = {
       "Content-Type" = "application/json"
     }
