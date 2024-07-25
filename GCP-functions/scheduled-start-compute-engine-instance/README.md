@@ -29,6 +29,11 @@ Start the npm server
 
 ```bash
 cd src
+
+# First time, or if you add dependencies to package.json:
+# (may not be necessary of some dependencies are installed globally)
+npm install
+
 npm-watch start
 ```
 
@@ -41,7 +46,8 @@ curl localhost:8080 \
  -X POST \
  -H "Content-Type: application/json" \
  -d '{
-      "jobName":"daily-gce-instance-start"
+      "jobName":"daily-gce-instance-start",
+      "projectId": "nuxeo-presales-apis"
     }'
 ```
 
@@ -57,7 +63,8 @@ Once deployed, a function run can be triggered manually
 
 ```bash
 gcloud functions call scheduled-shutdown-gce --data '{
-    "jobName":"daily-gce-instance-start"
+    "jobName":"daily-gce-instance-start",
+    "projectId": "nuxeo-presales-apis"
 }'
 ```
 

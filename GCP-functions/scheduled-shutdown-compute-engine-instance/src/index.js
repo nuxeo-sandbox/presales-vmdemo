@@ -74,99 +74,16 @@ functions.http('handlerHttp', async (req, res) => {
     console.log("No instance to stop");
   }
 
-  const msg = `daily-gce-instance-shutdown: Done. Instance(s) stopped: ${countOfStopped}\n`;
+  const msg = `${JOB_NAME}: Done. Instance(s) stopped: ${countOfStopped}\n`;
   console.log(msg);
   return res.send(msg);
-
-
-
-
-/*
-  const zoneNames = await listAllZones(projectId);
-  if (zoneNames.length > 0) {
-    console.log(`Checking instances in ${zoneNames.length} instances...`);
-    for (const zoneName of zoneNames) {
-      //console.log(`Checking instances in ${zoneName}...`);
-      let instancesToStop = await listInstancesToStop(projectId, zoneName);
-      if(instancesToStop.length > 0) {
-        console.log(`instancesToStop in ${zoneName}: ${instancesToStop.length}`);
-      }
-
-      // Stop the instances
-      await stopInstances(instancesToStop, projectId, zoneName);
-    }
-  } else {
-    console.log('No zones found.');
-    return res.send('daily-gce-instance-shutdown: No zones found???');
-  }
-
-  const msg = `daily-gce-instance-shutdown: Done. Instance(s) stopped: ${countOfStopped}\n`;
-  console.log(msg);
-  return res.send(msg);
-  */
-  
 
 });
 
-/*
-async function listInstancesToStop(projectId, zoneName) {
-
-  const instancesClient = new compute.InstancesClient();
-
-  // Create the request to list running instances
-  const request = {
-    project: projectId,
-    zone: zoneName,
-    filter: "status = RUNNING"
-  };
-  //console.log(JSON.stringify(request, null, 2));
-  const foundInstances = instancesClient.listAsync(request);
-
-  // Get the instances (using for...of to handle asynchronicity)
-  let instancesToStop = [];
-  for await (const instance of foundInstances) {
-    //console.log(`Instance name: ${instance.name}`);
-    let label = "" + instance.labels[KEEP_ALIVE_LABEL];
-    //console.log(`${instance.name}, ${KEEP_ALIVE_LABEL}: ${instance.labels[KEEP_ALIVE_LABEL]}`)
-    if(!label) {
-      // Not normal, all instance should ha this label => not stopped, just log
-      // We should send a mail, a notification
-      //instancesToStop.push(instance.name);
-      console.log(`Error: ${instance.name} dos not have the ${KEEP_ALIVE_LABEL} label set.`);
-    } else {
-      let now = newDate();
-      let nowStr = now.toISOString();
-
-      // If the label is only a time, let's add the current date for comparison
-      console.log("label before: " + label);
-      if(REGEX_TIME.test(label)) {
-        label = prefixTimeWithDate(label, now);
-      } else if(REGEX_TIME_NO_SECONDS.test(label)) {
-        label = prefixTimeWithDate(label, now) + ": 00";
-      } else if(REGEX_DATE_AND_TIME.test(label)) {
-        // No change
-      } else if(REGEX_DATE_AND_TIME_NO_SECONDS.test(label)) {
-        label += ":00";
-      } else if(label !== "true") {// Not a date
-        console.log("label is not a date and is not 'true' => stop instance");
-        instancesToStop.push(instance.name);
-        continue;
-      }
-      console.log("label after: " + label);
-
-      if(nowStr > label) {
-        instancesToStop.push(instance.name);
-      }
-    }
-  }
-
-  return instancesToStop;
-}
-  */
 
 // Return an array of {"instanceName": <name>, "zone": "<zone>"}, all the instances to stop.
 // They have been checked against their label, so we return only the instances
-// that really should be stopped given the urrent time.
+// that really should be stopped given the current time.
 async function listInstancesToStop(projectId) {
   const instancesClient = new compute.InstancesClient();
 

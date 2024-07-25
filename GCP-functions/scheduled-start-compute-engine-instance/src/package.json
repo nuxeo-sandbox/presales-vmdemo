@@ -1,7 +1,9 @@
 {
   "dependencies": {
     "@google-cloud/compute": "^4.7.0",
-    "@google-cloud/functions-framework": "^3.4.1"
+    "@google-cloud/functions-framework": "^3.4.1",
+    "moment": "^2.29.1",
+    "moment-timezone": "^0.5.34"
   },
   "watch": {
     "start": "*.js"
