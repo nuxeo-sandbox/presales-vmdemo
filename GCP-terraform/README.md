@@ -44,6 +44,7 @@ Var | Purpose | Default
 NX_STACK_NAME | Used for Compute Instance ID | n/a
 NX_DNS_NAME | URL e.g. "NX_DNS_NAME.gcp.cloud.nuxeo.com" | NX_STACK_NAME
 NX_STUDIO_PROJECT | Nuxeo Studio Project ID | n/a
+NX_ZONE | Deployment zone | us-central1-a
 NX_AUTO_START | Start Nuxeo stack after instance creation | true
 NX_USE_NEV | Deploy NEV? | false
 NX_NEV_VERSION | Version of NEV to deploy | 2.3.1
@@ -72,13 +73,13 @@ Param | Purpose | Default
 stack_name | Used for Compute Instance ID | n/a
 dns_name | URL e.g. "dns_name.gcp.cloud.nuxeo.com" | stack_name
 nx_studio | Nuxeo Studio Project ID | n/a
+nuxeo_zone | Deployment zone | us-central1-a
 auto_start | Start Nuxeo stack after instance creation | true
 with_nev | Deploy NEV? | false
 nev_version | Version of NEV to deploy | 2.3.1
 nuxeo_keep_alive | Control auto shutdown | 20h00m
 
-
-NB: `params` are not required, Terraform will prompt you to enter values, but you must pass them to override anything that has a default value.
+NB: params are not required. Terraform will prompt you to enter values as needed, but if you want to override any default values you must pass the new value, Terraform won't prompt for values that have a default.
 
 Example:
 

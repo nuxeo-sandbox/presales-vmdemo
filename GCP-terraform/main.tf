@@ -45,6 +45,12 @@ variable "nuxeo_keep_alive" {
   default     = "20h00m" # 8:00 PM relative to the zone
 }
 
+variable "nuxeo_zone" {
+  type        = string
+  description = "Deployment zone"
+  default     = "us-central1-a"
+}
+
 # Nuxeo Instance resources
 
 resource "random_password" "nuxeo_secret" {
@@ -53,12 +59,11 @@ resource "random_password" "nuxeo_secret" {
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
-
 resource "google_compute_instance" "nuxeo_instance" {
   project      = "nuxeo-presales-apis"
   name         = var.stack_name
   machine_type = "e2-standard-2"
-  zone         = "us-central1-a"
+  zone         = var.nuxeo_zone
   service_account {
     email = "1007087250969-compute@developer.gserviceaccount.com"
     scopes = [
@@ -120,4 +125,5 @@ module "nev" {
   nuxeo_url = "https://${local.dns_name}.gcp.cloud.nuxeo.com"
   nuxeo_secret= random_password.nuxeo_secret.result
   nuxeo_keep_alive = "${var.nuxeo_keep_alive}"
+  nev_zone = "${var.nuxeo_zone}"
 }

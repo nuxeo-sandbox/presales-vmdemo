@@ -9,6 +9,7 @@
 # ==============================================================================
 
 # Stack name
+# ==========
 nx_stack_name="${NX_STACK_NAME:-}" # NB: this allows the value to be read from an environment variable.
 # Required, loop until we get a value.
 while [ -z "${nx_stack_name}" ]
@@ -17,6 +18,7 @@ do
 done
 
 # Studio Project
+# ==============
 nx_studio_project="${NX_STUDIO_PROJECT:-}"
 # Required, loop until we get a value.
 while [ -z "${nx_studio_project}" ]
@@ -24,7 +26,18 @@ do
   read -p "Studio Project ID: " nx_studio_project
 done
 
+# Deployment zone
+# ===============
+NX_ZONE_DEFAULT="us-central1-a"
+nx_zone="${NX_ZONE:-}"
+if [ -z "${nx_zone}" ]
+then
+  read -p "Deployment zone [${NX_ZONE_DEFAULT}]: " nx_zone
+  nx_zone=${nx_zone:-${NX_ZONE_DEFAULT}}
+fi
+
 # Automatically start Nuxeo?
+# ==========================
 NX_AUTO_START_DEFAULT=true
 nx_auto_start="${NX_AUTO_START:-}"
 if [ -z "${nx_auto_start}" ]
@@ -50,6 +63,7 @@ then
 fi
 
 # DNS Name
+# ========
 # If not specified, use nx_stack_name
 NX_DNS_NAME_DEFAULT=${nx_stack_name}
 nx_dns_name="${NX_DNS_NAME:-}"
@@ -60,6 +74,7 @@ then
 fi
 
 # Use NEV?
+# ========
 NX_USE_NEV_DEFAULT=false
 nx_use_nev="${NX_USE_NEV:-}"
 if [ -z "${nx_use_nev}" ]
@@ -85,6 +100,7 @@ then
 fi
 
 # NEV Version
+# ===========
 if ${nx_use_nev}
 then
   # Default is 2.3.1
@@ -97,7 +113,8 @@ then
   fi
 fi
 
-# nuxeo-keep-alive
+# Control auto shutdown
+# =====================
 NX_KEEP_ALIVE_DEFAULT="20h00m"
 nx_keep_alive="${NX_KEEP_ALIVE:-}"
 if [ -z "${nx_keep_alive}" ]
@@ -111,10 +128,11 @@ fi
 # ==============================================================================
 workspace_name=${nx_stack_name}
 
-# params are printed to the screen and passed to Terraform
+# params are printed to the screen and passed to Terraform; best to store in an array
 params=(
   -var="stack_name=${nx_stack_name}"
   -var="nx_studio=${nx_studio_project}"
+  -var="nuxeo_zone=${nx_zone}"
   -var="with_nev=${nx_use_nev}"
   -var="dns_name=${nx_dns_name}"
   -var="nuxeo_keep_alive=${nx_keep_alive}"
@@ -130,6 +148,7 @@ fi
 echo
 echo "Stack name:       ${nx_stack_name}"
 echo "Studio project:   ${nx_studio_project}"
+echo "Deployment zone:  ${nx_zone}"
 echo "DNS name:         ${nx_dns_name}"
 echo "Deploy NEV?       ${nx_use_nev}"
 if ${nx_use_nev}

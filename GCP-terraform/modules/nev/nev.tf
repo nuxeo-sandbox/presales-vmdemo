@@ -36,11 +36,17 @@ variable "nuxeo_keep_alive" {
   default     = "20h00m" # 8:00 PM relative to the zone
 }
 
+variable "nev_zone" {
+  type        = string
+  description = "Deployment zone"
+  default     = "us-central1-a"
+}
+
 resource "google_compute_instance" "nev_instance" {
   project      = "nuxeo-presales-apis"
   name         = var.stack_name
   machine_type = "e2-standard-2"
-  zone         = "us-central1-a"
+  zone         = var.nev_zone
   service_account {
     email = "1007087250969-compute@developer.gserviceaccount.com"
     scopes = [
