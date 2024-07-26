@@ -60,9 +60,9 @@ variable "machine_type" {
 # Nuxeo Instance resources
 
 resource "random_password" "nuxeo_secret" {
-  length           = 32
+  length           = 64
   special          = true
-  override_special = "!#$%&*()-_=+[]{}<>:?"
+  override_special = "-"
 }
 
 resource "google_compute_instance" "nuxeo_instance" {
