@@ -149,13 +149,28 @@ async function listInstancesToStart(projectId) {
 
             if(nowUTCDate <= labelUTCDate) {
               if(nowUTCTime >= labelUTCTime) {
-                instancesToStart.push({"instanceName": instance.name, "zone": zoneName});
+                // Should start. Was it already started at least once "today"?
+                //console.log(`\nINSTANCE ${instance.name}`);
+                //console.log(`lastStartTimestamp => ${instance.lastStartTimestamp}\n`);
+                const lastStart = new Date(instance.lastStartTimestamp);
+                const lastStartUTCDate = getUTCYearMonthDayAsStr(lastStart);
+                const lastStartUTCTime = getUTCHoursMinutesAsStr(lastStart);
+                if(lastStartUTCDate === nowUTCDate) {
+                  if(lastStartUTCTime >= labelUTCTime) {
+                    logInfo += `    ${instance.name} was already started today (UTC ${lastStartUTCDate} at ${lastStartUTCTime}), after the scheduled start time.\n`;
+                  } else {
+                    logInfo += `    ${instance.name} was already started today (UTC ${lastStartUTCDate} at ${lastStartUTCTime}), but this was before the scheduled start time (${lastStartUTCTime}).\n`;
+                    instancesToStart.push({"instanceName": instance.name, "zone": zoneName});
+                  }
+                } else {
+                  instancesToStart.push({"instanceName": instance.name, "zone": zoneName});
+                }
               }
             }
             if(instancesToStart.length > originalLength) {
               logInfo += "    => Added to the list of instances to start.";
             } else {
-              logInfo += "    => Not to be stopped";
+              logInfo += "    => Not to be started";
             }
             console.log(logInfo);
           }
