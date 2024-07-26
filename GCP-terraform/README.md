@@ -45,6 +45,7 @@ NX_STACK_NAME | Used for Compute Instance ID | n/a
 NX_DNS_NAME | URL e.g. "NX_DNS_NAME.gcp.cloud.nuxeo.com" | NX_STACK_NAME
 NX_STUDIO_PROJECT | Nuxeo Studio Project ID | n/a
 NX_ZONE | Deployment zone | us-central1-a
+NX_MACHINE_TYPE | Compute Engine instance type | e2-standard-2
 NX_AUTO_START | Start Nuxeo stack after instance creation | true
 NX_USE_NEV | Deploy NEV? | false
 NX_NEV_VERSION | Version of NEV to deploy | 2.3.1
@@ -74,6 +75,7 @@ stack_name | Used for Compute Instance ID | n/a
 dns_name | URL e.g. "dns_name.gcp.cloud.nuxeo.com" | stack_name
 nx_studio | Nuxeo Studio Project ID | n/a
 nuxeo_zone | Deployment zone | us-central1-a
+machine_type | Compute Engine instance type | e2-standard-2
 auto_start | Start Nuxeo stack after instance creation | true
 with_nev | Deploy NEV? | false
 nev_version | Version of NEV to deploy | 2.3.1

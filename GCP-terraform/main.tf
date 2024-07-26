@@ -18,7 +18,7 @@ locals {
 
 variable "nx_studio" {
   type        = string
-  description = "Nuxeo Studio Poject ID"
+  description = "Nuxeo Studio Poject ID."
 }
 
 variable "with_nev" {
@@ -41,7 +41,7 @@ variable "auto_start" {
 
 variable "nuxeo_keep_alive" {
   type        = string
-  description = "Control auto shutdown"
+  description = "Control auto shutdown."
   default     = "20h00m" # 8:00 PM relative to the zone
 }
 
@@ -49,6 +49,12 @@ variable "nuxeo_zone" {
   type        = string
   description = "Deployment zone"
   default     = "us-central1-a"
+}
+
+variable "machine_type" {
+  type        = string
+  description = "Compute Engine instance type."
+  default     = "e2-standard-2"
 }
 
 # Nuxeo Instance resources
@@ -62,7 +68,7 @@ resource "random_password" "nuxeo_secret" {
 resource "google_compute_instance" "nuxeo_instance" {
   project      = "nuxeo-presales-apis"
   name         = var.stack_name
-  machine_type = "e2-standard-2"
+  machine_type = var.machine_type
   zone         = var.nuxeo_zone
   service_account {
     email = "1007087250969-compute@developer.gserviceaccount.com"

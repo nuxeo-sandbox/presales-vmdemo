@@ -36,6 +36,56 @@ then
   nx_zone=${nx_zone:-${NX_ZONE_DEFAULT}}
 fi
 
+# Machine Type
+# ============
+NX_MACHINE_TYPE_DEFAULT="e2-standard-2"
+nx_machine_type="${NX_MACHINE_TYPE:-}"
+if [ -z "${nx_machine_type}" ]
+then
+  # Hourly rates are just to give and idea of the scale, not guaranteed to be accurate.
+  MACHINE_TYPES=(
+    "e2-standard-2  2cpu   8GB  \$0.07/hr"
+    "e2-standard-4  4cpu  16GB  \$0.13/hr"
+    "e2-standard-8  8cpu  32GB  \$0.27/hr"
+  )
+  NUM_MACHINE_TYPES=${#MACHINE_TYPES[@]}
+  i=0
+
+  # Print numbered menu items, based on the arguments passed.
+  for machine in "${MACHINE_TYPES[@]}"
+  do
+    printf '%s\n' "$((++i))) $machine"
+  done
+
+  # Prompt the user for the index of the desired item.
+  while true
+  do
+    read -r -p "Machine type? (you can enter a custom type too) [1]: " selected
+    # Make sure that the input is either empty or that a valid index was entered.
+    [[ -z $selected ]] && break  # empty input
+    break
+  done
+
+  # Process the selected item.
+  case $selected in
+    1)
+      nx_machine_type="e2-standard-2";
+      ;;
+    2)
+      nx_machine_type="e2-standard-4";
+      ;;
+    3)
+      nx_machine_type="e2-standard-8";
+      ;;
+    '')
+      nx_machine_type="${NX_MACHINE_TYPE_DEFAULT}"
+      ;;
+    *)
+      nx_machine_type=${selected}
+      ;;
+  esac
+fi
+
 # Automatically start Nuxeo?
 # ==========================
 NX_AUTO_START_DEFAULT=true
@@ -133,6 +183,7 @@ params=(
   -var="stack_name=${nx_stack_name}"
   -var="nx_studio=${nx_studio_project}"
   -var="nuxeo_zone=${nx_zone}"
+  -var="machine_type=${nx_machine_type}"
   -var="with_nev=${nx_use_nev}"
   -var="dns_name=${nx_dns_name}"
   -var="nuxeo_keep_alive=${nx_keep_alive}"
@@ -149,6 +200,7 @@ echo
 echo "Stack name:       ${nx_stack_name}"
 echo "Studio project:   ${nx_studio_project}"
 echo "Deployment zone:  ${nx_zone}"
+echo "Machine type:     ${nx_machine_type}"
 echo "DNS name:         ${nx_dns_name}"
 echo "Deploy NEV?       ${nx_use_nev}"
 if ${nx_use_nev}
