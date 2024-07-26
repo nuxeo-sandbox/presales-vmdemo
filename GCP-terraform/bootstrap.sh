@@ -63,7 +63,7 @@ then
   # Allow empty input, in that case the default value is used.
   if [ -z "${selected}" ]
   then
-    selected=NX_MACHINE_TYPE_DEFAULT_SELECTION
+    selected=${NX_MACHINE_TYPE_DEFAULT_SELECTION}
   fi
 
   # Process the selected item.
