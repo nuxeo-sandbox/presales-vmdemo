@@ -1,0 +1,100 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  A lambda application to automatically start EC2 instances using an event scheduler
+Transform:
+- AWS::Serverless-2016-10-31
+
+Mappings : 
+  dailySchedule :
+    us-east-1 : 
+      schedule : "cron(0 12 ? * MON-FRI *)"
+    us-west-1 : 
+      schedule : "cron(0 15 ? * MON-FRI *)"
+    us-west-2 : 
+      schedule : "cron(0 15 ? * MON-FRI *)"
+    eu-west-1 : 
+      schedule : "cron(0 6 ? * MON-FRI *)"
+    ap-northeast-1 : 
+      schedule : "cron(0 0 ? * MON-FRI *)"
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Resources: 
+
+  functionRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+      Tags: 
+        - Key: billing-category
+          Value: presales
+        - Key: billing-subcategory
+          Value: generic
+      
+  ec2StartPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties: 
+      PolicyName: "nuxeo-ec2-start-policy"
+      PolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: "Allow"
+            Action: "ec2:StartInstances"
+            Resource: ["arn:aws:ec2:*:*:instance/*"]
+      Roles: 
+        - !Ref functionRole
+
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  lambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: nuxeo-scheduled-ec2-start-fn
+      Description: A lambda function to start EC2 instances
+      Runtime: nodejs20.x
+      Architectures:
+      - x86_64
+      Handler: src/index.handler
+      MemorySize: 128
+      Timeout: 100
+      Role: !GetAtt functionRole.Arn
+
+  dailySchedulerRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description : "Daily (Monday-Friday) triggers a lambda function to start EC2 instances that have the startDailyUntil tag."
+      Name : "nuxeo-scheduled-ec2-start-daily"
+      ScheduleExpression: !FindInMap [ "dailySchedule", !Ref "AWS::Region", "schedule" ]
+      State: ENABLED
+      Targets :
+        - Arn: !GetAtt lambdaFunction.Arn
+          Id : Lambda
+
+  dailyInvocationPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:InvokeFunction
+        FunctionName: !Sub ${lambdaFunction}
+        Principal: events.amazonaws.com
+        SourceArn: !GetAtt dailySchedulerRule.Arn
+
+  logGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+        LogGroupName: !Sub /aws/lambda/${lambdaFunction}
+        RetentionInDays: 7
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    LoggingConfig:
+      LogFormat: JSON
