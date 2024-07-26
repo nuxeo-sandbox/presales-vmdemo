@@ -145,8 +145,8 @@ fi
 # ===========
 if ${nx_use_nev}
 then
-  # Default is 2.3.1
-  NEV_DEFAULT=2.3.1
+  # Default is 2023.2.1
+  NEV_DEFAULT=2023.2.1
   nev_version="${NX_NEV_VERSION:-}"
   if [ -z "${nev_version}" ]
   then

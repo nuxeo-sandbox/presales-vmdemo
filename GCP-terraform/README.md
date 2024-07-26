@@ -48,7 +48,7 @@ NX_ZONE | Deployment zone | us-central1-a
 NX_MACHINE_TYPE | Compute Engine instance type | e2-standard-2
 NX_AUTO_START | Start Nuxeo stack after instance creation | true
 NX_USE_NEV | Deploy NEV? | false
-NX_NEV_VERSION | Version of NEV to deploy | 2.3.1
+NX_NEV_VERSION | Version of NEV to deploy | 2023.2.1
 NX_KEEP_ALIVE | Control auto shutdown | 20h00m
 
 
@@ -78,7 +78,7 @@ nuxeo_zone | Deployment zone | us-central1-a
 machine_type | Compute Engine instance type | e2-standard-2
 auto_start | Start Nuxeo stack after instance creation | true
 with_nev | Deploy NEV? | false
-nev_version | Version of NEV to deploy | 2.3.1
+nev_version | Version of NEV to deploy | 2023.2.1
 nuxeo_keep_alive | Control auto shutdown | 20h00m
 
 NB: params are not required. Terraform will prompt you to enter values as needed, but if you want to override any default values you must pass the new value, Terraform won't prompt for values that have a default.
