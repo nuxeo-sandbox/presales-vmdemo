@@ -42,23 +42,38 @@ variable "nev_zone" {
   default     = "us-central1-a"
 }
 
+resource "google_service_account" "service_account" {
+  project      = "nuxeo-presales-apis"
+  account_id   = "${var.stack_name}-nev-instance"
+  display_name = "Service Account for the ${var.stack_name} nev instance"
+}
+
+data "google_secret_manager_secret" "shared_credentials" {
+  project      = "nuxeo-presales-apis"
+  secret_id    = "nuxeo-presales-connect"
+}
+
+resource "google_secret_manager_secret_iam_member" "shared_credentials_member" {
+  project = "nuxeo-presales-apis"
+  secret_id = data.google_secret_manager_secret.shared_credentials.id
+  role = "roles/secretmanager.secretAccessor"
+  member = "serviceAccount:${google_service_account.service_account.email}"
+}
+
 resource "google_compute_instance" "nev_instance" {
   project      = "nuxeo-presales-apis"
   name         = var.stack_name
   machine_type = "e2-standard-2"
   zone         = var.nev_zone
   service_account {
-    email = "1007087250969-compute@developer.gserviceaccount.com"
+    email = google_service_account.service_account.email
     scopes = [
-      "https://www.googleapis.com/auth/devstorage.read_only",
       "https://www.googleapis.com/auth/logging.write",
       "https://www.googleapis.com/auth/monitoring.write",
       "https://www.googleapis.com/auth/pubsub",
       "https://www.googleapis.com/auth/service.management.readonly",
       "https://www.googleapis.com/auth/servicecontrol",
-      "https://www.googleapis.com/auth/trace.append",
-      "storage-full",
-      "https://www.googleapis.com/auth/cloud-platform"
+      "https://www.googleapis.com/auth/trace.append"
     ]
   }
   metadata = {
