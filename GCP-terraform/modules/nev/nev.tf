@@ -61,6 +61,9 @@ resource "google_secret_manager_secret_iam_member" "shared_credentials_member" {
 }
 
 resource "google_compute_instance" "nev_instance" {
+  depends_on = [
+    google_secret_manager_secret_iam_member.shared_credentials_member
+  ]
   project      = "nuxeo-presales-apis"
   name         = var.stack_name
   machine_type = "e2-standard-2"

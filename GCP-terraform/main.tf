@@ -107,6 +107,11 @@ resource "google_storage_bucket_iam_member" "member" {
 }
 
 resource "google_compute_instance" "nuxeo_instance" {
+  depends_on = [
+    google_secret_manager_secret_iam_member.shared_credentials_member,
+    google_secret_manager_secret_iam_member.instance_credentials_member,
+    google_storage_bucket_iam_member.member
+  ]
   project      = "nuxeo-presales-apis"
   name         = var.stack_name
   machine_type = var.machine_type
