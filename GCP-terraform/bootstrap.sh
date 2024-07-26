@@ -61,7 +61,7 @@ then
   while true
   do
     read -r -p "Machine type? (you can enter a custom type too) [1]: " selected
-    # Make sure that the input is either empty or that a valid index was entered.
+    # Allow empty input, in that case the default value is used.
     [[ -z $selected ]] && break  # empty input
     break
   done
