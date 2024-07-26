@@ -312,7 +312,7 @@
           "SecretStringTemplate": "{\"password\":\"${password}\"}",
           "GenerateStringKey": "password",
           "PasswordLength": 36,
-          "ExcludeCharacters": "\"`-~'@/!#$%^&*()_=+[]{};:?>.<,\\",
+          "ExcludeCharacters": "\"`-~'@/!#$%^&*()_=+[]{};:?>.<,\\|",
           "ExcludeUppercase": true
         }
       }
