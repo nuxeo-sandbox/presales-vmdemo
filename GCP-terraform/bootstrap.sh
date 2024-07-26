@@ -38,11 +38,12 @@ fi
 
 # Machine Type
 # ============
-NX_MACHINE_TYPE_DEFAULT="e2-standard-2"
+NX_MACHINE_TYPE_DEFAULT_SELECTION=1
 nx_machine_type="${NX_MACHINE_TYPE:-}"
 if [ -z "${nx_machine_type}" ]
 then
   # Hourly rates are just to give and idea of the scale, not guaranteed to be accurate.
+  # You can add new machine types here and the script will automatically support them as long as you follow the same format.
   MACHINE_TYPES_MENU=(
     "e2-standard-2  2cpu   8GB  \$0.07/hr"
     "e2-standard-4  4cpu  16GB  \$0.13/hr"
@@ -62,7 +63,7 @@ then
   # Allow empty input, in that case the default value is used.
   if [ -z "${selected}" ]
   then
-    selected=1
+    selected=NX_MACHINE_TYPE_DEFAULT_SELECTION
   fi
 
   # Process the selected item.
