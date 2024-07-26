@@ -21,6 +21,9 @@ AUTO_START=$(curl http://metadata.google.internal/computeMetadata/v1/instance/at
 NUXEO_SECRET=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nuxeo-secret -H "Metadata-Flavor: Google")
 MAKE_NEV=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/with-nev -H "Metadata-Flavor: Google")
 
+# Get credentials for Studio & Repository & mail
+gcloud secrets versions access latest --secret nuxeo-presales-connect --project nuxeo-presales-apis > /root/creds.json
+
 # Variables for installation
 COMPOSE_REPO="https://github.com/nuxeo-sandbox/nuxeo-presales-docker"
 COMPOSE_DIR="/home/ubuntu/nuxeo-presales-docker"
@@ -100,6 +103,8 @@ fi
 # This is required for WOPI
 JWT_SECRET=`uuid`
 
+MAIL_PASS=$(jq -r '.mail_password' < /root/creds.json)
+
 cat << EOF > ${CONF_DIR}/system.conf
 # Host Configuration
 session.timeout=600
@@ -171,9 +176,6 @@ echo "$(date) Configure Studio Project [${NX_STUDIO}]" | tee -a ${INSTALL_LOG}
 
 # Home required by 'docker'
 export HOME="/home/ubuntu"
-
-# Get credentials for Studio & Repository
-gcloud secrets versions access latest --secret nuxeo-presales-connect --project nuxeo-presales-apis > /root/creds.json
 
 # Get gcloud credentials for nuxeo
 gcloud secrets versions access latest --secret instance-credentials --project nuxeo-presales-apis > ${COMPOSE_DIR}/google-credential.json
