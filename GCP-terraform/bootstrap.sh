@@ -43,42 +43,33 @@ nx_machine_type="${NX_MACHINE_TYPE:-}"
 if [ -z "${nx_machine_type}" ]
 then
   # Hourly rates are just to give and idea of the scale, not guaranteed to be accurate.
-  MACHINE_TYPES=(
+  MACHINE_TYPES_MENU=(
     "e2-standard-2  2cpu   8GB  \$0.07/hr"
     "e2-standard-4  4cpu  16GB  \$0.13/hr"
     "e2-standard-8  8cpu  32GB  \$0.27/hr"
   )
-  NUM_MACHINE_TYPES=${#MACHINE_TYPES[@]}
+  NUM_MACHINE_TYPES_MENU=${#MACHINE_TYPES_MENU[@]}
   i=0
 
   # Print numbered menu items, based on the arguments passed.
-  for machine in "${MACHINE_TYPES[@]}"
+  for machine in "${MACHINE_TYPES_MENU[@]}"
   do
     printf '%s\n' "$((++i))) $machine"
   done
 
-  # Prompt the user for the index of the desired item.
-  while true
-  do
-    read -r -p "Machine type? (you can enter a custom type too) [1]: " selected
-    # Allow empty input, in that case the default value is used.
-    [[ -z $selected ]] && break  # empty input
-    break
-  done
+  read -r -p "Machine type? (you can enter a custom type too) [1]: " selected
+
+  # Allow empty input, in that case the default value is used.
+  if [ -z "${selected}" ]
+  then
+    selected=1
+  fi
 
   # Process the selected item.
   case $selected in
-    1)
-      nx_machine_type="e2-standard-2";
-      ;;
-    2)
-      nx_machine_type="e2-standard-4";
-      ;;
-    3)
-      nx_machine_type="e2-standard-8";
-      ;;
-    '')
-      nx_machine_type="${NX_MACHINE_TYPE_DEFAULT}"
+    1 | 2 | 3)
+      # QOL: extract machine type from the menu string so we only have to update one place to add new/edit existing types.
+      nx_machine_type=$( echo ${MACHINE_TYPES_MENU[(selected-1)]} | cut -d' ' -f 1)
       ;;
     *)
       nx_machine_type=${selected}
