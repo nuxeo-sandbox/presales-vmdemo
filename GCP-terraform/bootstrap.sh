@@ -10,7 +10,7 @@
 
 # Stack name
 # ==========
-nx_stack_name="${NX_STACK_NAME:-}" # NB: this allows the value to be read from an environment variable.
+nx_stack_name="${NX_STACK_NAME:-}" # NB: this syntax allows the value to be read from an environment variable.
 # Required, loop until we get a value.
 while [ -z "${nx_stack_name}" ]
 do
@@ -222,10 +222,10 @@ echo
 # ==============================================================================
 # Do the things
 # ==============================================================================
-
-
 terraform init
 # Create workspace
+# Doesn't check for existing beacuse Terraform doesn't care, it won't fail, and
+# makes the script simpler.
 terraform workspace new ${workspace_name}
 # Apply config
 terraform apply ${params[@]}
