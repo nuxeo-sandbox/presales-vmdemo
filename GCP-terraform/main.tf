@@ -67,7 +67,7 @@ resource "random_password" "nuxeo_secret" {
 
 resource "google_service_account" "service_account" {
   project      = "nuxeo-presales-apis"
-  account_id   = "${var.stack_name}-nuxeo-instance"
+  account_id   = "nxp-${var.stack_name}"
   display_name = "Service Account for the ${var.stack_name} nuxeo instance"
 }
 

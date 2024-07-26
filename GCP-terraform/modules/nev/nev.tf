@@ -44,7 +44,7 @@ variable "nev_zone" {
 
 resource "google_service_account" "service_account" {
   project      = "nuxeo-presales-apis"
-  account_id   = "${var.stack_name}-nev-instance"
+  account_id   = "nxp-${var.stack_name}"
   display_name = "Service Account for the ${var.stack_name} nev instance"
 }
 
