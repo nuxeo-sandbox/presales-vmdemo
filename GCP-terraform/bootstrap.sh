@@ -161,7 +161,7 @@ NX_KEEP_ALIVE_DEFAULT="20h00m"
 nx_keep_alive="${NX_KEEP_ALIVE:-}"
 if [ -z "${nx_keep_alive}" ]
 then
-  read -p "Keep alive until (YYYY-MM-DDtHHhMMm|HHhMMm) [${NX_KEEP_ALIVE_DEFAULT}]: " nx_keep_alive
+  read -p "Keep alive until (true|YYYY-MM-DDtHHhMMm|HHhMMm) [${NX_KEEP_ALIVE_DEFAULT}]: " nx_keep_alive
   nx_keep_alive=${nx_keep_alive:-${NX_KEEP_ALIVE_DEFAULT}}
 fi
 
