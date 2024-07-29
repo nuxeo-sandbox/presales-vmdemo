@@ -2,6 +2,17 @@
 
 A GCP cloud function to automatically start instances using a [GCP Cloud Scheduler](https://console.cloud.google.com/cloudscheduler)
 
+The scheduler runs once per hour (at 0mn in the default configuration) and checks to see if instances should be started. Basically, it lists instances whose status is TERMINATED and checks the `start-daily-until` label to decide if they must be started.
+
+About the `start-daily-until` _label_ (not a _tag_)
+* It is optional (not set, a terminated instance is not started)
+* Acceptable values:
+  * `YYYY-MM-DDtHHhMMm`: The instance will be started if the indicated date is >= current date and the indicated time has passed. The time is relative to the deployment zone of the instance
+  * `HHhMMm`: The instance will be started daily when the indicated time has passed (meaning it will be started every day at the same time if it was stopped). The time is relative to the deployment zone of the instance.
+  * Any other value (or if the label is not set) => instance is not started
+  * ℹ️ The values are formatted the way they are (i.e. not ISO datetime) because GCP only allows [certain characters in labels](https://cloud.google.com/compute/docs/labeling-resources#requirements).
+
+
 # Installation
 
 Install [terraform CLI](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/install-cli).
