@@ -31,7 +31,7 @@ Use the included script to automate the setup:
 ./bootstrap.sh
 ```
 
-You may supply param values via environment vars, e.g.:
+The script will prompt for all needed values, but you may also supply param values via environment vars, e.g.:
 
 ```bash
 NX_STACK_NAME=my-stack NX_STUDIO_PROJECT=my-studio-project NX_USE_NEV=false NX_DNS_NAME=my-dns-name NX_NEV_VERSION=2023.2.1 ./bootstrap.sh
@@ -42,7 +42,8 @@ Available variables:
 Var | Purpose | Default
 --- | --- | ---
 NX_STACK_NAME | Used for Compute Instance ID | n/a
-NX_DNS_NAME | URL e.g. "NX_DNS_NAME.gcp.cloud.nuxeo.com" | NX_STACK_NAME
+NX_DNS_NAME | URL i.e. `NX_DNS_NAME.gcp.cloud.nuxeo.com` | NX_STACK_NAME
+NX_NUXEO_VERSION | Nuxeo Docker image version i.e. `docker-private.packages.nuxeo.com/nuxeo/nuxeo:NX_NUXEO_VERSION`) | 2023
 NX_STUDIO_PROJECT | Nuxeo Studio Project ID | n/a
 NX_ZONE | Deployment zone | us-central1-a
 NX_MACHINE_TYPE | Compute Engine instance type | e2-standard-2
@@ -73,6 +74,7 @@ Param | Purpose | Default
 --- | --- | ---
 stack_name | Used for Compute Instance ID | n/a
 dns_name | URL e.g. "dns_name.gcp.cloud.nuxeo.com" | stack_name
+nuxeo_version | Version of the Nuxeo Docker image to use (i.e. `docker-private.packages.nuxeo.com/nuxeo/nuxeo:nuxeo_version`) | 2023
 nx_studio | Nuxeo Studio Project ID | n/a
 nuxeo_zone | Deployment zone | us-central1-a
 machine_type | Compute Engine instance type | e2-standard-2

@@ -16,6 +16,12 @@ locals {
   dns_name = var.dns_name == "" ? var.stack_name : var.dns_name
 }
 
+variable "nuxeo_version" {
+  type        = string
+  description = "Version of Nuxeo to deploy."
+  default     = "2023"
+}
+
 variable "nx_studio" {
   type        = string
   description = "Nuxeo Studio Poject ID."
@@ -133,6 +139,7 @@ resource "google_compute_instance" "nuxeo_instance" {
     enable-oslogin : "TRUE"
     stack-name : var.stack_name
     dns-name: local.dns_name
+    nuxeo-version: var.nuxeo_version
     nx-studio: var.nx_studio
     with-nev: var.with_nev
     nuxeo-secret: random_password.nuxeo_secret.result

@@ -36,6 +36,17 @@ then
   nx_zone=${nx_zone:-${NX_ZONE_DEFAULT}}
 fi
 
+# Nuxeo version
+# =============
+# Default is "2023" which pulls the latest release of 2023.
+NX_NUXEO_VERSION_DEFAULT="2023"
+nx_nuxeo_version="${NX_NUXEO_VERSION:-}"
+if [ -z "${nx_nuxeo_version}" ]
+then
+  read -p "Nuxeo version [${NX_NUXEO_VERSION_DEFAULT}]: " nx_nuxeo_version
+  nx_nuxeo_version=${nx_nuxeo_version:-${NX_NUXEO_VERSION_DEFAULT}}
+fi
+
 # Machine Type
 # ============
 NX_MACHINE_TYPE_DEFAULT_SELECTION=1
@@ -174,6 +185,7 @@ workspace_name=${nx_stack_name}
 params=(
   -var="stack_name=${nx_stack_name}"
   -var="nx_studio=${nx_studio_project}"
+  -var="nuxeo_version=${nx_nuxeo_version}"
   -var="nuxeo_zone=${nx_zone}"
   -var="machine_type=${nx_machine_type}"
   -var="with_nev=${nx_use_nev}"
@@ -191,6 +203,7 @@ fi
 echo
 echo "Stack name:       ${nx_stack_name}"
 echo "Studio project:   ${nx_studio_project}"
+echo "Nuxeo version:    ${nx_nuxeo_version}"
 echo "Deployment zone:  ${nx_zone}"
 echo "Machine type:     ${nx_machine_type}"
 echo "DNS name:         ${nx_dns_name}"

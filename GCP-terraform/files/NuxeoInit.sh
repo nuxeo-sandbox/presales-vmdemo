@@ -16,6 +16,7 @@ fi
 # Instance Metadata
 STACK_ID=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/stack-name -H "Metadata-Flavor: Google")
 DNS_NAME=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/dns-name -H "Metadata-Flavor: Google")
+NUXEO_VERSION=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nuxeo-version -H "Metadata-Flavor: Google")
 NX_STUDIO=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nx-studio -H "Metadata-Flavor: Google")
 AUTO_START=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/auto-start -H "Metadata-Flavor: Google")
 NUXEO_SECRET=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nuxeo-secret -H "Metadata-Flavor: Google")
@@ -41,7 +42,7 @@ OPENSEARCH_VERSION="1.3.17"
 OPENSEARCH_IMAGE="opensearchproject/opensearch:"${OPENSEARCH_VERSION}
 OPENSEARCH_DASHBOARDS_IMAGE="opensearchproject/opensearch-dashboards:"${OPENSEARCH_VERSION}
 
-LTS_IMAGE="docker-private.packages.nuxeo.com/nuxeo/nuxeo:2023"
+NUXEO_IMAGE="docker-private.packages.nuxeo.com/nuxeo/nuxeo:${NUXEO_VERSION}"
 
 TMP_DIR="/tmp/nuxeo"
 
@@ -52,9 +53,6 @@ echo "${INSTALL_LOG_PREFIX} Starting [${STACK_ID}]" > ${INSTALL_LOG}
 # https://opensearch.org/docs/1.3/install-and-configure/install-opensearch/index/#important-settings
 # https://www.mongodb.com/docs/manual/administration/production-checklist-operations/#linux
 echo "vm.max_map_count=262144" >> /etc/sysctl.conf && sysctl -p
-
-# Check configured image
-FROM_IMAGE="${LTS_IMAGE}"
 
 # Check DNS Name
 if [ -z "${DNS_NAME}" ]; then
@@ -202,7 +200,7 @@ cat << EOF > ${NUXEO_ENV}
 APPLICATION_NAME=${NX_STUDIO}
 PROJECT_NAME=${PROJECT_NAME}
 
-NUXEO_IMAGE=${FROM_IMAGE}
+NUXEO_IMAGE=${NUXEO_IMAGE}
 
 JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8787
 
@@ -231,7 +229,7 @@ chown -R nuxeo:ubuntu ${TMP_DIR}
 chown -R ubuntu:ubuntu ${COMPOSE_DIR} ${HOME}/.docker
 
 # Use the source image to register the project
-docker pull --quiet ${FROM_IMAGE} 2>&1 | tee -a ${INSTALL_LOG}
+docker pull --quiet ${NUXEO_IMAGE} 2>&1 | tee -a ${INSTALL_LOG}
 
 # Auto-start if Studio project defined
 if [ -n "${NX_STUDIO}" ]; then
