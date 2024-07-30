@@ -150,6 +150,7 @@ resource "google_compute_instance" "nuxeo_instance" {
 
   labels = {
     "nuxeo-keep-alive": var.nuxeo_keep_alive
+    "dns-name": local.dns_name
   }
 
   boot_disk {

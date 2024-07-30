@@ -41,8 +41,8 @@ functions.http('handlerHttp', async (req, res) => {
     return res.send(`Skipped!`);
   }
 
-  const dnsname = instance.name;
-  
+  const dnsname = instance.labels["dns-name"];
+
   console.log(dnsname)
 
   const dns = new DNS();
