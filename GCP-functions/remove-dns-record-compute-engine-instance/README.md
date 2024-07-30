@@ -25,10 +25,18 @@ terraform apply --destroy
 
 # Dev
 ## Test locally
-Start the npm server
+
+Install `npm-watch`:
+
+```bash
+npm install -g npm-watch
+```
+
+Start the npm server:
 
 ```bash
 cd src
+npm install
 npm-watch start
 ```
 
@@ -57,7 +65,7 @@ curl localhost:8080 \
   }'
 ```
 
-## Deploy changes 
+## Deploy changes
 
 ```bash
 terraform apply
@@ -84,7 +92,7 @@ gcloud functions call remove-dns-record-gce --data '{
   }'
 ```
 
-The function run logs can be accessed with 
+The function run logs can be accessed with
 
 ```bash
 gcloud functions logs read remove-dns-record-gce --gen2

@@ -36,15 +36,18 @@ terraform apply --destroy
 
 # Dev
 ## Test locally
-Start the npm server
+
+Install `npm-watch`:
+
+```bash
+npm install -g npm-watch
+```
+
+Start the npm server:
 
 ```bash
 cd src
-
-# First time, or if you add dependencies to package.json:
-# (may not be necessary of some dependencies are installed globally)
 npm install
-
 npm-watch start
 ```
 
@@ -62,7 +65,7 @@ curl localhost:8080 \
     }'
 ```
 
-## Deploy changes 
+## Deploy changes
 
 ```bash
 terraform apply
@@ -85,7 +88,7 @@ The scheduler can also be triggered to test the end-to-end feature
 gcloud scheduler jobs run daily-gce-instance-start  --location=us-central1
 ```
 
-The function run logs can be accessed with 
+The function run logs can be accessed with
 
 ```bash
 gcloud functions logs read scheduled-start-gce --gen2
