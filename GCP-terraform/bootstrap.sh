@@ -237,7 +237,7 @@ echo
 # ==============================================================================
 terraform init
 # Create workspace
-# Doesn't check for existing beacuse Terraform doesn't care, it won't fail, and
+# Doesn't check for existing because Terraform doesn't care, it won't fail, and
 # makes the script simpler.
 terraform workspace new ${workspace_name}
 # Apply config
