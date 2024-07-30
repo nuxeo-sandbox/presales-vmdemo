@@ -1,10 +1,10 @@
 # Description
 
-Tooling to automate the creation of a Nuxeo demo instance on GCP via [terraform](https://developer.hashicorp.com/terraform).
+Tooling to automate the creation of a Nuxeo demo instance on GCP via [Terraform](https://developer.hashicorp.com/terraform).
 
 # Installation
 
-Install [terraform CLI](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/install-cli).
+Install [Terraform CLI](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/install-cli).
 
 For Hyland team members, use `gcloud auth application-default login` to set/refresh the GCP credentials on your computer.
 

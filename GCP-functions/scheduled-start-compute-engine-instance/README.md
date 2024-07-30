@@ -15,7 +15,7 @@ About the `start-daily-until` _label_ (not a _tag_)
 
 # Installation
 
-Install [terraform CLI](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/install-cli).
+Install [Terraform CLI](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/install-cli).
 
 For Hyland team members, use `gcloud auth application-default login` to set/refresh the GCP credentials on your computer.
 
