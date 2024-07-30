@@ -97,10 +97,25 @@ Make sure to select the correct Workspace for the resources that you want to des
 
 ```bash
 terraform workspace select <stack_name>
-terraform apply --destroy
 ```
 
-Note: `terraform apply --destroy` will prompt for variable values, but the values aren't used. You can just press enter or, if the value can't be null, you can enter junk. Cf. https://github.com/hashicorp/terraform/issues/23552 and https://github.com/hashicorp/terraform/pull/29291
+## Script
+
+Use the included script to automate the deletion:
+
+```bash
+./destroy.sh
+```
+
+## Terraform CLI
+
+You can do it manually as well. You *must* specify the stack name when running `terraform apply --destroy`. You can parameterize it like so:
+
+```bash
+terraform apply --destroy -var="stack_name=my-stack-name"
+```
+
+Note: `terraform apply --destroy` will prompt for any variable values that don't have a default. Other than the stack name, you can just press enter or, if the value can't be null, you can enter junk. Cf. https://github.com/hashicorp/terraform/issues/23552 and https://github.com/hashicorp/terraform/pull/29291
 
 If you're done with this project, delete the Workspace:
 
