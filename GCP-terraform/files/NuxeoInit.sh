@@ -348,9 +348,9 @@ a2enmod proxy proxy_http rewrite ssl headers
 a2dissite 000-default
 a2ensite nuxeo
 
-#KIBANA_PASS=$(aws secretsmanager get-secret-value --secret-id kibana_default_password --region us-west-2 | jq -r '.SecretString|fromjson|.kibana_default_password')
-#htpasswd -b -c /etc/apache2/passwords kibana "${KIBANA_PASS}"
-#apache2ctl -k graceful
+KIBANA_PASS=$(gcloud secrets versions access latest --secret kibana-password --project nuxeo-presales-apis)
+htpasswd -b -c /etc/apache2/passwords kibana "${KIBANA_PASS}"
+apache2ctl -k graceful
 
 # Restart apache
 echo "Restarting Apache"

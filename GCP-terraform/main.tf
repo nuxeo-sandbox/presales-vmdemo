@@ -87,6 +87,11 @@ data "google_secret_manager_secret" "instance_credentials" {
   secret_id    = "instance-credentials"
 }
 
+data "google_secret_manager_secret" "kibana_credentials" {
+  project      = "nuxeo-presales-apis"
+  secret_id    = "kibana-password"
+}
+
 resource "google_secret_manager_secret_iam_member" "shared_credentials_member" {
   project = "nuxeo-presales-apis"
   secret_id = data.google_secret_manager_secret.shared_credentials.id
@@ -97,6 +102,13 @@ resource "google_secret_manager_secret_iam_member" "shared_credentials_member" {
 resource "google_secret_manager_secret_iam_member" "instance_credentials_member" {
   project = "nuxeo-presales-apis"
   secret_id = data.google_secret_manager_secret.instance_credentials.id
+  role = "roles/secretmanager.secretAccessor"
+  member = "serviceAccount:${google_service_account.service_account.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "kibana_credentials_member" {
+  project = "nuxeo-presales-apis"
+  secret_id = data.google_secret_manager_secret.kibana_credentials.id
   role = "roles/secretmanager.secretAccessor"
   member = "serviceAccount:${google_service_account.service_account.email}"
 }
@@ -116,7 +128,8 @@ resource "google_compute_instance" "nuxeo_instance" {
   depends_on = [
     google_secret_manager_secret_iam_member.shared_credentials_member,
     google_secret_manager_secret_iam_member.instance_credentials_member,
-    google_storage_bucket_iam_member.member
+    google_storage_bucket_iam_member.member,
+    google_secret_manager_secret_iam_member.kibana_credentials_member
   ]
   project      = "nuxeo-presales-apis"
   name         = var.stack_name
