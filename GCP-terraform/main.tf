@@ -1,5 +1,23 @@
 # Create Nuxeo stack on GCP using Terraform.
 
+terraform {
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = ">= 5.0.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 3.4.3"
+    }
+  }
+}
+
+variable "customer" {
+  type        = string
+  description = "Prospect company name or 'generic'"
+}
+
 variable "stack_name" {
   type        = string
   description = "Stack name (used for Compute Instance Name and DNS if not set)."
@@ -61,6 +79,13 @@ variable "machine_type" {
   type        = string
   description = "Compute Engine instance type."
   default     = "e2-standard-2"
+}
+
+provider "google" {
+  default_labels = {
+    billing-category = "presales"
+    billing-subcategory = var.customer
+  }
 }
 
 # Nuxeo Instance resources
