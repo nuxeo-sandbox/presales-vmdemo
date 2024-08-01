@@ -2,9 +2,23 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = ">= 4.34.0"
+      version = ">= 5.0.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 3.4.3"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = ">= 2.5.0"
     }
   }
+}
+
+variable "gcp_project" {
+  type        = string
+  description = "GCP project name"
+  default = "nuxeo-presales-apis"
 }
 
 variable "function_name" {
@@ -12,6 +26,15 @@ variable "function_name" {
   default = "add-dns-record-gce"
 }
 
+provider "google" {
+  project = var.gcp_project
+  default_labels = {
+    billing-category = "presales"
+    billing-subcategory = "generic"
+  }
+}
+
+data "google_project" "project" {}
 
 data "archive_file" "zip" {
   type        = "zip"
@@ -33,25 +56,23 @@ resource "google_storage_bucket_object" "object" {
 }
 
 resource "google_service_account" "service_account" {
-  project      = "nuxeo-presales-apis"
   account_id   = "fn-${var.function_name}-sa"
   display_name = "Service Account to add compute instance DNS records"
 }
 
 resource "google_project_iam_member" "event_receiver_iam" {
-  project      = "nuxeo-presales-apis"
+  project      = data.google_project.project.project_id
   role         = "roles/eventarc.eventReceiver"
   member = "serviceAccount:${google_service_account.service_account.email}"
 }
 
 resource "google_project_iam_member" "compute_viewer_iam" {
-  project      = "nuxeo-presales-apis"
+  project      = data.google_project.project.project_id
   role         = "roles/compute.viewer"
   member = "serviceAccount:${google_service_account.service_account.email}"
 }
 
 resource "google_dns_managed_zone_iam_member" "dns_admin_iam" {
-  project      = "nuxeo-presales-apis"
   managed_zone = "gcp"
   role = "roles/dns.admin"
   member = "serviceAccount:${google_service_account.service_account.email}"
@@ -59,7 +80,6 @@ resource "google_dns_managed_zone_iam_member" "dns_admin_iam" {
 
 resource "google_cloudfunctions2_function" "default" {
   name        = var.function_name
-  project      = "nuxeo-presales-apis"
   location    = "us-central1"
   description = "A function to remove DNS records for compute instances that are going offline"
   build_config {
@@ -81,7 +101,6 @@ resource "google_cloudfunctions2_function" "default" {
 }
 
 resource "google_cloud_run_service_iam_member" "member" {
-  project      = "nuxeo-presales-apis"
   location = google_cloudfunctions2_function.default.location
   service  = google_cloudfunctions2_function.default.service_config[0].service
   role = "roles/run.invoker"
@@ -90,7 +109,6 @@ resource "google_cloud_run_service_iam_member" "member" {
 
 resource "google_eventarc_trigger" "trigger" {
   depends_on = [google_project_iam_member.event_receiver_iam]
-  project      = "nuxeo-presales-apis"
   name = "${var.function_name}-trigger"
   service_account = google_service_account.service_account.email
   location = "us-central1"

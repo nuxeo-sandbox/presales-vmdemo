@@ -2,9 +2,23 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = ">= 4.34.0"
+      version = ">= 5.0.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 3.4.3"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = ">= 2.5.0"
     }
   }
+}
+
+variable "gcp_project" {
+  type        = string
+  description = "GCP project name"
+  default = "nuxeo-presales-apis"
 }
 
 variable "function_name" {
@@ -12,6 +26,15 @@ variable "function_name" {
   default = "scheduled-shutdown-gce"
 }
 
+provider "google" {
+  project = var.gcp_project
+  default_labels = {
+    billing-category = "presales"
+    billing-subcategory = "generic"
+  }
+}
+
+data "google_project" "project" {}
 
 data "archive_file" "zip" {
   type        = "zip"
@@ -33,20 +56,18 @@ resource "google_storage_bucket_object" "object" {
 }
 
 resource "google_service_account" "service_account" {
-  project      = "nuxeo-presales-apis"
   account_id   = "fn-${var.function_name}-sa"
   display_name = "Service Account to periodically shutdown compute instance"
 }
 
 resource "google_project_iam_member" "compute_viewer_iam" {
-  project      = "nuxeo-presales-apis"
+  project      = data.google_project.project.project_id
   role         = "roles/compute.admin"
   member = "serviceAccount:${google_service_account.service_account.email}"
 }
 
 resource "google_cloudfunctions2_function" "default" {
   name        = var.function_name
-  project      = "nuxeo-presales-apis"
   location    = "us-central1"
   description = "A function to periodically shutdown compute instances"
   build_config {
@@ -68,7 +89,6 @@ resource "google_cloudfunctions2_function" "default" {
 }
 
 resource "google_cloud_run_service_iam_member" "invoker_iam" {
-  project      = "nuxeo-presales-apis"
   location = google_cloudfunctions2_function.default.location
   service  = google_cloudfunctions2_function.default.service_config[0].service
   role = "roles/run.invoker"
@@ -77,7 +97,6 @@ resource "google_cloud_run_service_iam_member" "invoker_iam" {
 
 resource "google_cloud_scheduler_job" "job" {
   depends_on = [google_cloud_run_service_iam_member.invoker_iam]
-  project      = "nuxeo-presales-apis"
   region      = "us-central1"
   name        = "daily-gce-instance-shutdown"
   description = "Job to stop instances depending on their nuxeo-keep-alive label."
