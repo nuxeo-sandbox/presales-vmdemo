@@ -12,10 +12,10 @@
 nx_stack_name=`terraform workspace show`
 
 if [[ "$nx_stack_name" == "default" ]]; then
-    echo "Error: current workspace should not be 'default'."
+    echo "Error: selected workspace should not be 'default'."
     echo "Make sure to select the correct Workspace for the resources that you want to destroy. You can run..."
     echo "    terraform workspace list"
-    echo "...to find the Workspace name, then:"
+    echo "...to find the Workspace name, then run this to select it:"
     echo "    terraform workspace select <stack_name>"
     exit 1
 fi
