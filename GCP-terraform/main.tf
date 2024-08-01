@@ -16,7 +16,7 @@ terraform {
 variable "gcp_project" {
   type        = string
   description = "GCP project name"
-  default = "nuxeo-presales-apis"
+  default     = "nuxeo-presales-apis"
 }
 
 variable "customer" {
@@ -90,7 +90,7 @@ variable "machine_type" {
 provider "google" {
   project = var.gcp_project
   default_labels = {
-    billing-category = "presales"
+    billing-category    = "presales"
     billing-subcategory = var.customer
   }
 }
@@ -109,33 +109,33 @@ resource "google_service_account" "service_account" {
 }
 
 data "google_secret_manager_secret" "shared_credentials" {
-  secret_id    = "nuxeo-presales-connect"
+  secret_id = "nuxeo-presales-connect"
 }
 
 data "google_secret_manager_secret" "instance_credentials" {
-  secret_id    = "instance-credentials"
+  secret_id = "instance-credentials"
 }
 
 data "google_secret_manager_secret" "kibana_credentials" {
-  secret_id    = "kibana-password"
+  secret_id = "kibana-password"
 }
 
 resource "google_secret_manager_secret_iam_member" "shared_credentials_member" {
   secret_id = data.google_secret_manager_secret.shared_credentials.id
-  role = "roles/secretmanager.secretAccessor"
-  member = "serviceAccount:${google_service_account.service_account.email}"
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.service_account.email}"
 }
 
 resource "google_secret_manager_secret_iam_member" "instance_credentials_member" {
   secret_id = data.google_secret_manager_secret.instance_credentials.id
-  role = "roles/secretmanager.secretAccessor"
-  member = "serviceAccount:${google_service_account.service_account.email}"
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.service_account.email}"
 }
 
 resource "google_secret_manager_secret_iam_member" "kibana_credentials_member" {
   secret_id = data.google_secret_manager_secret.kibana_credentials.id
-  role = "roles/secretmanager.secretAccessor"
-  member = "serviceAccount:${google_service_account.service_account.email}"
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.service_account.email}"
 }
 
 data "google_storage_bucket" "content_bucket" {
@@ -144,7 +144,7 @@ data "google_storage_bucket" "content_bucket" {
 
 resource "google_storage_bucket_iam_member" "member" {
   bucket = data.google_storage_bucket.content_bucket.name
-  role = "roles/storage.admin"
+  role   = "roles/storage.admin"
   member = "serviceAccount:${google_service_account.service_account.email}"
 }
 
@@ -174,19 +174,19 @@ resource "google_compute_instance" "nuxeo_instance" {
   metadata = {
     enable-oslogin : "TRUE"
     stack-name : var.stack_name
-    dns-name: local.dns_name
-    nuxeo-version: var.nuxeo_version
-    nx-studio: var.nx_studio
-    with-nev: var.with_nev
-    nuxeo-secret: random_password.nuxeo_secret.result
-    auto-start: var.auto_start
-    startup-script: file("./files/NuxeoInit.sh")
+    dns-name : local.dns_name
+    nuxeo-version : var.nuxeo_version
+    nx-studio : var.nx_studio
+    with-nev : var.with_nev
+    nuxeo-secret : random_password.nuxeo_secret.result
+    auto-start : var.auto_start
+    startup-script : file("./files/NuxeoInit.sh")
   }
-  tags = ["http-server","https-server"]
+  tags = ["http-server", "https-server"]
 
   labels = {
-    "nuxeo-keep-alive": var.nuxeo_keep_alive
-    "dns-name": local.dns_name
+    "nuxeo-keep-alive" : var.nuxeo_keep_alive
+    "dns-name" : local.dns_name
   }
 
   boot_disk {
@@ -205,19 +205,19 @@ resource "google_dns_record_set" "nuxeo_instance_dns_record" {
   managed_zone = "gcp"
   name         = "${local.dns_name}.gcp.cloud.nuxeo.com."
   type         = "A"
-  rrdatas      = ["${google_compute_instance.nuxeo_instance.network_interface.0.access_config.0.nat_ip}"]
+  rrdatas = ["${google_compute_instance.nuxeo_instance.network_interface.0.access_config.0.nat_ip}"]
   ttl          = 300
 }
 
 # Nuxeo Enhanced Viewer Resources
 module "nev" {
-  count = var.with_nev ? 1 : 0
-  source = "./modules/nev"
-  nev_version = "${var.nev_version}"
-  stack_name = "${var.stack_name}-nev"
-  dns_name = "${local.dns_name}-nev"
-  nuxeo_url = "https://${local.dns_name}.gcp.cloud.nuxeo.com"
-  nuxeo_secret= random_password.nuxeo_secret.result
+  count            = var.with_nev ? 1 : 0
+  source           = "./modules/nev"
+  nev_version      = "${var.nev_version}"
+  stack_name       = "${var.stack_name}-nev"
+  dns_name         = "${local.dns_name}-nev"
+  nuxeo_url        = "https://${local.dns_name}.gcp.cloud.nuxeo.com"
+  nuxeo_secret     = random_password.nuxeo_secret.result
   nuxeo_keep_alive = "${var.nuxeo_keep_alive}"
-  nev_zone = "${var.nuxeo_zone}"
+  nev_zone         = "${var.nuxeo_zone}"
 }
