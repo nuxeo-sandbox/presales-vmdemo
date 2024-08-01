@@ -20,8 +20,8 @@ if [[ "$nx_stack_name" == "default" ]]; then
     exit 1
 fi
 
-# These values don't matter, it's not used, but the terraform config requires them
-# when they don't have a default value set.
+# These values don't matter, they're not used, but the terraform config requires
+# them when they don't have a default value set.
 nx_studio_project="foo"
 nx_customer="bar"
 
