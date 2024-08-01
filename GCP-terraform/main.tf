@@ -13,6 +13,12 @@ terraform {
   }
 }
 
+variable "gcp_project" {
+  type        = string
+  description = "GCP project name"
+  default = "nuxeo-presales-apis"
+}
+
 variable "customer" {
   type        = string
   description = "Prospect company name or 'generic'"
@@ -82,6 +88,7 @@ variable "machine_type" {
 }
 
 provider "google" {
+  project = var.gcp_project
   default_labels = {
     billing-category = "presales"
     billing-subcategory = var.customer
@@ -97,49 +104,41 @@ resource "random_password" "nuxeo_secret" {
 }
 
 resource "google_service_account" "service_account" {
-  project      = "nuxeo-presales-apis"
   account_id   = "nxp-${var.stack_name}"
   display_name = "Service Account for the ${var.stack_name} nuxeo instance"
 }
 
 data "google_secret_manager_secret" "shared_credentials" {
-  project      = "nuxeo-presales-apis"
   secret_id    = "nuxeo-presales-connect"
 }
 
 data "google_secret_manager_secret" "instance_credentials" {
-  project      = "nuxeo-presales-apis"
   secret_id    = "instance-credentials"
 }
 
 data "google_secret_manager_secret" "kibana_credentials" {
-  project      = "nuxeo-presales-apis"
   secret_id    = "kibana-password"
 }
 
 resource "google_secret_manager_secret_iam_member" "shared_credentials_member" {
-  project = "nuxeo-presales-apis"
   secret_id = data.google_secret_manager_secret.shared_credentials.id
   role = "roles/secretmanager.secretAccessor"
   member = "serviceAccount:${google_service_account.service_account.email}"
 }
 
 resource "google_secret_manager_secret_iam_member" "instance_credentials_member" {
-  project = "nuxeo-presales-apis"
   secret_id = data.google_secret_manager_secret.instance_credentials.id
   role = "roles/secretmanager.secretAccessor"
   member = "serviceAccount:${google_service_account.service_account.email}"
 }
 
 resource "google_secret_manager_secret_iam_member" "kibana_credentials_member" {
-  project = "nuxeo-presales-apis"
   secret_id = data.google_secret_manager_secret.kibana_credentials.id
   role = "roles/secretmanager.secretAccessor"
   member = "serviceAccount:${google_service_account.service_account.email}"
 }
 
 data "google_storage_bucket" "content_bucket" {
-  project = "nuxeo-presales-apis"
   name = "nuxeo-demo-shared-bucket-us"
 }
 
@@ -156,7 +155,6 @@ resource "google_compute_instance" "nuxeo_instance" {
     google_storage_bucket_iam_member.member,
     google_secret_manager_secret_iam_member.kibana_credentials_member
   ]
-  project      = "nuxeo-presales-apis"
   name         = var.stack_name
   machine_type = var.machine_type
   zone         = var.nuxeo_zone
@@ -204,7 +202,6 @@ resource "google_compute_instance" "nuxeo_instance" {
 }
 
 resource "google_dns_record_set" "nuxeo_instance_dns_record" {
-  project      = "nuxeo-presales-apis"
   managed_zone = "gcp"
   name         = "${local.dns_name}.gcp.cloud.nuxeo.com."
   type         = "A"
