@@ -11,6 +11,15 @@
 # Get the workspace name (it's also the stack name)
 nx_stack_name=`terraform workspace show`
 
+if [[ "$nx_stack_name" == "default" ]]; then
+    echo "Error: current workspace should not be 'default'."
+    echo "Make sure to select the correct Workspace for the resources that you want to destroy. You can run..."
+    echo "    terraform workspace list"
+    echo "...to find the Workspace name, then:"
+    echo "    terraform workspace select <stack_name>"
+    exit 1
+fi
+
 # These values don't matter, it's not used, but the terraform config requires them
 # when they don't have a default value set.
 nx_studio_project="foo"
