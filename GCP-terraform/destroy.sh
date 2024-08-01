@@ -11,8 +11,10 @@
 # Get the workspace name (it's also the stack name)
 nx_stack_name=`terraform workspace show`
 
-# This value doesn't matter, it's not used, but the terraform config requires it.
+# These values don't matter, it's not used, but the terraform config requires them
+# when they don't have a default value set.
 nx_studio_project="foo"
+nx_customer="bar"
 
 # ==============================================================================
 # Other params
@@ -23,6 +25,7 @@ workspace_name=${nx_stack_name}
 params=(
   -var="stack_name=${nx_stack_name}"
   -var="nx_studio=${nx_studio_project}"
+  -var="customer=${nx_customer}"
 )
 
 # ==============================================================================
