@@ -99,7 +99,7 @@ resource "google_cloud_scheduler_job" "job" {
   depends_on = [google_cloud_run_service_iam_member.invoker_iam]
   region      = "us-central1"
   name        = "daily-gce-instance-shutdown"
-  description = "Job to stop instances depending on their nuxeo-keep-alive label."
+  description = "Job to stop instances depending on their nuxeo-keep-alive label"
   schedule    = "0 * * * *"
 
   http_target {

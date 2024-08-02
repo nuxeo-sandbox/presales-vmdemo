@@ -26,12 +26,12 @@ variable "customer" {
 
 variable "stack_name" {
   type        = string
-  description = "Stack name (used for Compute Instance Name and DNS if not set)."
+  description = "Stack name (used for Compute Instance Name and DNS if not set)"
 }
 
 variable "dns_name" {
   type        = string
-  description = "DNS name (i.e. dns_name.gcp.cloud.nuxeo.com)."
+  description = "DNS name (i.e. dns_name.gcp.cloud.nuxeo.com)"
   default     = ""
 }
 
@@ -42,24 +42,24 @@ locals {
 
 variable "nuxeo_version" {
   type        = string
-  description = "Version of Nuxeo to deploy."
+  description = "Version of Nuxeo to deploy"
   default     = "2023"
 }
 
 variable "nx_studio" {
   type        = string
-  description = "Nuxeo Studio Poject ID."
+  description = "Nuxeo Studio Poject ID"
 }
 
 variable "with_nev" {
   type        = bool
-  description = "Deploy NEV? [true|false]"
+  description = "Deploy NEV?"
   default     = false
 }
 
 variable "nev_version" {
   type        = string
-  description = "Version of NEV to deploy."
+  description = "Version of NEV to deploy"
   default     = "2023.2.1"
 }
 
@@ -71,7 +71,7 @@ variable "auto_start" {
 
 variable "nuxeo_keep_alive" {
   type        = string
-  description = "Control auto shutdown."
+  description = "Control auto shutdown"
   default     = "20h00m" # 8:00 PM relative to the zone
 }
 
@@ -83,7 +83,7 @@ variable "nuxeo_zone" {
 
 variable "machine_type" {
   type        = string
-  description = "Compute Engine instance type."
+  description = "Compute Engine instance type"
   default     = "e2-standard-2"
 }
 

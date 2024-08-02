@@ -28,6 +28,8 @@ nx_customer="bar"
 # ==============================================================================
 # Other params
 # ==============================================================================
+
+# Reassign just for readability and clarity.
 workspace_name=${nx_stack_name}
 
 # params are printed to the screen and passed to Terraform; best to store in an array

@@ -99,7 +99,7 @@ resource "google_cloud_scheduler_job" "job" {
   depends_on = [google_cloud_run_service_iam_member.invoker_iam]
   region      = "us-central1"
   name        = "daily-gce-instance-start"
-  description = "Job to start instances depending on their start-daily-until label."
+  description = "Job to start instances depending on their start-daily-until label"
   schedule    = "0 * * * *"
 
   http_target {
