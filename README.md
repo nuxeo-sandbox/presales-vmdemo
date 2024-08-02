@@ -9,11 +9,11 @@ Note: The master branch currently deploys Nuxeo LTS 2023. To deploy Nuxeo LTS 20
 A [packer.io](https://www.packer.io/) template to automate the creation of cloud images with all the required OS packages pre-installed. See the [README](_COMMON/vm-image-builder/README.md) to get more details about how to use it.
 
 ## AWS resources
-[AWS](AWS/README.md) contains AWS CLoud Formation templates and scripts to deploy a demo instance on AWS.
+[AWS](aws/README.md) contains AWS CLoud Formation templates and scripts to deploy a demo instance on AWS.
 The folder also contains Lambda functions to automatically update DNS records and schedule instances uptime.
 
 ## GCP resources
-[GCP](GCP/README.md) contains terraform templates and scripts to deploy a demo instance on GCP.
+[GCP](gcp/README.md) contains terraform templates and scripts to deploy a demo instance on GCP.
 The folder also contains Cloud Functions to automatically update DNS records and schedule instances uptime.
 
 # About Nuxeo
