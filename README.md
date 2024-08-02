@@ -12,9 +12,8 @@ A [packer.io](https://www.packer.io/) template to automate the creation of cloud
 [AWS](AWS/README.md) contains AWS CLoud Formation templates and scripts to deploy a demo instance on AWS.
 The folder also contains Lambda functions to automatically update DNS records and schedule instances uptime.
 
-
 ## GCP resources
-[GCP](GCP/Demo-stack/README.md) contains terraform templates and scripts to deploy a demo instance on GCP.
+[GCP](GCP/README.md) contains terraform templates and scripts to deploy a demo instance on GCP.
 The folder also contains Cloud Functions to automatically update DNS records and schedule instances uptime.
 
 # About Nuxeo
