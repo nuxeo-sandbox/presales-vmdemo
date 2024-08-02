@@ -5,7 +5,7 @@ GCP resources used by the Nuxeo Presales Team. These are provided for inspiratio
 
 ## Demo Stack Tooling
 Contains tooling to deploy a full demo stack on GCP. See [README](terraform/README.md) to get started.
-These tooling uses the compute image built with the packer template at [vm-image-builder](../_COMMON/vm-image-builder/README.md).
+This tooling uses the compute image built with the packer template at [vm-image-builder](../_COMMON/vm-image-builder/README.md).
 
 ## Cloud Functions
 Functions used to automate various tasks including:
