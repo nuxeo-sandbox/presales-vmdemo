@@ -51,7 +51,7 @@ NX_AUTO_START | Start Nuxeo stack after instance creation | true
 NX_USE_NEV | Deploy NEV? | false
 NX_NEV_VERSION | Version of NEV to deploy | 2023.2.1
 NX_KEEP_ALIVE | Control auto shutdown | 20h00m
-
+NX_CUSTOMER | Prospect company name or 'generic' | n/a
 
 Don't forget to make the script executable if needed:
 
@@ -82,6 +82,7 @@ auto_start | Start Nuxeo stack after instance creation | true
 with_nev | Deploy NEV? | false
 nev_version | Version of NEV to deploy | 2023.2.1
 nuxeo_keep_alive | Control auto shutdown | 20h00m
+customer | Prospect company name or 'generic' | n/a
 
 NB: params are not required. Terraform will prompt you to enter values as needed, but if you want to override any default values you must pass the new value, Terraform won't prompt for values that have a default.
 
@@ -105,6 +106,12 @@ Use the included script to automate the deletion:
 
 ```bash
 ./destroy.sh
+```
+
+Don't forget to make the script executable if needed:
+
+```bash
+chmod u+x destroy.sh
 ```
 
 ## Terraform CLI

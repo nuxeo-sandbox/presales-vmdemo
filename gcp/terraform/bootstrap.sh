@@ -26,6 +26,15 @@ do
   read -p "Studio Project ID: " nx_studio_project
 done
 
+# Customer
+# ========
+nx_customer="${NX_CUSTOMER:-}"
+# Required, loop until we get a value.
+while [ -z "${nx_customer}" ]
+do
+  read -p "Customer name or 'generic': " nx_customer
+done
+
 # Deployment zone
 # ===============
 NX_ZONE_DEFAULT="us-central1-a"
@@ -191,6 +200,7 @@ params=(
   -var="with_nev=${nx_use_nev}"
   -var="dns_name=${nx_dns_name}"
   -var="nuxeo_keep_alive=${nx_keep_alive}"
+  -var="customer=${nx_customer}"
 )
 if ${nx_use_nev}
 then
@@ -203,6 +213,7 @@ fi
 echo
 echo "Stack name:       ${nx_stack_name}"
 echo "Studio project:   ${nx_studio_project}"
+echo "Customer:         ${nx_customer}"
 echo "Nuxeo version:    ${nx_nuxeo_version}"
 echo "Deployment zone:  ${nx_zone}"
 echo "Machine type:     ${nx_machine_type}"
