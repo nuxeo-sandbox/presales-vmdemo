@@ -17,9 +17,9 @@ The folder also contains Lambda functions to automatically update DNS records an
 The folder also contains Cloud Functions to automatically update DNS records and schedule instances uptime.
 
 # Quick Links
-[Create an AWS demo instance](aws/cf-templates/Nuxeo.template)
-[Create a GCP demo instance](gcp/terraform/README.md)
-[Build a new instance image](_common/vm-image-builder/README.md)
+- [Create an AWS demo instance](aws/cf-templates/Nuxeo.template)
+- [Create a GCP demo instance](gcp/terraform/README.md)
+- [Build a new instance image](_common/vm-image-builder/README.md)
 
 # About Nuxeo
 [Nuxeo](https://www.hyland.com/products/nuxeo-platform), leading Content Services Platform, is reinventing enterprise content management (ECM) and digital asset management (DAM). Nuxeo is fundamentally changing how people work with data and content to realize new value from digital information. Its cloud-native platform has been deployed by large enterprises, mid-sized businesses and government agencies worldwide. Customers like Verizon, Electronic Arts, ABN Amro, and the Department of Defense have used Nuxeo's technology to transform the way they do business.
