@@ -10,13 +10,9 @@ For Hyland team members, use `gcloud auth application-default login` to set/refr
 
 Install tooling:
 
-> [!IMPORTANT]
-> When ready to merge with master, remove the branch info
-
 ```bash
-git clone -b gcp https://github.com/nuxeo-sandbox/presales-vmdemo
-cd presales-vmdemo/GCP/Demo-stack
-terraform init
+git clone https://github.com/nuxeo-sandbox/presales-vmdemo
+cd presales-vmdemo/gcp/terraform
 ```
 
 # Create Resources

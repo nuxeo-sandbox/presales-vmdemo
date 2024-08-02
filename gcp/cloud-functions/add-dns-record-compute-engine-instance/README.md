@@ -11,8 +11,8 @@ For Hyland team members, use `gcloud auth application-default login` to set/refr
 Install tooling:
 
 ```bash
-git clone -b gcp https://github.com/nuxeo-sandbox/presales-vmdemo
-cd presales-vmdemo/GCP/Cloud-functions/add-dns-record-compute-engine-instance
+git clone https://github.com/nuxeo-sandbox/presales-vmdemo
+cd presales-vmdemo/gcp/cloud-functions/add-dns-record-compute-engine-instance
 terraform init
 terraform apply
 ```

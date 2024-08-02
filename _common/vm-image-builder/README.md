@@ -12,7 +12,7 @@ For Hyland team members, use `aws sso login --profile <AWS_PROFILE>` to set/refr
 
 ```
 git clone https://github.com/nuxeo-sandbox/presales-vmdemo
-cd IMAGE-builder
+cd presales-vmdemo/_common/vm-image-builder
 packer init .\aws-ami.pkr.hcl
 packer build -var 'profile=<AWS_PROFILE>' .\aws-ami.pkr.hcl
 ```
@@ -25,7 +25,7 @@ For Hyland team members, use ` gcloud auth application-default login` to set/ref
 
 ```
 git clone https://github.com/nuxeo-sandbox/presales-vmdemo
-cd IMAGE-builder
+cd presales-vmdemo/_common/vm-image-builder
 packer init .\gcp-image.pkr.hcl
 packer build .\gcp-image.pkr.hcl
 ```

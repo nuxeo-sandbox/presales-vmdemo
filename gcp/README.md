@@ -5,7 +5,7 @@ GCP resources used by the Nuxeo Presales Team. These are provided for inspiratio
 
 ## Demo Stack Tooling
 Contains tooling to deploy a full demo stack on GCP. See [README](terraform/README.md) to get started.
-This tooling uses the compute image built with the packer template at [vm-image-builder](../_COMMON/vm-image-builder/README.md).
+This tooling uses the compute image built with the packer template at [vm-image-builder](../_common/vm-image-builder/README.md).
 
 ## Cloud Functions
 Functions used to automate various tasks including:
@@ -13,7 +13,7 @@ Functions used to automate various tasks including:
 * Automatic start of instances
 * Automatic update of DNS records when instances are started or stopped
 
-See dedicated READMEs for each function in  [Cloud-functions](cloud-functions)
+See dedicated READMEs for each function in  [cloud-functions](cloud-functions)
 
 # About Nuxeo
 [Nuxeo](https://www.hyland.com/products/nuxeo-platform), leading Content Services Platform, is reinventing enterprise content management (ECM) and digital asset management (DAM). Nuxeo is fundamentally changing how people work with data and content to realize new value from digital information. Its cloud-native platform has been deployed by large enterprises, mid-sized businesses and government agencies worldwide. Customers like Verizon, Electronic Arts, ABN Amro, and the Department of Defense have used Nuxeo's technology to transform the way they do business.
