@@ -403,7 +403,7 @@
         "UserData": {
           "Fn::Base64": {
             "Fn::Sub": [
-              "#!/bin/bash\n\nwget https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/${branch}/AWS/EC2-scripts/Nuxeo.sh\necho export UPLOAD_ROLE_ARN=${uploadRole} REKOGNITION_ROLE_ARN=${rekognitionRole} SNS_TOPIC_ARN=${snsTopic} STACK_ID=${stack} DNS_NAME=${dnsName} REGION=${region} S3BUCKET=${bucket} NX_BRANCH=${branch} PRESALES_DOCKER_BRANCH=${branchForPresalesDocker} NX_STUDIO=${studio} NX_STUDIO_VER=${studioVer} AUTO_START=${autoStart} INSTALL_RPM=${rpms} MAKE_NEV=${MakeNEV} ARENDER_ADDON=${ArenderAddon} NUXEO_SECRET=${NuxeoSecret} >> /etc/profile.d/load_env.sh\nbash Nuxeo.sh\n",
+              "#!/bin/bash\n\nwget https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/${branch}/aws/ec2-scripts/Nuxeo.sh\necho export UPLOAD_ROLE_ARN=${uploadRole} REKOGNITION_ROLE_ARN=${rekognitionRole} SNS_TOPIC_ARN=${snsTopic} STACK_ID=${stack} DNS_NAME=${dnsName} REGION=${region} S3BUCKET=${bucket} NX_BRANCH=${branch} PRESALES_DOCKER_BRANCH=${branchForPresalesDocker} NX_STUDIO=${studio} NX_STUDIO_VER=${studioVer} AUTO_START=${autoStart} INSTALL_RPM=${rpms} MAKE_NEV=${MakeNEV} ARENDER_ADDON=${ArenderAddon} NUXEO_SECRET=${NuxeoSecret} >> /etc/profile.d/load_env.sh\nbash Nuxeo.sh\n",
               {
                 "stack": {
                   "Ref": "AWS::StackName"
