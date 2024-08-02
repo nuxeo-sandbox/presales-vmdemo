@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = ">= 5.0.0"
+    }
+  }
+}
+
 variable "stack_name" {
   type        = string
   description = "The name of the nev demo stack"
@@ -43,18 +52,15 @@ variable "nev_zone" {
 }
 
 resource "google_service_account" "service_account" {
-  project      = "nuxeo-presales-apis"
   account_id   = "nxp-${var.stack_name}"
   display_name = "Service Account for the ${var.stack_name} nev instance"
 }
 
 data "google_secret_manager_secret" "shared_credentials" {
-  project      = "nuxeo-presales-apis"
   secret_id    = "nuxeo-presales-connect"
 }
 
 resource "google_secret_manager_secret_iam_member" "shared_credentials_member" {
-  project = "nuxeo-presales-apis"
   secret_id = data.google_secret_manager_secret.shared_credentials.id
   role = "roles/secretmanager.secretAccessor"
   member = "serviceAccount:${google_service_account.service_account.email}"
@@ -64,7 +70,6 @@ resource "google_compute_instance" "nev_instance" {
   depends_on = [
     google_secret_manager_secret_iam_member.shared_credentials_member
   ]
-  project      = "nuxeo-presales-apis"
   name         = var.stack_name
   machine_type = "e2-standard-2"
   zone         = var.nev_zone
@@ -110,7 +115,6 @@ resource "google_compute_instance" "nev_instance" {
 }
 
 resource "google_dns_record_set" "nev_instance_dns_record" {
-  project      = "nuxeo-presales-apis"
   managed_zone = "gcp"
   name         = "${local.dns_name}.gcp.cloud.nuxeo.com."
   type         = "A"
