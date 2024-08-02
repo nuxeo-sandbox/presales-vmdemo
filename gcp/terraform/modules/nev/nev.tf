@@ -87,6 +87,7 @@ resource "google_compute_instance" "nev_instance" {
   }
   metadata = {
     enable-oslogin : "TRUE"
+    enable-osconfig : "TRUE"
     stack-name : var.stack_name
     dns-name: local.dns_name
     auto-start: "true"
