@@ -6,7 +6,8 @@ Note: The master branch currently deploys Nuxeo LTS 2023. To deploy Nuxeo LTS 20
 # Content
 
 ## CF-templates
-Contains a [template](CF-templates/Nuxeo.template) to provision a Nuxeo demo stack, and a [template](CF-templates/NEV.template) to provision an NEV stack. These templates use the AMI mentioned above.
+Contains a [template](CF-templates/Nuxeo.template) to provision a Nuxeo demo stack, and a [template](CF-templates/NEV.template) to provision an NEV stack.
+These templates use the AMI built with the packer template at [vm-image-builder](../_COMMON/vm-image-builder/README.md).
 
 ## EC2-instance-Connect-Tools
 Helpful stuff for working on localhost, including:
