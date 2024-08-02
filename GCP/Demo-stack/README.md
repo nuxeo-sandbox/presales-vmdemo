@@ -15,7 +15,7 @@ Install tooling:
 
 ```bash
 git clone -b gcp https://github.com/nuxeo-sandbox/presales-vmdemo
-cd presales-vmdemo/GCP-terraform
+cd presales-vmdemo/GCP/Demo-stack
 terraform init
 ```
 

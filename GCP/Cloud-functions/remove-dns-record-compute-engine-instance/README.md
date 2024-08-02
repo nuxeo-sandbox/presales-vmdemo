@@ -12,7 +12,7 @@ Install tooling:
 
 ```bash
 git clone -b gcp https://github.com/nuxeo-sandbox/presales-vmdemo
-cd presales-vmdemo/GCP-functions/remove-dns-record-compute-engine-instance
+cd presales-vmdemo/GCP/Cloud-functions/remove-dns-record-compute-engine-instance
 terraform init
 terraform apply
 ```

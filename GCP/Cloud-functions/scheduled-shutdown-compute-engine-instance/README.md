@@ -45,7 +45,7 @@ Install tooling:
 
 ```bash
 git clone -b gcp https://github.com/nuxeo-sandbox/presales-vmdemo
-cd presales-vmdemo/GCP-functions/scheduled-shutdown-compute-engine-instance
+cd presales-vmdemo/GCP/Cloud-functions/scheduled-shutdown-compute-engine-instance
 terraform init
 terraform apply
 ```

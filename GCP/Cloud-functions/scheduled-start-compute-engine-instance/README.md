@@ -1,6 +1,17 @@
 # Description
 
-A GCP cloud function to automatically add DNS records when an compute instance goes online
+A GCP cloud function to automatically start instances using a [GCP Cloud Scheduler](https://console.cloud.google.com/cloudscheduler)
+
+The scheduler runs once per hour (at 0mn in the default configuration) and checks to see if instances should be started. Basically, it lists instances whose status is TERMINATED and checks the `start-daily-until` label to decide if they must be started.
+
+About the `start-daily-until` _label_ (not a _tag_)
+* It is optional (not set, a terminated instance is not started)
+* Acceptable values:
+  * `YYYY-MM-DDtHHhMMm`: The instance will be started if the indicated date is >= current date and the indicated time has passed. The time is relative to the deployment zone of the instance
+  * `HHhMMm`: The instance will be started daily when the indicated time has passed (meaning it will be started every day at the same time if it was stopped). The time is relative to the deployment zone of the instance.
+  * Any other value (or if the label is not set) => instance is not started
+  * ℹ️ The values are formatted the way they are (i.e. not ISO datetime) because GCP only allows [certain characters in labels](https://cloud.google.com/compute/docs/labeling-resources#requirements).
+
 
 # Installation
 
@@ -12,7 +23,7 @@ Install tooling:
 
 ```bash
 git clone -b gcp https://github.com/nuxeo-sandbox/presales-vmdemo
-cd presales-vmdemo/GCP-functions/add-dns-record-compute-engine-instance
+cd presales-vmdemo/GCP/Cloud-functions/scheduled-start-compute-engine-instance
 terraform init
 terraform apply
 ```
@@ -42,27 +53,16 @@ npm-watch start
 
 The local server supports hotreload when modifications are made to the function source.
 
-To test the function, send an http request to the local npm server with the test payload
+To test the function, send a http request to the local npm server with the test payload
 
 ```bash
 curl localhost:8080 \
  -X POST \
  -H "Content-Type: application/json" \
- -H "ce-type: google.cloud.pubsub.topic.v1.messagePublished" \
  -d '{
-    "protoPayload": {
-      "serviceName": "compute.googleapis.com",
-      "methodName": "v1.compute.instances.start"
-    },
-    "resource": {
-     "type": "gce_instance",
-     "labels":{
-      "instance_id": "22880703951",
-      "zone": "us-central1-a",
-      "project_id": "nuxeo-presales-apis"
-     }
-    }
-  }'
+      "jobName":"daily-gce-instance-start",
+      "projectId": "nuxeo-presales-apis"
+    }'
 ```
 
 ## Deploy changes
@@ -76,26 +76,22 @@ terraform apply
 Once deployed, a function run can be triggered manually
 
 ```bash
-gcloud functions call add-dns-record-gce --data '{
-    "protoPayload": {
-      "serviceName": "compute.googleapis.com",
-      "methodName": "v1.compute.instances.start"
-    },
-    "resource": {
-     "type": "gce_instance",
-     "labels": {
-      "instance_id": "228807926809951",
-      "zone": "us-central1-a",
-      "project_id": "nuxeo-presales-apis"
-     }
-    }
-  }'
+gcloud functions call scheduled-shutdown-gce --data '{
+    "jobName":"daily-gce-instance-start",
+    "projectId": "nuxeo-presales-apis"
+}'
+```
+
+The scheduler can also be triggered to test the end-to-end feature
+
+```bash
+gcloud scheduler jobs run daily-gce-instance-start  --location=us-central1
 ```
 
 The function run logs can be accessed with
 
 ```bash
-gcloud functions logs read add-dns-record-gce --gen2
+gcloud functions logs read scheduled-start-gce --gen2
 ```
 
 # About Nuxeo
