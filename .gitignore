@@ -33,6 +33,6 @@ node_modules
 .terraform
 .terraform.lock.hcl
 terraform.tfstate
-GCP-terraform/terraform.tfstate.backup
+terraform.tfstate.backup
 .aws-sam
 Local
