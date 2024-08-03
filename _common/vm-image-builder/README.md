@@ -17,7 +17,7 @@ packer init .\aws-ami.pkr.hcl
 packer build -var 'profile=<AWS_PROFILE>' .\aws-ami.pkr.hcl
 ```
 
-- update `AWS-CF-templates/Nuxeo.template` with the new AMI ID for each region
+- update `aws/cf-templates/Nuxeo.template` with the new AMI ID for each region
 
 ### GCP
 
