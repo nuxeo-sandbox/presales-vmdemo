@@ -15,10 +15,11 @@ export const handler = async (event, context) => {
 
     describeInstanceResponse.Reservations.forEach(reservation => {
         reservation.Instances.forEach(instance => {
-            if (isWeekend) {
-                instanceIds.push(instance.InstanceId);
-                return;
-            }
+            // Disabled per Derick Deleo's request on 08-01-2024
+            // if (isWeekend) {
+            //     instanceIds.push(instance.InstanceId);
+            //     return;
+            // }
 
             // Look for nuxeoKeepAlive tag
             let tagIndex = instance.Tags.findIndex(tag => {
