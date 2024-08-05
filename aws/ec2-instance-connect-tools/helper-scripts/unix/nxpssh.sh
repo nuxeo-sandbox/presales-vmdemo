@@ -176,7 +176,7 @@ fi
 if [ -z "$instance_id" ]
 then
   instance_id=$(aws ec2 describe-instances \
-    --filters "Name=tag:dnsName,Values=$instance_identifier" \
+    --filters Name=instance-state-name,Values=running Name=tag:dnsName,Values=${instance_identifier} \
     --query 'Reservations[].Instances[].[InstanceId]' \
     --region $region \
     --output text)
@@ -186,10 +186,22 @@ fi
 if [ -z "$instance_id" ]
 then
   instance_id=$(aws ec2 describe-instances \
-    --filters "Name=tag:Name,Values=$instance_identifier" \
+    --filters Name=instance-state-name,Values=running Name=tag:Name,Values=${instance_identifier} \
     --query 'Reservations[].Instances[].[InstanceId]' \
     --region $region \
     --output text)
+fi
+
+# Sometimes you can get more than one instance ID, like if you create an
+# instance, terminate it, and create another (although this particular case was
+# fixed with a filter). The script isn't sophisticated enough to handle it for
+# now since we don't know which one to choose.
+if [[ ${instance_id} == *[[:space:]]* ]]
+then
+  echo
+  echo "$scriptName: error: found more than one instance ID for \"${instance_identifier}\"; this is not supported"
+  echo
+  exit 3
 fi
 
 if [ -z "$instance_id" ]
