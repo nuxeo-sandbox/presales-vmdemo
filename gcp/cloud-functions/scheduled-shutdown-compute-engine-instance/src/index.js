@@ -8,16 +8,16 @@
       * true
       * YYYY-MM-DDtHHhMMm
       * HHhMMm
-    
+
     Any other value (of if the label is not set) => instance is not stopped, the log describes the error.
     (we should send a notification)
 
     An instance is stopped if
       * The date and/or time set in the label is < current date/time
       * If the nuxeo-keep-alive contains only a time ("21h00m"), it means "stop the instance every day at this time"
-    
+
     An instance is never stopped if nuxeo-keep-alive is "true".
-    
+
     The code handles time zone. nuxeo-keep-alive does not define a time zone, only hours and minutes.
     The value is converted to a date using the time zone of the zone in which lives the instance
     (for example, 'America/Chicago' for 'us-central1')
@@ -37,7 +37,7 @@ const KEEP_ALIVE_LABEL = "nuxeo-keep-alive"; //"nuxeoKeepAlive"
 // Holly..., the values themselves are to follow the same limitation.
 // So, the values will not be ISO, but must follow this format:
 // Instead of 2024-08-31T21:00:00 => 2024-08-31t21h00m
-// The code below will resotre an ISO date.
+// The code below will restore an ISO date.
 const REGEX_TIME = /^(?:[01]\d|2[0-3])h[0-5]\dm$/;
 const REGEX_DATE_AND_TIME = /^\d{4}-\d{2}-\d{2}t(?:[01]\d|2[0-3])h[0-5]\dm$/;
 function backToISO(dateStr) {
@@ -114,7 +114,7 @@ async function listInstancesToStop(projectId) {
       for (const instance of instances) {
         if(instance.status === "RUNNING") {
           let label = "" + instance.labels[KEEP_ALIVE_LABEL];
-          if(!label || label === "undefined") { 
+          if(!label || label === "undefined") {
             // Not normal, every instance should have this label => not stopped, just log
             // We should send a mail, a notification
             console.error(`ERROR: ${instance.name} does not have the ${KEEP_ALIVE_LABEL} label set. We keep it alive.`);
