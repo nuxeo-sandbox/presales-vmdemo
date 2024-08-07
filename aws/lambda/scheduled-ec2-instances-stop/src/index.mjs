@@ -2,6 +2,24 @@ import { EC2Client, DescribeInstancesCommand, StopInstancesCommand } from "@aws-
 
 const ec2 = new EC2Client({});
 
+
+const getDateTimeWithTz = (dateString) => {
+
+    const pad = (num) => {
+      return (num < 10 ? '0' : '') + num;
+    };
+
+    const currentDate = new Date();
+    const tzOffset = currentDate.getTimezoneOffset();
+
+    const sign = tzOffset >= 0 ? '+' : '-';
+    const hourOffset = pad(Math.floor(Math.abs(tzOffset) / 60));
+    const minuteOffset = pad(Math.abs(tzOffset) % 60);
+
+    return `${dateString}T00:00:00.000${sign}${hourOffset}:${minuteOffset}`
+}
+
+
 export const handler = async (event, context) => {
 
     const isWeekend = event?.resources?.[0].includes('nuxeo-scheduled-ec2-shutdown-weekend');
@@ -27,9 +45,12 @@ export const handler = async (event, context) => {
                     // If this is a date, check to see if it is in the past
                     // Current date will be "in the past" for the daily check
                     if (/([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))/.test(tag.Value)) {
-                        let keepAliveDate = new Date(tag.Value);
-                        let currentDate = new Date();
-                        // If today is less than the keep alive date, return true
+                        const currentDate = new Date();
+                        console.log(`Now: ${currentDate.toISOString()}`);
+                        const keepAliveDateIsoStr = getDateTimeWithTz(tag.Value);
+                        console.log(`keepAliveDate: ${keepAliveDateIsoStr}`);
+                        let keepAliveDate = new Date(keepAliveDateIsoStr);
+                        // If now is less than the keep alive date, return true
                         return currentDate.getTime() < keepAliveDate.getTime();
                     }
                     return tag.Value !== "false";

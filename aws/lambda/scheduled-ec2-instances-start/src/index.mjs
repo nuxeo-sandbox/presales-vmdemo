@@ -2,6 +2,22 @@ import { EC2Client, DescribeInstancesCommand, StartInstancesCommand } from "@aws
 
 const ec2 = new EC2Client({});
 
+const getDateTimeWithTz = (dateString) => {
+
+    const pad = (num) => {
+      return (num < 10 ? '0' : '') + num;
+    };
+
+    const currentDate = new Date();
+    const tzOffset = currentDate.getTimezoneOffset();
+
+    const sign = tzOffset >= 0 ? '+' : '-';
+    const hourOffset = pad(Math.floor(Math.abs(tzOffset) / 60));
+    const minuteOffset = pad(Math.abs(tzOffset) % 60);
+
+    return `${dateString}T23:59:59.999${sign}${hourOffset}:${minuteOffset}`
+}
+
 export const handler = async (event, context) => {
 
     const describeInstanceResponse = await ec2.send(
@@ -18,13 +34,11 @@ export const handler = async (event, context) => {
                 if (tag.Key === "startDailyUntil") {
                     // Check we have a date
                     if (/([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))/.test(tag.Value)) {
-                        let startUntil = new Date(tag.Value);
-                        // Make it the end of day, so currentDate is <= currentDate if we are the same day
-                        // Anyway, the spirit of this lambda is to start instances in the morning
-                        startUntil.setHours(20);
-                        startUntil.setMinutes(59);
-                        startUntil.setSeconds(59);
-                        let currentDate = new Date();
+                        const currentDate = new Date();
+                        console.log(`Now: ${currentDate.toISOString()}`);
+                        const startUntilDateIsoStr = getDateTimeWithTz(tag.Value);
+                        console.log(`startUntil: ${startUntilDateIsoStr}`);
+                        const startUntil = new Date(startUntilDateIsoStr);
                         return currentDate.getTime() <= startUntil.getTime();
                     } else {
                         return true;

@@ -66,8 +66,8 @@ describe('Test instance shutdown', function () {
     const instanceId = "i-08abcedef";
     const dnsName = "test";
 
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1) 
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     const ec2Mock = mockClient(EC2Client);
     ec2Mock
@@ -78,7 +78,7 @@ describe('Test instance shutdown', function () {
               InstanceId: instanceId,
               Tags: [{
                 Key: "nuxeoKeepAlive",
-                Value: tomorrow.toISOString()
+                Value: tomorrow.toISOString().substring(0,10)
               }]
             }]
           }]
@@ -111,7 +111,7 @@ describe('Test instance shutdown', function () {
               InstanceId: instanceId,
               Tags: [{
                 Key: "nuxeoKeepAlive",
-                Value: yesterday.toISOString()
+                Value: yesterday.toISOString().substring(0,10)
               }]
             }]
           }]

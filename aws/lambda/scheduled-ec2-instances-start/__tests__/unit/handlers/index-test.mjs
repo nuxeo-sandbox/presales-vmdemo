@@ -78,7 +78,7 @@ describe('Test instance start', function () {
               InstanceId: instanceId,
               Tags: [{
                 Key: "startDailyUntil",
-                Value: tomorrow.toISOString()
+                Value: tomorrow.toISOString().substring(0,10)
               }]
             }]
           }]
@@ -111,7 +111,7 @@ describe('Test instance start', function () {
               InstanceId: instanceId,
               Tags: [{
                 Key: "startDailyUntil",
-                Value: yesterday.toISOString()
+                Value: yesterday.toISOString().substring(0,10)
               }]
             }]
           }]
