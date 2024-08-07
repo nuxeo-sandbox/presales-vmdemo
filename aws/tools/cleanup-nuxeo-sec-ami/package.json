@@ -1,0 +1,9 @@
+{
+  "name": "cleanup-ami",
+  "version": "1.0.0",
+  "author": "Michael Vachette",
+  "private": true,
+  "devDependencies": {
+    "@aws-sdk/client-ec2": "^3.614.0"
+  }
+}
