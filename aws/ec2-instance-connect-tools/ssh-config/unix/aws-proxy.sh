@@ -11,9 +11,6 @@ EC2_INSTANCE_ID=$2
 # is restricted.
 EPHEMERAL_SSH_KEY=$3
 
-# if region is not passed, get the default one with the aws cli
-REGION=${4-$(aws configure get region)}
-
 EPHEMERAL_SSH_KEY_PUB=$EPHEMERAL_SSH_KEY.pub
 
 #===============================================================================
@@ -55,5 +52,4 @@ ssh-keygen -t rsa -b 2048 -f "${EPHEMERAL_SSH_KEY}" -N '' <<<y >/dev/null 2>&1
 aws ec2-instance-connect send-ssh-public-key \
   --instance-id "${EC2_INSTANCE_ID}" \
   --instance-os-user "${USER}" \
-  --ssh-public-key "file://${EPHEMERAL_SSH_KEY_PUB}" \
-  --region "${REGION}"
+  --ssh-public-key "file://${EPHEMERAL_SSH_KEY_PUB}"

@@ -5,11 +5,3 @@ Match host i-* exec "aws-proxy.sh %r %h ~/.ssh/aws-proxy.%h.%r"
     # Remove ephemeral key
     PermitLocalCommand yes
     LocalCommand rm ~/.ssh/aws-proxy.%h.%r*
-
-# Example of hardcoded config for permanent instances
-# Match host permanent-instance exec "aws-proxy.sh %r %h ~/.ssh/aws-proxy.%h.%r us-east-1"
-#    IdentityFile ~/.ssh/aws-proxy.%h.%r
-#    ProxyCommand aws ec2-instance-connect open-tunnel --instance-id %h --region us-east-1
-#    # Remove ephemeral key
-#    PermitLocalCommand yes
-#    LocalCommand rm ~/.ssh/aws-proxy.%h.%r*
