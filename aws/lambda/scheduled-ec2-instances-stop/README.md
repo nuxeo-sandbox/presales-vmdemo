@@ -15,14 +15,10 @@ To use the AWS SAM CLI, you need the following tools:
 
 # Build and deploy
 
-To build and deploy your application, run the following in your shell:
+To build and deploy the application, run the following in your shell:
 
 ```bash
-sam build
-```
-Then deploy in the target region using the following commands
-
-```bash
+rm -rf node_modules
 sam deploy --s3-bucket us-east-1-demo-bucket --region us-east-1 --no-confirm-changeset
 sam deploy --s3-bucket us-west-1-demo-bucket --region us-west-1 --no-confirm-changeset
 sam deploy --s3-bucket us-west-2-demo-bucket --region us-west-2 --no-confirm-changeset
