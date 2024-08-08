@@ -23,11 +23,11 @@ sam build
 Then deploy in the target region using the following commands
 
 ```bash
-sam deploy --s3-bucket us-east-1-demo-bucket --region us-east-1
-sam deploy --s3-bucket us-west-1-demo-bucket --region us-west-1
-sam deploy --s3-bucket us-west-2-demo-bucket --region us-west-2
-sam deploy --s3-bucket eu-west-1-demo-bucket --region eu-west-1
-sam deploy --s3-bucket ap-northeast-1-demo-bucket --region ap-northeast-1
+sam deploy --s3-bucket us-east-1-demo-bucket --region us-east-1 --no-confirm-changeset
+sam deploy --s3-bucket us-west-1-demo-bucket --region us-west-1 --no-confirm-changeset
+sam deploy --s3-bucket us-west-2-demo-bucket --region us-west-2 --no-confirm-changeset
+sam deploy --s3-bucket eu-west-1-demo-bucket --region eu-west-1 --no-confirm-changeset
+sam deploy --s3-bucket ap-northeast-1-demo-bucket --region ap-northeast-1 --no-confirm-changeset
 ```
 
 To manually trigger the lambda function, use the following command
