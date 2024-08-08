@@ -12,7 +12,7 @@ const getDateTimeWithTz = (dateString) => {
     const currentDate = new Date();
     const tzOffset = currentDate.getTimezoneOffset();
 
-    const sign = tzOffset >= 0 ? '+' : '-';
+    const sign = tzOffset >= 0 ? '-' : '+';
     const hourOffset = pad(Math.floor(Math.abs(tzOffset) / 60));
     const minuteOffset = pad(Math.abs(tzOffset) % 60);
 

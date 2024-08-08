@@ -11,7 +11,7 @@ const getDateTimeWithTz = (dateString) => {
     const currentDate = new Date();
     const tzOffset = currentDate.getTimezoneOffset();
 
-    const sign = tzOffset >= 0 ? '+' : '-';
+    const sign = tzOffset >= 0 ? '-' : '+';
     const hourOffset = pad(Math.floor(Math.abs(tzOffset) / 60));
     const minuteOffset = pad(Math.abs(tzOffset) % 60);
 
@@ -37,8 +37,9 @@ export const handler = async (event, context) => {
                         const currentDate = new Date();
                         console.log(`Now: ${currentDate.toISOString()}`);
                         const startUntilDateIsoStr = getDateTimeWithTz(tag.Value);
-                        console.log(`startUntil: ${startUntilDateIsoStr}`);
+                        console.log(`startUntilIsoStr: ${startUntilDateIsoStr}`);
                         const startUntil = new Date(startUntilDateIsoStr);
+                        console.log(`startUntil: ${startUntil.toISOString()}`);
                         return currentDate.getTime() <= startUntil.getTime();
                     } else {
                         return true;
