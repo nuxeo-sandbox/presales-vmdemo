@@ -16,7 +16,7 @@ const getDateTimeWithTz = (dateString) => {
     const hourOffset = pad(Math.floor(Math.abs(tzOffset) / 60));
     const minuteOffset = pad(Math.abs(tzOffset) % 60);
 
-    return `${dateString}T00:00:00.000${sign}${hourOffset}:${minuteOffset}`
+    return `${dateString}T23:59:59.999${sign}${hourOffset}:${minuteOffset}`
 }
 
 
@@ -48,8 +48,9 @@ export const handler = async (event, context) => {
                         const currentDate = new Date();
                         console.log(`Now: ${currentDate.toISOString()}`);
                         const keepAliveDateIsoStr = getDateTimeWithTz(tag.Value);
-                        console.log(`keepAliveDate: ${keepAliveDateIsoStr}`);
+                        console.log(`keepAliveDateIsoStr: ${keepAliveDateIsoStr} `);
                         let keepAliveDate = new Date(keepAliveDateIsoStr);
+                        console.log(`keepAliveDate: ${keepAliveDate.toISOString()} `);
                         // If now is less than the keep alive date, return true
                         return currentDate.getTime() < keepAliveDate.getTime();
                     }

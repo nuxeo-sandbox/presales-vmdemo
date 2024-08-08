@@ -100,7 +100,7 @@ describe('Test instance shutdown', function () {
     const dnsName = "test";
 
     const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1); 
+    yesterday.setDate(yesterday.getDate() - 1);
 
     const ec2Mock = mockClient(EC2Client);
     ec2Mock
