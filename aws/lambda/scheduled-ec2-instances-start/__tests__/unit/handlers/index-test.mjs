@@ -32,7 +32,7 @@ describe('Test instance start', function () {
 
   });
 
-  it('Verifies the empty startDailyUntil is respected', async () => {
+  it('Verifies the empty startDailyUntil is honored', async () => {
     const instanceId = "i-08abcedef";
     const dnsName = "test";
 
@@ -62,7 +62,7 @@ describe('Test instance start', function () {
 
   });
 
-  it('Verifies that future startDailyUntil value is respected', async () => {
+  it('Verifies that future startDailyUntil value is honored', async () => {
     const instanceId = "i-08abcedef";
     const dnsName = "test";
 
@@ -95,7 +95,7 @@ describe('Test instance start', function () {
 
   });
 
-  it('Verifies that past startDailyUntil value is respected', async () => {
+  it('Verifies that past startDailyUntil value is honored', async () => {
     const instanceId = "i-08abcedef";
     const dnsName = "test";
 

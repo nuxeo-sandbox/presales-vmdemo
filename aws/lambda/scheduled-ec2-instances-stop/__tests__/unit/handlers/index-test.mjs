@@ -32,7 +32,7 @@ describe('Test instance shutdown', function () {
 
   });
 
-  it('Verifies the empty nuxeoKeepAlive is respected', async () => {
+  it('Verifies the empty nuxeoKeepAlive is honored', async () => {
     const instanceId = "i-08abcedef";
     const dnsName = "test";
 
@@ -62,7 +62,7 @@ describe('Test instance shutdown', function () {
 
   });
 
-  it('Verifies that future nuxeoKeepAlive value is respected', async () => {
+  it('Verifies that future nuxeoKeepAlive value is honored', async () => {
     const instanceId = "i-08abcedef";
     const dnsName = "test";
 
@@ -95,7 +95,7 @@ describe('Test instance shutdown', function () {
 
   });
 
-  it('Verifies that past nuxeoKeepAlive value is respected', async () => {
+  it('Verifies that past nuxeoKeepAlive value is honored', async () => {
     const instanceId = "i-08abcedef";
     const dnsName = "test";
 
