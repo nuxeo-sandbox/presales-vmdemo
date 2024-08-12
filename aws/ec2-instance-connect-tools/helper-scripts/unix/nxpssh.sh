@@ -248,7 +248,7 @@ echo
 #===============================================================================
 # Cleanup
 #===============================================================================
-# NB: this is hard-coded in aws-proxy.sh and the SSH config
+# NB: the file path is hard-coded in aws-proxy.sh and the SSH config
 EPHEMERAL_PRIVATE_SSH_KEY=~/.ssh/aws-proxy.$instance_id.$user
 if [[ -e ${EPHEMERAL_PRIVATE_SSH_KEY} ]]
 then
