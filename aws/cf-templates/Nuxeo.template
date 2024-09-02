@@ -1151,6 +1151,18 @@
               ]
             }
           ]
+        },
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "Id": "delete-incomplete-mpu-3days",
+              "Prefix": "",
+              "AbortIncompleteMultipartUpload": {
+                "DaysAfterInitiation": 3
+              },
+              "Status": "Enabled"
+            }
+          ]
         }
       }
     },
