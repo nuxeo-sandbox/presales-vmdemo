@@ -91,15 +91,6 @@ if [[ "${S3BUCKET}" == "Shared" ]]; then
   S3_UPLOAD_TRANSIENT_PREFIX="${STACK_ID}/upload_transient/"
 fi
 
-# Make sure we always have a UI installed
-AUTO_PACKAGES="nuxeo-web-ui"
-# Auto install Nuxeo Explorer because the website is unusable
-AUTO_PACKAGES="${AUTO_PACKAGES} platform-explorer"
-# Make sure to install S3 plugin if needed
-if [[ "${S3BUCKET}" == "true" || "${S3BUCKET}" == "Create" || "${S3BUCKET}" == "Shared" ]]; then
-  AUTO_PACKAGES="${AUTO_PACKAGES} amazon-s3-online-storage"
-fi
-
 # Write system configuration
 
 # This is required for WOPI
@@ -236,8 +227,24 @@ if [ -n "${NX_STUDIO}" ]; then
 fi
 PROJECT_NAME=$(echo "${NX_STUDIO}" | awk '{print tolower($0)}')
 
-# Set working environment
+# Set up .env file
+
+# Make sure we always have a UI installed
+AUTO_PACKAGES="nuxeo-web-ui"
+# Auto install Nuxeo Explorer because the website is often unusable
+AUTO_PACKAGES="${AUTO_PACKAGES} platform-explorer"
+# Make sure to install S3 plugin if needed
+if [[ "${S3BUCKET}" == "true" || "${S3BUCKET}" == "Create" || "${S3BUCKET}" == "Shared" ]]; then
+  AUTO_PACKAGES="${AUTO_PACKAGES} amazon-s3-online-storage"
+fi
+
+# In AWS we default to baking the packages into the image
+ENV_BUILD_PACKAGES="${STUDIO_PACKAGE} ${AUTO_PACKAGES} ${ARENDER_ADDON} ${NUXEO_PACKAGES}"
+ENV_NUXEO_PACKAGES="${STUDIO_PACKAGE}"
+
+# Retreive stored password for `nuxeo_presales`
 CREDENTIALS=$(jq -r '.SecretString|fromjson|.connect_presales_pwd' < /root/creds.json)
+
 cat << EOF > ${NUXEO_ENV}
 APPLICATION_NAME=${NX_STUDIO}
 PROJECT_NAME=${PROJECT_NAME}
@@ -250,7 +257,12 @@ CONNECT_URL=https://connect.nuxeo.com/nuxeo/site/
 
 NUXEO_DEV=true
 NUXEO_PORT=8080
-NUXEO_PACKAGES=${STUDIO_PACKAGE} ${AUTO_PACKAGES} ${ARENDER_ADDON} ${NUXEO_PACKAGES}
+
+# These packages will be included in the custom image build
+BUILD_PACKAGES=${ENV_BUILD_PACKAGES}
+
+# These packages will be installed at startup
+NUXEO_PACKAGES=${ENV_NUXEO_PACKAGES}
 
 INSTALL_RPM=${INSTALL_RPM}
 
