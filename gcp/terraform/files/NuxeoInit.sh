@@ -88,14 +88,6 @@ cp ${COMPOSE_DIR}/conf.d/* ${CONF_DIR}
 BUCKET="nuxeo-demo-shared-bucket-us"
 BUCKET_PREFIX="${STACK_ID}/"
 
-# Make sure we always have a UI installed
-AUTO_PACKAGES="nuxeo-web-ui google-storage platform-explorer"
-
-if [[ ${MAKE_NEV} == "true" ]]
-then
-   AUTO_PACKAGES="${AUTO_PACKAGES} nuxeo-arender"
-fi
-
 # Write system configuration
 
 # This is required for WOPI
@@ -194,8 +186,27 @@ if [ -n "${NX_STUDIO}" ]; then
 fi
 PROJECT_NAME=$(echo "${NX_STUDIO}" | awk '{print tolower($0)}')
 
-# Set working environment
+# Set up .env file
+
+# Make sure we always have a UI installed
+AUTO_PACKAGES="nuxeo-web-ui"
+# Auto install Nuxeo Explorer because the website is often unusable
+AUTO_PACKAGES="${AUTO_PACKAGES} platform-explorer"
+# Make sure to install google storage plugin
+AUTO_PACKAGES="${AUTO_PACKAGES} google-storage"
+
+if [[ ${MAKE_NEV} == "true" ]]
+then
+   AUTO_PACKAGES="${AUTO_PACKAGES} nuxeo-arender"
+fi
+
+# In cloud we default to baking the packages into the image
+ENV_BUILD_PACKAGES="${STUDIO_PACKAGE} ${AUTO_PACKAGES} ${NUXEO_PACKAGES}"
+ENV_NUXEO_PACKAGES="${STUDIO_PACKAGE}"
+
+# Retreive stored password for `nuxeo_presales`
 CREDENTIALS=$(jq -r '.connect_presales_pwd' < /root/creds.json)
+
 cat << EOF > ${NUXEO_ENV}
 APPLICATION_NAME=${NX_STUDIO}
 PROJECT_NAME=${PROJECT_NAME}
@@ -208,7 +219,12 @@ CONNECT_URL=https://connect.nuxeo.com/nuxeo/site/
 
 NUXEO_DEV=true
 NUXEO_PORT=8080
-NUXEO_PACKAGES=${STUDIO_PACKAGE} ${AUTO_PACKAGES} ${NUXEO_PACKAGES}
+
+# These packages will be included in the custom image build
+BUILD_PACKAGES=${ENV_BUILD_PACKAGES}
+
+# These packages will be installed at startup
+NUXEO_PACKAGES=${ENV_NUXEO_PACKAGES}
 
 INSTALL_RPM=${INSTALL_RPM}
 
