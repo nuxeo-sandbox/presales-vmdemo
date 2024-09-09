@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# Installation can take time.
-# You can tail -F /var/log/nuxeo_install.log to see basic install progress
-# You can tail -F /var/log/syslog to see the full startup and check for errors
-INSTALL_LOG="/var/log/nuxeo_install.log"
-INSTALL_LOG_PREFIX="NXP Install Script:"
+# GCP-specific stuff...
 
 # In GCP the `startup-script` runs every time the instance starts; we only want
 # it to run the first time, so we set a "flag" to stop subsequent executions
@@ -25,26 +21,29 @@ MAKE_NEV=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attr
 # Get credentials for Studio & Repository & mail
 gcloud secrets versions access latest --secret nuxeo-presales-connect --project nuxeo-presales-apis > /root/creds.json
 
-# Variables for installation
+# Install script
+
+# Installation can take time.
+# You can tail -F /var/log/nuxeo_install.log to see basic install progress
+# You can tail -F /var/log/syslog to see the full startup and check for errors
+
+# Variables for this script
+INSTALL_LOG="/var/log/nuxeo_install.log"
+INSTALL_LOG_PREFIX="NXP Install Script:"
 COMPOSE_REPO="https://github.com/nuxeo-sandbox/nuxeo-presales-docker"
 COMPOSE_DIR="/home/ubuntu/nuxeo-presales-docker"
 CONF_DIR="${COMPOSE_DIR}/conf"
-
 NUXEO_ENV="${COMPOSE_DIR}/.env"
+NUXEO_IMAGE="docker-private.packages.nuxeo.com/nuxeo/nuxeo:${NUXEO_VERSION}"
+TMP_DIR="/tmp/nuxeo"
 
+# Variables for `.env`
 STUDIO_USERNAME="nuxeo_presales"
-
 TEMPLATES="default,mongodb"
-
 MONGO_VERSION="6.0"
-
 OPENSEARCH_VERSION="1.3.17"
 OPENSEARCH_IMAGE="opensearchproject/opensearch:"${OPENSEARCH_VERSION}
 OPENSEARCH_DASHBOARDS_IMAGE="opensearchproject/opensearch-dashboards:"${OPENSEARCH_VERSION}
-
-NUXEO_IMAGE="docker-private.packages.nuxeo.com/nuxeo/nuxeo:${NUXEO_VERSION}"
-
-TMP_DIR="/tmp/nuxeo"
 
 # Start of installation steps
 echo "${INSTALL_LOG_PREFIX} Starting [${STACK_ID}]" > ${INSTALL_LOG}

@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# Installation can take time.
-# You can tail -F /var/log/nev_install.log to see basic install progress
-# You can tail -F /var/log/syslog to see the full startup and check for errors
-INSTALL_LOG="/var/log/nev_install.log"
-INSTALL_LOG_PREFIX="NXP Install Script:"
+# GCP-specific stuff...
 
 # In GCP the `startup-script` runs every time the instance starts; we only want
 # it to run the first time, so we set a "flag" to stop subsequent executions
@@ -21,10 +17,17 @@ NUXEO_SECRET=$(curl http://metadata.google.internal/computeMetadata/v1/instance/
 NUXEO_URL=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nuxeo-url -H "Metadata-Flavor: Google")
 NEV_VERSION=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nev-version -H "Metadata-Flavor: Google")
 
+# Install script
+
+# Installation can take time.
+# You can tail -F /var/log/nev_install.log to see basic install progress
+# You can tail -F /var/log/syslog to see the full startup and check for errors
+
 # Variables for installation
+INSTALL_LOG="/var/log/nev_install.log"
+INSTALL_LOG_PREFIX="NXP Install Script:"
 COMPOSE_REPO="https://github.com/nuxeo-sandbox/nuxeo-presales-nev"
 COMPOSE_DIR="/home/ubuntu/nuxeo-presales-nev"
-
 NEV_ENV="${COMPOSE_DIR}/.env"
 
 # Check DNS Name
