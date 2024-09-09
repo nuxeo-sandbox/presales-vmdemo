@@ -9,28 +9,25 @@
 
 source /etc/profile.d/load_env.sh
 
-# Variables for installation
+# Variables for this script:
 INSTALL_LOG="/var/log/nuxeo_install.log"
+TMP_DIR="/tmp/nuxeo"
 
 COMPOSE_REPO="https://github.com/nuxeo-sandbox/nuxeo-presales-docker"
 COMPOSE_DIR="/home/ubuntu/nuxeo-presales-docker"
 CONF_DIR="${COMPOSE_DIR}/conf"
 
+# Values for `.env`
 NUXEO_ENV="${COMPOSE_DIR}/.env"
-
 STUDIO_USERNAME="nuxeo_presales"
-
 TEMPLATES="default,mongodb"
-
 MONGO_VERSION="6.0"
-
 OPENSEARCH_VERSION="1.3.11"
 OPENSEARCH_IMAGE="opensearchproject/opensearch:"${OPENSEARCH_VERSION}
 OPENSEARCH_DASHBOARDS_IMAGE="opensearchproject/opensearch-dashboards:"${OPENSEARCH_VERSION}
 
+# TODO: remove this, it's redundant
 LTS_IMAGE="docker-private.packages.nuxeo.com/nuxeo/nuxeo:2023"
-
-TMP_DIR="/tmp/nuxeo"
 
 # Start of installation script
 
