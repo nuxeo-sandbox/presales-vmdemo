@@ -16,9 +16,9 @@ TMP_DIR="/tmp/nuxeo"
 COMPOSE_REPO="https://github.com/nuxeo-sandbox/nuxeo-presales-docker"
 COMPOSE_DIR="/home/ubuntu/nuxeo-presales-docker"
 CONF_DIR="${COMPOSE_DIR}/conf"
+NUXEO_ENV="${COMPOSE_DIR}/.env"
 
 # Values for `.env`
-NUXEO_ENV="${COMPOSE_DIR}/.env"
 STUDIO_USERNAME="nuxeo_presales"
 TEMPLATES="default,mongodb"
 MONGO_VERSION="6.0"
