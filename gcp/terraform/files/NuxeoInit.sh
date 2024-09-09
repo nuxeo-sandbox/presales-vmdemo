@@ -17,6 +17,7 @@ NX_STUDIO=$(curl http://metadata.google.internal/computeMetadata/v1/instance/att
 AUTO_START=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/auto-start -H "Metadata-Flavor: Google")
 NUXEO_SECRET=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/nuxeo-secret -H "Metadata-Flavor: Google")
 MAKE_NEV=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/with-nev -H "Metadata-Flavor: Google")
+PRESALES_DOCKER_BRANCH=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/npd-branch -H "Metadata-Flavor: Google")
 
 # Get credentials for Studio & Repository & mail
 gcloud secrets versions access latest --secret nuxeo-presales-connect --project nuxeo-presales-apis > /root/creds.json
@@ -75,7 +76,7 @@ echo "${INSTALL_LOG_PREFIX} Install Nuxeo" | tee -a ${INSTALL_LOG}
 
 # Make directories and clone compose stack
 mkdir -p ${COMPOSE_DIR} ${NUXEO_DATA_DIR} ${NUXEO_LOG_DIR} ${TMP_DIR}
-git clone ${COMPOSE_REPO} ${COMPOSE_DIR}
+git clone -b ${PRESALES_DOCKER_BRANCH} ${COMPOSE_REPO} ${COMPOSE_DIR}
 mkdir -p ${CONF_DIR}
 echo "${INSTALL_LOG_PREFIX} Install Nuxeo => DONE" | tee -a ${INSTALL_LOG}
 

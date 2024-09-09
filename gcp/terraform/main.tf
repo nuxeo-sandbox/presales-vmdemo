@@ -87,6 +87,12 @@ variable "machine_type" {
   default     = "e2-standard-2"
 }
 
+variable "npd_branch" {
+  type        = string
+  description = "Branch of nuxeo-presales-docker to use"
+  default     = "master"
+}
+
 provider "google" {
   project = var.gcp_project
   default_labels = {
@@ -181,6 +187,7 @@ resource "google_compute_instance" "nuxeo_instance" {
     with-nev : var.with_nev
     nuxeo-secret : random_password.nuxeo_secret.result
     auto-start : var.auto_start
+    npd-branch : var.npd_branch
     startup-script : file("./files/NuxeoInit.sh")
   }
   tags = ["http-server", "https-server"]

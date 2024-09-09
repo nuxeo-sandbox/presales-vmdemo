@@ -135,6 +135,16 @@ then
   nx_dns_name=${nx_dns_name:-${NX_DNS_NAME_DEFAULT}}
 fi
 
+# NPD Branch
+# =====================
+NX_NPD_BRANCH_DEFAULT="master"
+nx_npd_branch="${NX_NPD_BRANCH:-}"
+if [ -z "${nx_npd_branch}" ]
+then
+  read -p "Which nuxeo-presales-docker (NPD) branch? [${NX_NPD_BRANCH_DEFAULT}]: " nx_npd_branch
+  nx_npd_branch=${nx_npd_branch:-${NX_NPD_BRANCH_DEFAULT}}
+fi
+
 # Use NEV?
 # ========
 NX_USE_NEV_DEFAULT=false
@@ -201,6 +211,7 @@ params=(
   -var="dns_name=${nx_dns_name}"
   -var="nuxeo_keep_alive=${nx_keep_alive}"
   -var="customer=${nx_customer}"
+  -var="npd_branch=${nx_npd_branch}"
 )
 if ${nx_use_nev}
 then
@@ -218,6 +229,7 @@ echo "Nuxeo version:    ${nx_nuxeo_version}"
 echo "Deployment zone:  ${nx_zone}"
 echo "Machine type:     ${nx_machine_type}"
 echo "DNS name:         ${nx_dns_name}"
+echo "NPD branch:       ${nx_npd_branch}"
 echo "Deploy NEV?       ${nx_use_nev}"
 if ${nx_use_nev}
 then
