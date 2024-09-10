@@ -75,7 +75,7 @@ Resources:
       Architectures:
       - x86_64
       Handler: src/index.handler
-      MemorySize: 128
+      MemorySize: 256
       Timeout: 100
       Role: !GetAtt functionRole.Arn
 

@@ -38,7 +38,7 @@ Resources:
       Architectures:
       - x86_64
       Handler: src/handlers/updateRoute53Records.updateRoute53Records
-      MemorySize: 128
+      MemorySize: 256
       Timeout: 100
       Role: !GetAtt functionRole.Arn
       Environment:
