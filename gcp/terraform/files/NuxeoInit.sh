@@ -42,7 +42,7 @@ TMP_DIR="/tmp/nuxeo"
 STUDIO_USERNAME="nuxeo_presales"
 TEMPLATES="default,mongodb"
 MONGO_VERSION="6.0"
-OPENSEARCH_VERSION="1.3.17"
+OPENSEARCH_VERSION="1.3.19"
 OPENSEARCH_IMAGE="opensearchproject/opensearch:"${OPENSEARCH_VERSION}
 OPENSEARCH_DASHBOARDS_IMAGE="opensearchproject/opensearch-dashboards:"${OPENSEARCH_VERSION}
 
