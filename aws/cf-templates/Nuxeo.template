@@ -23,6 +23,7 @@
             "GitBranchPresalesDocker",
             "StudioProject",
             "StudioVersion",
+            "NuxeoVersion",
             "InstanceType",
             "DiskSize",
             "AutoStart",
@@ -122,6 +123,11 @@
       "Default": "0.0.0-SNAPSHOT",
       "Description": "The Nuxeo Studio version (used with Release in Studio to install a different version)"
     },
+    "NuxeoVersion":{
+      "Type": "String",
+      "Default": "2023",
+      "Description": "The Nuxeo Server version (tip: use minor version to install a specific hotfix, e.g. `2023.10`)"
+    }
     "AutoStart": {
       "AllowedValues": [
         "true",
@@ -403,7 +409,7 @@
         "UserData": {
           "Fn::Base64": {
             "Fn::Sub": [
-              "#!/bin/bash\n\nwget https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/${branch}/aws/ec2-scripts/Nuxeo.sh\necho export UPLOAD_ROLE_ARN=${uploadRole} REKOGNITION_ROLE_ARN=${rekognitionRole} SNS_TOPIC_ARN=${snsTopic} STACK_ID=${stack} DNS_NAME=${dnsName} REGION=${region} S3BUCKET=${bucket} NX_BRANCH=${branch} PRESALES_DOCKER_BRANCH=${branchForPresalesDocker} NX_STUDIO=${studio} NX_STUDIO_VER=${studioVer} AUTO_START=${autoStart} INSTALL_RPM=${rpms} MAKE_NEV=${MakeNEV} ARENDER_ADDON=${ArenderAddon} NUXEO_SECRET=${NuxeoSecret} >> /etc/profile.d/load_env.sh\nbash Nuxeo.sh\n",
+              "#!/bin/bash\n\nwget https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/${branch}/aws/ec2-scripts/Nuxeo.sh\necho export UPLOAD_ROLE_ARN=${uploadRole} REKOGNITION_ROLE_ARN=${rekognitionRole} SNS_TOPIC_ARN=${snsTopic} STACK_ID=${stack} DNS_NAME=${dnsName} REGION=${region} S3BUCKET=${bucket} NX_BRANCH=${branch} PRESALES_DOCKER_BRANCH=${branchForPresalesDocker} NX_STUDIO=${studio} NX_STUDIO_VER=${studioVer} NUXEO_VERSION=${nuxeover} AUTO_START=${autoStart} INSTALL_RPM=${rpms} MAKE_NEV=${MakeNEV} ARENDER_ADDON=${ArenderAddon} NUXEO_SECRET=${NuxeoSecret} >> /etc/profile.d/load_env.sh\nbash Nuxeo.sh\n",
               {
                 "stack": {
                   "Ref": "AWS::StackName"
@@ -428,6 +434,9 @@
                 },
                 "studioVer": {
                   "Ref": "StudioVersion"
+                },
+                "nuxeover": {
+                  "Ref": "NuxeoVersion"
                 },
                 "autoStart": {
                   "Ref": "AutoStart"

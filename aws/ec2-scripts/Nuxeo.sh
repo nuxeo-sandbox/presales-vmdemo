@@ -17,6 +17,7 @@ COMPOSE_REPO="https://github.com/nuxeo-sandbox/nuxeo-presales-docker"
 COMPOSE_DIR="/home/ubuntu/nuxeo-presales-docker"
 CONF_DIR="${COMPOSE_DIR}/conf"
 NUXEO_ENV="${COMPOSE_DIR}/.env"
+NUXEO_VERSION="{$NUXEO_VERSION}"
 
 # Values for `.env`
 STUDIO_USERNAME="nuxeo_presales"
@@ -36,7 +37,7 @@ echo "Nuxeo Presales Installation Script Starting [${STACK_ID}]" > ${INSTALL_LOG
 echo "vm.max_map_count=262144" >> /etc/sysctl.conf && sysctl -p
 
 # Check configured image
-FROM_IMAGE="docker-private.packages.nuxeo.com/nuxeo/nuxeo:2023"
+FROM_IMAGE="docker-private.packages.nuxeo.com/nuxeo/nuxeo:{$NUXEO_VERSION}"
 
 # Check DNS Name
 if [ -z "${DNS_NAME}" ]; then
@@ -161,7 +162,6 @@ nuxeo.wopi.discoveryURL=https://onenote.officeapps.live.com/hosting/discovery
 nuxeo.wopi.baseURL=https://wopi.nuxeocloud.com/${FQDN}/nuxeo/
 # JWT token is required for WOPI
 nuxeo.jwt.secret=${JWT_SECRET}
-
 EOF
 
 # NEV setup
@@ -271,6 +271,31 @@ EOF
 
 # Make env not as hidden
 ln -s ${NUXEO_ENV} ${COMPOSE_DIR}/env
+
+# Support Nuxeo Server version < 2023.20 (Rocky Linux vs Oracle Linux)
+
+# If no HF level is specified, just use latest Dockerfile.
+if [[ $NUXEO_VERSION == "2023" ]]
+then
+  DOCKERFILE="build_nuxeo/Dockerfile"
+fi
+
+# If HF level has been specified we need to select the correct Dockerfile.
+if [ -z "${DOCKERFILE}" ]
+then
+  # If Nuxeo verion is 2023.19 or earlier, use Rocky Linux Dockerfile
+  TARGET_VERSION="2023.19"
+  # Compare the two versions using sort (code from ChatGPT)
+  if [ "$(printf '%s\n' "$nx_version" "$TARGET_VERSION" | sort -V | head -n 1)" = "$nx_version" ]; then
+    DOCKERFILE="build_nuxeo/Dockerfile.hf19"
+  else
+    DOCKERFILE="build_nuxeo/Dockerfile"
+  fi
+fi
+
+# Use correct Dockerfile for Oracle vs Rocky Linux
+# Use sed to replace the value of 'dockerfile' for Nuxeo with the new value (for macOS)
+sed -i '' "s|dockerfile: build_nuxeo/Dockerfile|dockerfile: $DOCKERFILE|" "${COMPOSE_DIR}/docker-compose.yml"
 
 # Add newDNS script
 curl https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/master/aws/ec2-scripts/newDNS.sh > ${TMP_DIR}/newDNS.sh
