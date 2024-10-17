@@ -127,7 +127,7 @@
       "Type": "String",
       "Default": "2023",
       "Description": "The Nuxeo Server version (tip: use minor version to install a specific hotfix, e.g. `2023.10`)"
-    }
+    },
     "AutoStart": {
       "AllowedValues": [
         "true",
