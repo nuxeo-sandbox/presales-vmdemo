@@ -236,8 +236,34 @@ FQDN=${FQDN}
 STUDIO_USERNAME=${STUDIO_USERNAME}
 STUDIO_CREDENTIALS=${CREDENTIALS}
 EOF
+
 # Make env not as hidden
 ln -s ${NUXEO_ENV} ${COMPOSE_DIR}/env
+
+# Support Nuxeo Server version < 2023.20 (Rocky Linux vs Oracle Linux)
+
+# If no HF level is specified, just use latest Dockerfile.
+if [[ $NUXEO_VERSION == "2023" ]]
+then
+  DOCKERFILE="build_nuxeo/Dockerfile"
+fi
+
+# If HF level has been specified we need to select the correct Dockerfile.
+if [ -z "${DOCKERFILE}" ]
+then
+  # If Nuxeo verion is 2023.19 or earlier, use Rocky Linux Dockerfile
+  TARGET_VERSION="2023.19"
+  # Compare the two versions using sort (code from ChatGPT)
+  if [ "$(printf '%s\n' "$nx_version" "$TARGET_VERSION" | sort -V | head -n 1)" = "$nx_version" ]; then
+    DOCKERFILE="build_nuxeo/Dockerfile.hf19"
+  else
+    DOCKERFILE="build_nuxeo/Dockerfile"
+  fi
+fi
+
+# Use correct Dockerfile for Oracle vs Rocky Linux
+# Use sed to replace the value of 'dockerfile' for Nuxeo with the new value (for Linux)
+sed -i "s|dockerfile: build_nuxeo/Dockerfile|dockerfile: $DOCKERFILE|" "${COMPOSE_DIR}/docker-compose.yml"
 
 # Fix up permissions
 rm -f /root/creds.json
