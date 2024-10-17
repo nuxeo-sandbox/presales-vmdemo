@@ -85,7 +85,7 @@
         "t3.large",
         "t3.xlarge",
         "t3.2xlarge",
-		"m5.2xlarge",
+        "m5.2xlarge",
         "m7a.large",
         "m7a.xlarge",
         "m7a.2xlarge",
