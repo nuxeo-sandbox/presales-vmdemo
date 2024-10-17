@@ -294,8 +294,8 @@ then
 fi
 
 # Use correct Dockerfile for Oracle vs Rocky Linux
-# Use sed to replace the value of 'dockerfile' for Nuxeo with the new value (for macOS)
-sed -i '' "s|dockerfile: build_nuxeo/Dockerfile|dockerfile: $DOCKERFILE|" "${COMPOSE_DIR}/docker-compose.yml"
+# Use sed to replace the value of 'dockerfile' for Nuxeo with the new value (for Linux)
+sed -i "s|dockerfile: build_nuxeo/Dockerfile|dockerfile: $DOCKERFILE|" "${COMPOSE_DIR}/docker-compose.yml"
 
 # Add newDNS script
 curl https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/master/aws/ec2-scripts/newDNS.sh > ${TMP_DIR}/newDNS.sh
