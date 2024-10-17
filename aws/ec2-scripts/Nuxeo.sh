@@ -26,9 +26,6 @@ OPENSEARCH_VERSION="1.3.19"
 OPENSEARCH_IMAGE="opensearchproject/opensearch:"${OPENSEARCH_VERSION}
 OPENSEARCH_DASHBOARDS_IMAGE="opensearchproject/opensearch-dashboards:"${OPENSEARCH_VERSION}
 
-# TODO: remove this, it's redundant
-LTS_IMAGE="docker-private.packages.nuxeo.com/nuxeo/nuxeo:2023"
-
 # Start of installation script
 
 echo "Nuxeo Presales Installation Script Starting [${STACK_ID}]" > ${INSTALL_LOG}
@@ -39,7 +36,7 @@ echo "Nuxeo Presales Installation Script Starting [${STACK_ID}]" > ${INSTALL_LOG
 echo "vm.max_map_count=262144" >> /etc/sysctl.conf && sysctl -p
 
 # Check configured image
-FROM_IMAGE="${LTS_IMAGE}"
+FROM_IMAGE="docker-private.packages.nuxeo.com/nuxeo/nuxeo:2023"
 
 # Check DNS Name
 if [ -z "${DNS_NAME}" ]; then
@@ -271,6 +268,7 @@ FQDN=${FQDN}
 STUDIO_USERNAME=${STUDIO_USERNAME}
 STUDIO_CREDENTIALS=${CREDENTIALS}
 EOF
+
 # Make env not as hidden
 ln -s ${NUXEO_ENV} ${COMPOSE_DIR}/env
 
