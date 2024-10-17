@@ -17,7 +17,7 @@ COMPOSE_REPO="https://github.com/nuxeo-sandbox/nuxeo-presales-docker"
 COMPOSE_DIR="/home/ubuntu/nuxeo-presales-docker"
 CONF_DIR="${COMPOSE_DIR}/conf"
 NUXEO_ENV="${COMPOSE_DIR}/.env"
-NUXEO_VERSION="{$NUXEO_VERSION}"
+NUXEO_VERSION="${NUXEO_VERSION}"
 
 # Values for `.env`
 STUDIO_USERNAME="nuxeo_presales"
@@ -37,7 +37,7 @@ echo "Nuxeo Presales Installation Script Starting [${STACK_ID}]" > ${INSTALL_LOG
 echo "vm.max_map_count=262144" >> /etc/sysctl.conf && sysctl -p
 
 # Check configured image
-FROM_IMAGE="docker-private.packages.nuxeo.com/nuxeo/nuxeo:{$NUXEO_VERSION}"
+FROM_IMAGE="docker-private.packages.nuxeo.com/nuxeo/nuxeo:${NUXEO_VERSION}"
 
 # Check DNS Name
 if [ -z "${DNS_NAME}" ]; then
