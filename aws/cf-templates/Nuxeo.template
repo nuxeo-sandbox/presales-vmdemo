@@ -36,8 +36,8 @@
             "default": "NEV Setup (optional)"
           },
           "Parameters": [
-            "NEVGitBranch",
             "MakeNEV",
+            "NEVGitBranch",
             "NEVInstanceType",
             "NEVVersion",
             "NEVArenderAddon",
@@ -87,6 +87,7 @@
         "t3.xlarge",
         "t3.2xlarge",
         "m5.2xlarge",
+        "m5.4xlarge",
         "m7a.large",
         "m7a.xlarge",
         "m7a.2xlarge",
