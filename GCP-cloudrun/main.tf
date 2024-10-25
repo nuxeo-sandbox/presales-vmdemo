@@ -43,6 +43,12 @@ resource "google_cloud_run_v2_service" "nuxeo_test" {
   template {
     containers {
       image = docker_registry_image.nuxeo_custom_remote.name
+      resources {
+        limits = {
+          cpu    = "2"
+          memory = "4Gi"
+        }
+      }
     }
   }
 }
