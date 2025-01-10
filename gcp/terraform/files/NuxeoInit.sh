@@ -41,8 +41,8 @@ TMP_DIR="/tmp/nuxeo"
 # Variables for `.env`
 STUDIO_USERNAME="nuxeo_presales"
 TEMPLATES="default,mongodb"
-MONGO_VERSION="6.0"
-OPENSEARCH_VERSION="1.3.19"
+MONGO_VERSION="8.0"
+OPENSEARCH_VERSION="1.3.20"
 OPENSEARCH_IMAGE="opensearchproject/opensearch:"${OPENSEARCH_VERSION}
 OPENSEARCH_DASHBOARDS_IMAGE="opensearchproject/opensearch-dashboards:"${OPENSEARCH_VERSION}
 
