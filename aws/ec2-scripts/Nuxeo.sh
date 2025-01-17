@@ -133,15 +133,6 @@ nuxeo.s3storage.transient.roleArn=${UPLOAD_ROLE_ARN}
 nuxeo.s3storage.transient.bucket=${S3_BUCKET}
 nuxeo.s3storage.transient.bucket_prefix=${S3_UPLOAD_PREFIX}
 
-# Nuxeo Insight Configuration
-#nuxeo.ai.insight.client.target.url=https://insight.nuxeocloud.com/nuxeo
-#nuxeo.ai.insight.client.enable=true
-#nuxeo.ai.insight.client.projectid=
-#nuxeo.ai.insight.client.token=
-#nuxeo.ai.insight.datasource.label=
-#nuxeo.ai.images.enabled=true
-#nuxeo.ai.text.enabled=true
-
 # Rekognition Configuration
 nuxeo.enrichment.save.facets=true
 nuxeo.enrichment.save.tags=true
