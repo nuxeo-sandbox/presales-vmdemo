@@ -15,10 +15,10 @@ function usage {
   echo "  -u user     The user for the host OS; default is 'ubuntu'"
   echo
   echo "Examples:"
-  echo "  $scriptName my-demo                           Start EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
+  echo "  $scriptName my-demo                           Stop EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
   echo "  $scriptName my-demo.cloud.nuxeo.com           Same as above."
-  echo "  $scriptName -r eu-east-1 my-demo              Start EC2 instance with Name \"mydemo\" in region \"eu-east-1\"."
-  echo "  $scriptName -p custom-profile my-demo         Start EC2 instance with Name \"mydemo\" using custom AWS CLI profile."
+  echo "  $scriptName -r eu-east-1 my-demo              Stop EC2 instance with Name \"mydemo\" in region \"eu-east-1\"."
+  echo "  $scriptName -p custom-profile my-demo         Stop EC2 instance with Name \"mydemo\" using custom AWS CLI profile."
 }
 
 profile=""
@@ -141,7 +141,7 @@ fi
 if [ -z "$instance_id" ]
 then
   instance_id=$(aws ec2 describe-instances \
-    --filters Name=instance-state-name,Values=stopped Name=tag:dnsName,Values=${instance_identifier} \
+    --filters Name=instance-state-name,Values=running Name=tag:dnsName,Values=${instance_identifier} \
     --query 'Reservations[].Instances[].[InstanceId]' \
     --region $region \
     --output text)
@@ -151,7 +151,7 @@ fi
 if [ -z "$instance_id" ]
 then
   instance_id=$(aws ec2 describe-instances \
-    --filters Name=instance-state-name,Values=stopped Name=tag:Name,Values=${instance_identifier} \
+    --filters Name=instance-state-name,Values=running Name=tag:Name,Values=${instance_identifier} \
     --query 'Reservations[].Instances[].[InstanceId]' \
     --region $region \
     --output text)
@@ -173,7 +173,7 @@ if [ -z "$instance_id" ]
 then
   echo
   echo "$scriptName: error: Instance ID not found for \"$instance_identifier\" in region $region."
-  echo "$scriptName:        Check the name, the region and the status (it must be \"stopped\" to be started)"
+  echo "$scriptName:        Check the name, the region and the status (it must be \"running\" to be stopped)"
   echo
   exit 3
 fi
@@ -192,7 +192,7 @@ echo "Instance ID: $instance_id"
 #===============================================================================
 echo
 echo "Executing:"
-echo "aws ec2 start-instances --instance-ids $instance_id"
+echo "aws ec2 stop-instances --instance-ids $instance_id"
 echo
-aws ec2 start-instances --instance-ids $instance_id
+aws ec2 stop-instances --instance-ids $instance_id
 echo
