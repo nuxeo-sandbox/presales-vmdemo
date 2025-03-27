@@ -4,7 +4,7 @@ scriptName=$(basename "$0")
 
 function usage {
   echo
-  echo "Usage: $scriptName [-p profile] [-r region] <instance_identifier> [src] [dest]"
+  echo "Usage: $scriptName [-p profile] [-r region] [-d download] <instance_identifier> [src] [dest]"
   echo
   echo "Arguments:"
   echo "  instance_identifier   The EC2 instance; can be ID, Name, dnsName, or host."
@@ -15,6 +15,7 @@ function usage {
   echo "  -p string   AWS CLI profile to use; default is 'default'."
   echo "  -r string   AWS region. If not specified, will use \$AWS_REGION, region of selected profile, or 'us-east-1' (in that order)."
   echo "  -u user     The user for the host OS; default is 'ubuntu'"
+  echo "  -d boolean  When doing scp, download from the server. Default is false (upload to the server)"
   echo
   echo "Examples:"
   echo "  $scriptName my-demo                           SSH to EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
@@ -23,6 +24,9 @@ function usage {
   echo "  $scriptName -p custom-profile my-demo         SSH to EC2 instance with Name \"mydemo\" using custom AWS CLI profile."
   echo "  $scriptName my-demo foo.txt                   SCP "foo.txt" to EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
   echo "  $scriptName my-demo.cloud.nuxeo.com foo.txt   Same as above."
+  echo "  $scriptName my-demo foo.txt f1/foo.txt        SCP "foo.txt" to EC2 instance, stor it at /home/{user}/f1/foo.txt."
+  echo "  $scriptName -d true my-demo foo.txt ~/foo.txt SCP, download from user@instance:foo.txt to local ~/foo.txt."
+  echo "  $scriptName -d true my-demo a/b/c.txt ~/c.txt SCP, download from user@instance:a/b/c.txt to local ~/c.txt."
 }
 
 profile=""
@@ -32,15 +36,17 @@ instance_identifier=""
 src=""
 dest=""
 instance_id=""
+doDownload=""
 
 DEFAULT_REGION="us-east-1"
 DEFAULT_PROFILE="default"
 DEFAULT_USER="ubuntu"
+DEFAULT_DOWNLOAD="false"
 
 #===============================================================================
 # Handle options.
 #===============================================================================
-while getopts ":r:p:" opt;
+while getopts ":r:p:u:d:" opt;
 do
   case ${opt} in
     r)
@@ -51,6 +57,13 @@ do
       ;;
     u)
       user=$OPTARG
+      ;;
+    d)
+      doDownload=$OPTARG
+      if [ -n "$doDownload" ] && [ "$doDownload" != "true" ] && [ "$doDownload" != "false" ]; then
+          echo "⚠️ Warning: doDownload has an unexpected value: '$doDownload'. Should be 'true' or 'false'"
+          exit 1
+      fi
       ;;
     \?)
       usage
@@ -165,6 +178,15 @@ then
 fi
 
 #===============================================================================
+# Handle scp download
+#===============================================================================
+if [ -z "$doDownload" ]
+then
+  doDownload=$DEFAULT_DOWNLOAD
+fi
+
+
+#===============================================================================
 # Find instance Id
 #===============================================================================
 # If it's already an instance ID, just use it...
@@ -219,6 +241,10 @@ echo
 echo "Profile: $profile"
 echo "Region: $region"
 echo "Instance: $instance_identifier"
+if [ "$doDownload" ]
+then
+  echo "SCP Download: $doDownload"
+fi
 if [ "$src" ]
 then
   echo "src: $src"
@@ -234,9 +260,15 @@ echo "Executing:"
 
 if [ "$src" ]
 then
-  echo "scp $src $user@$instance_id:$dest"
-  echo
-  scp $src $user@$instance_id:$dest
+  if [ "$doDownload" == "true" ]; then
+    echo "scp $user@$instance_id:$src $dest"
+    echo
+    scp $user@$instance_id:$src $dest
+  else
+    echo "scp $src $user@$instance_id:$dest"
+    echo
+    scp $src $user@$instance_id:$dest
+  fi
 else
   echo "ssh $user@$instance_id"
   echo
