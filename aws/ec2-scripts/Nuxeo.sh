@@ -217,6 +217,7 @@ PROJECT_NAME=$(echo "${NX_STUDIO}" | awk '{print tolower($0)}')
 # Make sure we always have a UI installed
 AUTO_PACKAGES="nuxeo-web-ui"
 # Auto install Nuxeo Explorer because the website is often unusable
+# WARNING: platform-explorer not (yet?) available for LTS 2025 as of May 2025
 # AUTO_PACKAGES="${AUTO_PACKAGES} platform-explorer"
 # Make sure to install S3 plugin if needed
 if [[ "${S3BUCKET}" == "true" || "${S3BUCKET}" == "Create" || "${S3BUCKET}" == "Shared" ]]; then
