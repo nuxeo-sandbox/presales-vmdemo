@@ -47,7 +47,7 @@
       ],
       "ParameterLabels": {
         "MakeNEV": {
-          "default": "Create a NEV stack? =====> If yes, make sure latest version of NEV.template has been uploaded to s3 <====="
+          "default": "Create a NEV stack?"
         },
         "NEVInstanceType": {
           "default": "NEV instance type"
