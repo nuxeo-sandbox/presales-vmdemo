@@ -4,7 +4,7 @@ scriptName=$(basename "$0")
 
 function usage {
   echo
-  echo "Usage: $scriptName [-p profile] [-r region] [-d] <instance_identifier> [src] [dest]"
+  echo "Usage: $scriptName [-p profile] [-r region] [-u user] [-d] <instance_identifier> [src] [dest]"
   echo
   echo "Arguments:"
   echo "  instance_identifier   The EC2 instance; can be ID, Name, dnsName, or host."
