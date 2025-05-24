@@ -23,10 +23,7 @@ function usage {
   echo "  $scriptName -r eu-east-1 my-demo              SSH to EC2 instance with Name \"mydemo\" in region \"eu-east-1\"."
   echo "  $scriptName -p custom-profile my-demo         SSH to EC2 instance with Name \"mydemo\" using custom AWS CLI profile."
   echo "  $scriptName my-demo foo.txt                   SCP "foo.txt" to EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
-  echo "  $scriptName my-demo.cloud.nuxeo.com foo.txt   Same as above."
-  echo "  $scriptName my-demo foo.txt f1/foo.txt        SCP "foo.txt" to EC2 instance, stor it at /home/{user}/f1/foo.txt."
-  echo "  $scriptName -d true my-demo foo.txt ~/foo.txt SCP, download from user@instance:foo.txt to local ~/foo.txt."
-  echo "  $scriptName -d true my-demo a/b/c.txt ~/c.txt SCP, download from user@instance:a/b/c.txt to local ~/c.txt."
+  echo "  $scriptName -d true my-demo foo.txt ~/foo.txt SCP, download from user@my-demo:foo.txt to local ~/foo.txt."
 }
 
 profile=""
