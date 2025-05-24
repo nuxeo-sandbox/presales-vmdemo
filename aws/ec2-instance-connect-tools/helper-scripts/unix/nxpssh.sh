@@ -234,14 +234,11 @@ echo
 echo "Profile: $profile"
 echo "Region: $region"
 echo "Instance: $instance_identifier"
-if [ "$scp_download" ]
-then
-  echo "SCP Download: $scp_download"
-fi
 if [ "$src" ]
 then
   echo "src: $src"
   echo "dest: $dest"
+  echo "Download: $scp_download"
 fi
 echo "Instance ID: $instance_id"
 
@@ -253,7 +250,8 @@ echo "Executing:"
 
 if [ "$src" ]
 then
-  if [ "$scp_download" == "true" ]; then
+  if [ "$scp_download" == "true" ]
+  then
     echo "scp $user@$instance_id:$src $dest"
     echo
     scp $user@$instance_id:$src $dest
