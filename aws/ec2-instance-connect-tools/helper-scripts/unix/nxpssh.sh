@@ -4,7 +4,7 @@ scriptName=$(basename "$0")
 
 function usage {
   echo
-  echo "Usage: $scriptName [-p profile] [-r region] [-d download] <instance_identifier> [src] [dest]"
+  echo "Usage: $scriptName [-p profile] [-r region] [-d] <instance_identifier> [src] [dest]"
   echo
   echo "Arguments:"
   echo "  instance_identifier   The EC2 instance; can be ID, Name, dnsName, or host."
@@ -15,15 +15,15 @@ function usage {
   echo "  -p string   AWS CLI profile to use; default is 'default'."
   echo "  -r string   AWS region. If not specified, will use \$AWS_REGION, region of selected profile, or 'us-east-1' (in that order)."
   echo "  -u user     The user for the host OS; default is 'ubuntu'"
-  echo "  -d boolean  When doing scp, download from the server. Default is false (upload to the server)"
+  echo "  -d          Use scp to download instead of upload"
   echo
   echo "Examples:"
-  echo "  $scriptName my-demo                           SSH to EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
-  echo "  $scriptName my-demo.cloud.nuxeo.com           Same as above."
-  echo "  $scriptName -r eu-east-1 my-demo              SSH to EC2 instance with Name \"mydemo\" in region \"eu-east-1\"."
-  echo "  $scriptName -p custom-profile my-demo         SSH to EC2 instance with Name \"mydemo\" using custom AWS CLI profile."
-  echo "  $scriptName my-demo foo.txt                   SCP "foo.txt" to EC2 instance with Name or dnsName \"mydemo\" using default AWS CLI profile and automatically selected region."
-  echo "  $scriptName -d true my-demo foo.txt ~/foo.txt SCP, download from user@my-demo:foo.txt to local ~/foo.txt."
+  echo "  $scriptName my-demo                    SSH to EC2 instance with Name or dnsName \"my-demo\" using default AWS CLI profile and automatically selected region."
+  echo "  $scriptName my-demo.cloud.nuxeo.com    Same as above."
+  echo "  $scriptName -r eu-east-1 my-demo       SSH to EC2 instance with Name \"my-demo\" in region \"eu-east-1\"."
+  echo "  $scriptName -p custom-profile my-demo  SSH to EC2 instance with Name \"my-demo\" using custom AWS CLI profile."
+  echo "  $scriptName my-demo foo.txt            SCP upload "foo.txt" to EC2 instance with Name or dnsName \"my-demo\" using default AWS CLI profile and automatically selected region."
+  echo "  $scriptName -d my-demo foo.txt         SCP download "user@my-demo:foo.txt" to ./foo.txt."
 }
 
 profile=""
@@ -43,7 +43,7 @@ DEFAULT_DOWNLOAD="false"
 #===============================================================================
 # Handle options.
 #===============================================================================
-while getopts ":r:p:u:d:" opt;
+while getopts ":r:p:u:d" opt;
 do
   case ${opt} in
     r)
@@ -56,11 +56,7 @@ do
       user=$OPTARG
       ;;
     d)
-      doDownload=$OPTARG
-      if [ -n "$doDownload" ] && [ "$doDownload" != "true" ] && [ "$doDownload" != "false" ]; then
-          echo "⚠️ Warning: doDownload has an unexpected value: '$doDownload'. Should be 'true' or 'false'"
-          exit 1
-      fi
+      doDownload=true
       ;;
     \?)
       usage
