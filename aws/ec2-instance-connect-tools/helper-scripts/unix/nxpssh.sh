@@ -18,12 +18,13 @@ function usage {
   echo "  -d          Use scp to download instead of upload"
   echo
   echo "Examples:"
-  echo "  $scriptName my-demo                    SSH to EC2 instance with Name or dnsName \"my-demo\" using default AWS CLI profile and automatically selected region."
-  echo "  $scriptName my-demo.cloud.nuxeo.com    Same as above."
-  echo "  $scriptName -r eu-east-1 my-demo       SSH to EC2 instance with Name \"my-demo\" in region \"eu-east-1\"."
-  echo "  $scriptName -p custom-profile my-demo  SSH to EC2 instance with Name \"my-demo\" using custom AWS CLI profile."
-  echo "  $scriptName my-demo foo.txt            SCP upload "foo.txt" to EC2 instance with Name or dnsName \"my-demo\" using default AWS CLI profile and automatically selected region."
-  echo "  $scriptName -d my-demo foo.txt         SCP download "user@my-demo:foo.txt" to ./foo.txt."
+  echo "  $scriptName my-demo                     SSH to EC2 instance with Name or dnsName \"my-demo\" using default AWS CLI profile and automatically selected region."
+  echo "  $scriptName my-demo.cloud.nuxeo.com     Same as above."
+  echo "  $scriptName -r eu-east-1 my-demo        SSH to EC2 instance with Name \"my-demo\" in region \"eu-east-1\"."
+  echo "  $scriptName -p custom-profile my-demo   SSH to EC2 instance with Name \"my-demo\" using custom AWS CLI profile."
+  echo "  $scriptName my-demo foo.txt             SCP upload "foo.txt" to EC2 instance with Name or dnsName \"my-demo\" using default AWS CLI profile and automatically selected region."
+  echo "  $scriptName my-demo foo.txt f1/foo.txt  SCP "foo.txt" to EC2 instance, store it at /home/{user}/f1/foo.txt."
+  echo "  $scriptName -d my-demo foo.txt          SCP download "user@my-demo:foo.txt" to ./foo.txt."
 }
 
 profile=""
