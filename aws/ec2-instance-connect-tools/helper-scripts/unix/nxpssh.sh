@@ -33,12 +33,12 @@ instance_identifier=""
 src=""
 dest=""
 instance_id=""
-doDownload=""
+scp_download=""
 
 DEFAULT_REGION="us-east-1"
 DEFAULT_PROFILE="default"
 DEFAULT_USER="ubuntu"
-DEFAULT_DOWNLOAD="false"
+DEFAULT_SCP_DOWNLOAD="false"
 
 #===============================================================================
 # Handle options.
@@ -56,7 +56,7 @@ do
       user=$OPTARG
       ;;
     d)
-      doDownload=true
+      scp_download=true
       ;;
     \?)
       usage
@@ -173,9 +173,9 @@ fi
 #===============================================================================
 # Handle scp download
 #===============================================================================
-if [ -z "$doDownload" ]
+if [ -z "$scp_download" ]
 then
-  doDownload=$DEFAULT_DOWNLOAD
+  scp_download=$DEFAULT_SCP_DOWNLOAD
 fi
 
 
@@ -234,9 +234,9 @@ echo
 echo "Profile: $profile"
 echo "Region: $region"
 echo "Instance: $instance_identifier"
-if [ "$doDownload" ]
+if [ "$scp_download" ]
 then
-  echo "SCP Download: $doDownload"
+  echo "SCP Download: $scp_download"
 fi
 if [ "$src" ]
 then
@@ -253,7 +253,7 @@ echo "Executing:"
 
 if [ "$src" ]
 then
-  if [ "$doDownload" == "true" ]; then
+  if [ "$scp_download" == "true" ]; then
     echo "scp $user@$instance_id:$src $dest"
     echo
     scp $user@$instance_id:$src $dest
