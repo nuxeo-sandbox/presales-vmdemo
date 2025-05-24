@@ -24,7 +24,7 @@ function usage {
   echo "  $scriptName -p custom-profile my-demo   SSH to EC2 instance with Name \"my-demo\" using custom AWS CLI profile."
   echo "  $scriptName my-demo foo.txt             SCP upload "foo.txt" to EC2 instance with Name or dnsName \"my-demo\" using default AWS CLI profile and automatically selected region."
   echo "  $scriptName my-demo foo.txt f1/foo.txt  SCP "foo.txt" to EC2 instance, store it at /home/{user}/f1/foo.txt."
-  echo "  $scriptName -d my-demo foo.txt          SCP download "user@my-demo:foo.txt" to ./foo.txt."
+  echo "  $scriptName -d my-demo foo.txt          SCP download \"user@my-demo:foo.txt\" to ./foo.txt."
 }
 
 profile=""
