@@ -11,6 +11,7 @@ These templates use the AMI built with the packer template at [vm-image-builder]
 
 ## EC2-instance-Connect-Tools
 Helpful stuff for working on localhost, including:
+* [Scripts](ec2-instance-connect-tools/helper-scripts/unix/) to start and stop an instance using the EC2 Name, dnsName, or host (more convenient than Instance IDs)
 * A [script](ec2-instance-connect-tools/helper-scripts/unix/nxpstart.sh) to start an instance using the EC2 Name, dnsName, or host (more convenient than Instance IDs)
 * A [script](ec2-instance-connect-tools/helper-scripts/unix/nxpssh.sh) to connect to an instance using the EC2 Name, dnsName, or host (more convenient than Instance IDs)
 * [Tooling](ec2-instance-connect-tools/ssh-config) to allow `scp` to function when connecting via EC2 Instance Connect Endpoints
