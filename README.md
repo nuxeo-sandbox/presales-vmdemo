@@ -1,7 +1,7 @@
 # Description
 Cloud deployment resources used by the Nuxeo Presales Team. These are provided for inspiration and we encourage developers to use them as code samples and learning resources.
 
-Note: The master branch currently deploys Nuxeo LTS 2023. To deploy Nuxeo LTS 2021, please use the [lts2021](https://github.com/nuxeo-sandbox/presales-vmdemo/tree/lts2021) branch.
+Note: The master branch currently deploys Nuxeo LTS 2023. To deploy other versions please use the appropriate branch.
 
 # Content
 
