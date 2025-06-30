@@ -179,7 +179,7 @@ export HOME="/home/ubuntu"
 # Get gcloud credentials for nuxeo
 gcloud secrets versions access latest --secret instance-credentials --project nuxeo-presales-apis > ${COMPOSE_DIR}/google-credential.json
 chmod 664 ${COMPOSE_DIR}/google-credential.json
-sed -i '/google-credential.json/s/^#//g' ${COMPOSE_DIR}/build_nuxeo/Dockerfile
+sed -i '/google-credential.json/s/^# //g' ${COMPOSE_DIR}/build_nuxeo/Dockerfile
 
 # Log in to docker
 DOCKER_USER=$(jq -r '.docker_presales_user' < /root/creds.json)
