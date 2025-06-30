@@ -129,6 +129,15 @@ nuxeo.gcp.storage.bucket=${BUCKET}
 nuxeo.gcp.storage.bucket_prefix=${BUCKET_PREFIX}
 nuxeo.gcp.project=nuxeo-presales-apis
 
+#gcp ai configuration
+nuxeo.ai.images.enabled=true
+nuxeo.enrichment.gcp.images=true
+nuxeo.enrichment.save.tags=true
+nuxeo.enrichment.save.facets=true
+nuxeo.enrichment.raiseEvent=true
+# It appears nuxeo-ai-gcp doesn't support this at all
+#nuxeo.ai.video.enabled
+
 # WOPI Configuration
 nuxeo.wopi.discoveryURL=https://onenote.officeapps.live.com/hosting/discovery
 nuxeo.wopi.baseURL=https://wopi.nuxeocloud.com/${FQDN}/nuxeo/
