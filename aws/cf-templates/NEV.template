@@ -11,7 +11,7 @@
     "InstanceType": {
       "Description": "t3.medium = 2vCPU/4GB, t3.large = 2vCPU/8GB, t3.xlarge = 4vCPU/16GB",
       "Type": "String",
-      "Default": "t3.medium",
+      "Default": "t3.xlarge",
       "AllowedValues": [
         "t3.medium",
         "t3.large",
