@@ -29,6 +29,24 @@
       "Default": "wwpresalesdemos@hyland.com",
       "Description": "Contact email address"
     },
+    "ManagerName": {
+      "Type": "String",
+      "Description": "For cross-team demos, 'Larry Moscovic', otherwise enter your manager's name",
+      "MinLength": 1,
+      "ConstraintDescription": "Manager is required - please specify manager"
+    },
+    "OnwerName": {
+      "Type": "String",
+      "Description": "For cross-team demos, 'Nuxeo Presales', otherwise enter your name",
+      "MinLength": 1,
+      "ConstraintDescription": "Owner is required - please specify owner"
+    },
+    "OnwerEmail": {
+      "Type": "String",
+      "Description": "For cross-team demos, 'wwpresalesdemos@hyland.com', otherwise enter your email",
+      "AllowedPattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+      "ConstraintDescription": "Valid email address is required - please enter email"
+    },
     "NEVVersion": {
       "Type": "String",
       "Default": "2023.2.1",
@@ -208,6 +226,24 @@
             }
           },
           {
+            "Key": "Manager",
+            "Value": {
+              "Ref": "ManagerName"
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {
+              "Ref": "OnwerName"
+            }
+          },
+          {
+            "Key": "Email",
+            "Value": {
+              "Ref": "OnwerEmail"
+            }
+          },
+          {
             "Key": "environment",
             "Value": "dev"
           },
@@ -238,6 +274,7 @@
             }
           }
         ],
+        "PropagateTagsToVolumeOnCreation": true,
         "IamInstanceProfile": {
           "Ref": "InstanceProfile"
         },

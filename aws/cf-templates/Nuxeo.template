@@ -12,7 +12,10 @@
             "GitBranch",
             "Customer",
             "DnsName",
-            "Contact"
+            "Contact",
+            "ManagerName",
+            "OnwerName",
+            "OnwerEmail"
           ]
         },
         {
@@ -145,7 +148,25 @@
     "Contact": {
       "Type": "String",
       "Default": "wwpresalesdemos@hyland.com",
-      "Description": "Contact email address"
+      "Description": "Contact email address for questions about the instance"
+    },
+    "ManagerName": {
+      "Type": "String",
+      "Description": "For cross-team demos, 'Larry Moscovic', otherwise enter your manager's name",
+      "MinLength": 1,
+      "ConstraintDescription": "Manager is required - please specify manager"
+    },
+    "OnwerName": {
+      "Type": "String",
+      "Description": "For cross-team demos, 'Nuxeo Presales', otherwise enter your name",
+      "MinLength": 1,
+      "ConstraintDescription": "Owner is required - please specify owner"
+    },
+    "OnwerEmail": {
+      "Type": "String",
+      "Description": "For cross-team demos, 'wwpresalesdemos@hyland.com', otherwise enter your email",
+      "AllowedPattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+      "ConstraintDescription": "Valid email address is required - please enter email"
     },
     "DiskSize": {
       "Type": "Number",
@@ -374,6 +395,24 @@
             }
           },
           {
+            "Key": "Manager",
+            "Value": {
+              "Ref": "ManagerName"
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {
+              "Ref": "OnwerName"
+            }
+          },
+          {
+            "Key": "Email",
+            "Value": {
+              "Ref": "OnwerEmail"
+            }
+          },
+          {
             "Key": "environment",
             "Value": "dev"
           },
@@ -404,6 +443,7 @@
             }
           }
         ],
+        "PropagateTagsToVolumeOnCreation": true,
         "IamInstanceProfile": {
           "Ref": "InstanceProfile"
         },
@@ -1121,6 +1161,24 @@
             }
           },
           {
+            "Key": "Manager",
+            "Value": {
+              "Ref": "ManagerName"
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {
+              "Ref": "OnwerName"
+            }
+          },
+          {
+            "Key": "Email",
+            "Value": {
+              "Ref": "OnwerEmail"
+            }
+          },
+          {
             "Key": "billing-category",
             "Value": "presales"
           },
@@ -1197,6 +1255,24 @@
             }
           },
           {
+            "Key": "Manager",
+            "Value": {
+              "Ref": "ManagerName"
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {
+              "Ref": "OnwerName"
+            }
+          },
+          {
+            "Key": "Email",
+            "Value": {
+              "Ref": "OnwerEmail"
+            }
+          },
+          {
             "Key": "billing-category",
             "Value": "presales"
           },
@@ -1233,6 +1309,15 @@
           },
           "Contact": {
             "Ref": "Contact"
+          },
+          "ManagerName": {
+            "Ref": "ManagerName"
+          },
+          "OnwerName": {
+            "Ref": "OnwerName"
+          },
+          "OnwerEmail": {
+            "Ref": "OnwerEmail"
           },
           "NEVVersion": {
             "Ref": "NEVVersion"
