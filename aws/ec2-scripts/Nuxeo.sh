@@ -264,6 +264,8 @@ EOF
 # Make env not as hidden
 ln -s ${NUXEO_ENV} ${COMPOSE_DIR}/env
 
+DOCKERFILE="build_nuxeo/Dockerfile"
+
 # Add newDNS script
 curl https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/master/aws/ec2-scripts/newDNS.sh > ${TMP_DIR}/newDNS.sh
 chmod +x ${TMP_DIR}/newDNS.sh
