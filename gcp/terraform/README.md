@@ -24,13 +24,13 @@ You can use the bootstrap script to automate resource creation, or handle it man
 Use the included script to automate the setup:
 
 ```bash
-./bootstrap.sh
+./create-nuxeo-gcp.sh
 ```
 
 The script will prompt for all needed values, but you may also supply param values via environment vars, e.g.:
 
 ```bash
-NX_STACK_NAME=my-stack NX_STUDIO_PROJECT=my-studio-project NX_USE_NEV=false NX_DNS_NAME=my-dns-name NX_NEV_VERSION=2025.2.0 ./bootstrap.sh
+NX_STACK_NAME=my-stack NX_STUDIO_PROJECT=my-studio-project NX_USE_NEV=false NX_DNS_NAME=my-dns-name NX_NEV_VERSION=2025.2.0 ./create-nuxeo-gcp.sh
 ```
 
 Available variables:
@@ -53,7 +53,7 @@ Var | Purpose | Default
 Don't forget to make the script executable if needed:
 
 ```bash
-chmod u+x bootstrap.sh
+chmod u+x create-nuxeo-gcp.sh
 ```
 
 ## Terraform CLI
@@ -103,13 +103,13 @@ terraform workspace select <stack_name>
 Use the included script to automate the deletion:
 
 ```bash
-./destroy.sh
+./destroy-nuxeo-gcp.sh
 ```
 
 Don't forget to make the script executable if needed:
 
 ```bash
-chmod u+x destroy.sh
+chmod u+x destroy-nuxeo-gcp.sh
 ```
 
 ## Terraform CLI
