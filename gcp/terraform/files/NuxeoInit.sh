@@ -201,6 +201,10 @@ PROJECT_NAME=$(echo "${NX_STUDIO}" | awk '{print tolower($0)}')
 AUTO_PACKAGES="nuxeo-web-ui"
 # Auto install Nuxeo Explorer because the website is often unusable
 AUTO_PACKAGES="${AUTO_PACKAGES} platform-explorer"
+# Auto install Nuxeo API Playground for easier API testing
+AUTO_PACKAGES="${AUTO_PACKAGES} nuxeo-api-playground"
+# Auto install Nuxeo Admin Console for easier administration
+AUTO_PACKAGES="${AUTO_PACKAGES} nuxeo-admin-console"
 # Make sure to install google storage plugin
 AUTO_PACKAGES="${AUTO_PACKAGES} google-storage"
 
