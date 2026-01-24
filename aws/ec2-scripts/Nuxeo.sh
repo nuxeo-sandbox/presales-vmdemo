@@ -9,17 +9,17 @@
 
 source /etc/profile.d/load_env.sh
 
-# Variables for this script:
+# Variables for this script
 INSTALL_LOG="/var/log/nuxeo_install.log"
-TMP_DIR="/tmp/nuxeo"
-
+INSTALL_LOG_PREFIX="NXP Install Script:"
 COMPOSE_REPO="https://github.com/nuxeo-sandbox/nuxeo-presales-docker"
 COMPOSE_DIR="/home/ubuntu/nuxeo-presales-docker"
 CONF_DIR="${COMPOSE_DIR}/conf"
 NUXEO_ENV="${COMPOSE_DIR}/.env"
-NUXEO_VERSION="${NUXEO_VERSION}"
+NUXEO_IMAGE="docker-private.packages.nuxeo.com/nuxeo/nuxeo:${NUXEO_VERSION}"
+TMP_DIR="/tmp/nuxeo"
 
-# Values for `.env`
+# Variables for `.env`
 STUDIO_USERNAME="nuxeo_presales"
 TEMPLATES="default,mongodb"
 MONGO_VERSION="8.0"
@@ -27,17 +27,13 @@ OPENSEARCH_VERSION="1.3.20"
 OPENSEARCH_IMAGE="opensearchproject/opensearch:"${OPENSEARCH_VERSION}
 OPENSEARCH_DASHBOARDS_IMAGE="opensearchproject/opensearch-dashboards:"${OPENSEARCH_VERSION}
 
-# Start of installation script
-
-echo "Nuxeo Presales Installation Script Starting [${STACK_ID}]" > ${INSTALL_LOG}
+# Start of installation steps
+echo "${INSTALL_LOG_PREFIX} Starting [${STACK_ID}]" > ${INSTALL_LOG}
 
 # set memory settings
 # https://opensearch.org/docs/1.3/install-and-configure/install-opensearch/index/#important-settings
 # https://www.mongodb.com/docs/manual/administration/production-checklist-operations/#linux
 echo "vm.max_map_count=262144" >> /etc/sysctl.conf && sysctl -p
-
-# Check configured image
-FROM_IMAGE="docker-private.packages.nuxeo.com/nuxeo/nuxeo:${NUXEO_VERSION}"
 
 # Check DNS Name
 if [ -z "${DNS_NAME}" ]; then
@@ -57,15 +53,15 @@ hostname ${DNS_NAME}
 echo "Domains=cloud.nuxeo.com" >> /etc/systemd/resolved.conf
 
 # Install Nuxeo
-echo "Nuxeo Presales Installation Script: Install Nuxeo" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Install Nuxeo" | tee -a ${INSTALL_LOG}
 
 # Make directories and clone compose stack
 mkdir -p ${COMPOSE_DIR} ${NUXEO_DATA_DIR} ${NUXEO_LOG_DIR} ${TMP_DIR}
 git clone -b ${PRESALES_DOCKER_BRANCH} ${COMPOSE_REPO} ${COMPOSE_DIR}
 mkdir -p ${CONF_DIR}
-echo "Nuxeo Presales Installation Script: Install Nuxeo => DONE" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Install Nuxeo => DONE" | tee -a ${INSTALL_LOG}
 
-echo "Nuxeo Presales Installation Script: Configure Nuxeo" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Configure Nuxeo" | tee -a ${INSTALL_LOG}
 
 # Copy default conf.d files
 cp ${COMPOSE_DIR}/conf.d/* ${CONF_DIR}
@@ -238,7 +234,7 @@ cat << EOF > ${NUXEO_ENV}
 APPLICATION_NAME=${NX_STUDIO}
 PROJECT_NAME=${PROJECT_NAME}
 
-NUXEO_IMAGE=${FROM_IMAGE}
+NUXEO_IMAGE=${NUXEO_IMAGE}
 
 JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8787
 
@@ -280,7 +276,7 @@ chown -R nuxeo:ubuntu ${TMP_DIR}
 chown -R ubuntu:ubuntu ${COMPOSE_DIR} ${HOME}/.docker
 
 # Use the source image to register the project
-docker pull --quiet ${FROM_IMAGE} 2>&1 | tee -a ${INSTALL_LOG}
+docker pull --quiet ${NUXEO_IMAGE} 2>&1 | tee -a ${INSTALL_LOG}
 
 # Auto-start if Studio project defined
 if [ -n "${NX_STUDIO}" ]; then
@@ -303,12 +299,12 @@ if [ -n "${NX_STUDIO}" ]; then
   chown -R ubuntu:ubuntu ${HOME}/.docker
 
 fi
-echo "Nuxeo Presales Installation Script: Configure Nuxeo => DONE" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Configure Nuxeo => DONE" | tee -a ${INSTALL_LOG}
 
-echo "Nuxeo Presales Installation Script: Install Misc." | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Install Misc." | tee -a ${INSTALL_LOG}
 # Update some defaults
 update-alternatives --set editor /usr/bin/vim.basic
-echo "Nuxeo Presales Installation Script: Install Misc. => DONE" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Install Misc. => DONE" | tee -a ${INSTALL_LOG}
 
 # Configure reverse-proxy
 cat << EOF > /etc/apache2/sites-available/nuxeo.conf
@@ -410,10 +406,10 @@ echo "Restarting Apache"
 systemctl restart apache2
 
 # Enable SSL certs
-echo "Nuxeo Presales Installation Script: Enable Certbot Certificate" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Enable Certbot Certificate" | tee -a ${INSTALL_LOG}
 certbot -q --apache --redirect --hsts --uir --agree-tos -m wwpresalesdemos@hyland.com -d ${FQDN} | tee -a ${INSTALL_LOG}
 
-echo "Nuxeo Presales Installation Script: Setup profile, ubuntu, etc." | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Setup profile, ubuntu, etc." | tee -a ${INSTALL_LOG}
 
 #set up ubuntu user
 cat << EOF >> /home/ubuntu/.profile
@@ -429,14 +425,14 @@ alias mydu='du -sh */'
 # Add stack management and QOL aliases
 source ${COMPOSE_DIR}/aliases.sh
 
-# Override some of the above for AWS usage
+# Override some of the above for cloud usage
 alias stack='make -e -f ${COMPOSE_DIR}/Makefile'
 
-# Extras for AWS usage
+# Extras for cloud usage
 alias nxenv='vim ${COMPOSE_DIR}/.env'
 alias nxconf='vim ${CONF_DIR}/system.conf'
 
-figlet $DNS_NAME.cloud.nuxeo.com
+figlet $FQDN
 EOF
 
 # Set up vim for ubuntu user
@@ -445,6 +441,6 @@ cat << EOF > /home/ubuntu/.vimrc
 " 'filetype' has not already been set
 au BufRead,BufNewFile *.conf setfiletype conf
 EOF
-echo "Nuxeo Presales Installation Script: Setup profile, ubuntu, etc. => DONE" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Setup profile, ubuntu, etc. => DONE" | tee -a ${INSTALL_LOG}
 
-echo "Nuxeo Presales Installation Script Complete" | tee -a ${INSTALL_LOG}
+echo "${INSTALL_LOG_PREFIX} Complete" | tee -a ${INSTALL_LOG}

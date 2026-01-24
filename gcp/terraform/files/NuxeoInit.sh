@@ -22,6 +22,8 @@ PRESALES_DOCKER_BRANCH=$(curl http://metadata.google.internal/computeMetadata/v1
 # Get credentials for Studio & Repository & mail
 gcloud secrets versions access latest --secret nuxeo-presales-connect --project nuxeo-presales-apis > /root/creds.json
 
+# End GCP-specific stuff
+
 # Install script
 
 # Installation can take time.
@@ -143,7 +145,6 @@ nuxeo.wopi.discoveryURL=https://onenote.officeapps.live.com/hosting/discovery
 nuxeo.wopi.baseURL=https://wopi.nuxeocloud.com/${FQDN}/nuxeo/
 # JWT token is required for WOPI
 nuxeo.jwt.secret=${JWT_SECRET}
-
 EOF
 
 if [[ ${MAKE_NEV} == "true" ]]
@@ -408,10 +409,10 @@ alias mydu='du -sh */'
 # Add stack management and QOL aliases
 source ${COMPOSE_DIR}/aliases.sh
 
-# Override some of the above for CLOUD usage
+# Override some of the above for cloud usage
 alias stack='make -e -f ${COMPOSE_DIR}/Makefile'
 
-# Extras for CLOUD usage
+# Extras for cloud usage
 alias nxenv='vim ${COMPOSE_DIR}/.env'
 alias nxconf='vim ${CONF_DIR}/system.conf'
 
