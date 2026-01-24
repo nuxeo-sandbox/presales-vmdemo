@@ -92,7 +92,7 @@ resource "google_compute_instance" "nev_instance" {
     dns-name: local.dns_name
     auto-start: "true"
     nev-version: var.nev_version
-    startup-script: file("./files/NevInit.sh")
+    startup-script: file("./files/setup-nev.sh")
     nuxeo-url: var.nuxeo_url
     nuxeo-secret: var.nuxeo_secret
   }

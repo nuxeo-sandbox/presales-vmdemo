@@ -188,7 +188,7 @@ resource "google_compute_instance" "nuxeo_instance" {
     nuxeo-secret : random_password.nuxeo_secret.result
     auto-start : var.auto_start
     npd-branch : var.npd_branch
-    startup-script : file("./files/NuxeoInit.sh")
+    startup-script : file("./files/setup-nuxeo.sh")
   }
   tags = ["http-server", "https-server"]
 
