@@ -30,7 +30,7 @@ Use the included script to automate the setup:
 The script will prompt for all needed values, but you may also supply param values via environment vars, e.g.:
 
 ```bash
-NX_STACK_NAME=my-stack NX_STUDIO_PROJECT=my-studio-project NX_USE_NEV=false NX_DNS_NAME=my-dns-name NX_NEV_VERSION=2023.2.1 ./bootstrap.sh
+NX_STACK_NAME=my-stack NX_STUDIO_PROJECT=my-studio-project NX_USE_NEV=false NX_DNS_NAME=my-dns-name NX_NEV_VERSION=2025.2.0 ./bootstrap.sh
 ```
 
 Available variables:
@@ -41,13 +41,13 @@ Var | Purpose | Default
 `NX_STUDIO_PROJECT` | Nuxeo Studio Project ID | n/a
 `NX_CUSTOMER` | Prospect company name or 'generic' | n/a
 `NX_ZONE` | Deployment zone | `us-central1-a`
-`NX_NUXEO_VERSION` | Nuxeo Docker image version | `2023`
+`NX_NUXEO_VERSION` | Nuxeo Docker image version | `2025`
 `NX_MACHINE_TYPE` | Compute Engine instance type | `e2-standard-2`
 `NX_AUTO_START` | Start Nuxeo stack after instance creation | `true`
 `NX_DNS_NAME` | URL i.e. `NX_DNS_NAME.gcp.cloud.nuxeo.com` | `$NX_STACK_NAME`
 `NX_NPD_BRANCH` | Branch of `nuxeo-presales-docker` to use | `master`
 `NX_USE_NEV` | Deploy NEV? | `false`
-`NX_NEV_VERSION` | Version of NEV to deploy | `2023.2.1`
+`NX_NEV_VERSION` | Version of NEV to deploy | `2025.2.0`
 `NX_KEEP_ALIVE` | Control auto shutdown | `20h00m`
 
 Don't forget to make the script executable if needed:
@@ -71,13 +71,13 @@ Param | Purpose | Default
 --- | --- | ---
 stack_name | Used for Compute Instance ID | n/a
 dns_name | URL e.g. "dns_name.gcp.cloud.nuxeo.com" | stack_name
-nuxeo_version | Nuxeo Docker image version | 2023
+nuxeo_version | Nuxeo Docker image version |
 nx_studio | Nuxeo Studio Project ID | n/a
 nuxeo_zone | Deployment zone | us-central1-a
 machine_type | Compute Engine instance type | e2-standard-2
 auto_start | Start Nuxeo stack after instance creation | true
 with_nev | Deploy NEV? | false
-nev_version | Version of NEV to deploy | 2023.2.1
+nev_version | Version of NEV to deploy | 2025.2.0
 nuxeo_keep_alive | Control auto shutdown | 20h00m
 customer | Prospect company name or 'generic' | n/a
 npd_branch | Branch of `nuxeo-presales-docker` to use | `master`

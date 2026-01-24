@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Nuxeo Presales Demo Template (LTS2023)",
+  "Description": "Nuxeo Presales Demo Template (LTS2025)",
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterGroups": [
@@ -129,8 +129,8 @@
     },
     "NuxeoVersion":{
       "Type": "String",
-      "Default": "2023",
-      "Description": "The Nuxeo Server version (tip: use minor version to install a specific hotfix, e.g. `2023.10`)"
+      "Default": "2025",
+      "Description": "The Nuxeo Server version (tip: use minor version to install a specific hotfix, e.g. `2025.10`)"
     },
     "AutoStart": {
       "AllowedValues": [
@@ -204,7 +204,7 @@
     },
     "NEVVersion": {
       "Type": "String",
-      "Default": "2023.2.1",
+      "Default": "2025.2.0",
       "Description": "https://doc.nuxeo.com/nxdoc/nuxeo-enhanced-viewer-release-notes/"
     },
     "NEVArenderAddon": {

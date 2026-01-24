@@ -43,7 +43,7 @@ locals {
 variable "nuxeo_version" {
   type        = string
   description = "Version of Nuxeo to deploy"
-  default     = "2023"
+  default     = "2025"
 }
 
 variable "nx_studio" {
@@ -60,7 +60,7 @@ variable "with_nev" {
 variable "nev_version" {
   type        = string
   description = "Version of NEV to deploy"
-  default     = "2023.2.1"
+  default     = "2025.2.0"
 }
 
 variable "auto_start" {

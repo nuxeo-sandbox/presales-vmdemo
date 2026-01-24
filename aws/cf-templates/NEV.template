@@ -49,7 +49,7 @@
     },
     "NEVVersion": {
       "Type": "String",
-      "Default": "2023.2.1",
+      "Default": "2025.2.0",
       "Description": "https://doc.nuxeo.com/nxdoc/nuxeo-enhanced-viewer-release-notes/"
     },
     "NuxeoSecret": {

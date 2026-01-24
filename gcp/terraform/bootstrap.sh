@@ -47,8 +47,8 @@ fi
 
 # Nuxeo version
 # =============
-# Default is "2023" which pulls the latest release of 2023.
-NX_NUXEO_VERSION_DEFAULT="2023"
+# Default is "2025" which pulls the latest release of 2025.
+NX_NUXEO_VERSION_DEFAULT="2025"
 nx_nuxeo_version="${NX_NUXEO_VERSION:-}"
 if [ -z "${nx_nuxeo_version}" ]
 then
@@ -175,8 +175,8 @@ fi
 # ===========
 if ${nx_use_nev}
 then
-  # Default is 2023.2.1
-  NEV_DEFAULT=2023.2.1
+  # Default is 2025.2.0
+  NEV_DEFAULT=2025.2.0
   nev_version="${NX_NEV_VERSION:-}"
   if [ -z "${nev_version}" ]
   then

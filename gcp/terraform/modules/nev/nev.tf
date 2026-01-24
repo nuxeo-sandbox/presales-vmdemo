@@ -26,7 +26,7 @@ locals {
 variable "nev_version" {
   type        = string
   description = "Version of NEV to deploy"
-  default     = "2023.2.1"
+  default     = "2025.2.0"
 }
 
 variable "nuxeo_url" {
