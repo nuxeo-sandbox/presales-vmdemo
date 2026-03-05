@@ -152,7 +152,7 @@
     },
     "ManagerName": {
       "Type": "String",
-      "Description": "For cross-team demos, 'Larry Moscovic', otherwise enter your manager's name",
+      "Description": "For cross-team demos, 'Tara Francois', otherwise enter your manager's name",
       "MinLength": 1,
       "ConstraintDescription": "Manager is required - please specify manager"
     },
