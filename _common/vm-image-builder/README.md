@@ -14,7 +14,7 @@ For Hyland team members, make sure to set/refresh your AWS credentials e.g. `aws
 git clone https://github.com/nuxeo-sandbox/presales-vmdemo
 cd presales-vmdemo/_common/vm-image-builder
 packer init aws-ami.pkr.hcl
-packer build -var aws-ami.pkr.hcl
+packer build aws-ami.pkr.hcl
 ```
 
 - update `aws/cf-templates/Nuxeo.template` with the new AMI ID for each region
