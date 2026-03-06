@@ -22,7 +22,7 @@ packer build aws-ami.pkr.hcl
 
 ### GCP
 
-For Hyland team members, use ` gcloud auth application-default login` to set/refresh the GCP credentials on your computer
+For Hyland team members, use `gcloud auth application-default login` to set/refresh the GCP credentials on your computer
 
 ```
 git clone https://github.com/nuxeo-sandbox/presales-vmdemo
