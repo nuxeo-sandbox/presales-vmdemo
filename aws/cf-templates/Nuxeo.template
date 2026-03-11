@@ -1111,7 +1111,8 @@
               "Action": [
                 "sns:GetTopicAttributes",
                 "sns:ListSubscriptionsByTopic",
-                "sns:Subscribe"
+                "sns:Subscribe",
+                "sns:ConfirmSubscription"
               ],
               "Resource": {
                 "Ref": "RekognitionSns"
