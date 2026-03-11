@@ -1,7 +1,9 @@
 # Description
 Cloud deployment resources used by the Nuxeo Presales Team. These are provided for inspiration and we encourage developers to use them as code samples and learning resources.
 
-Note: The master branch currently deploys Nuxeo LTS 2023. To deploy other versions please use the appropriate branch.
+# Requirements
+
+* Nuxeo LTS 2023
 
 # Content
 
