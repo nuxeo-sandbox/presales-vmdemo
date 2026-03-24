@@ -21,7 +21,7 @@ apt-get -q -y install apache2 apt-transport-https openssh-server openssh-client 
                       ca-certificates curl software-properties-common figlet \
                       atop htop make uuid
 
-#Additional modules and config for apache                      
+#Additional modules and config for apache
 a2enmod proxy proxy_http rewrite ssl headers
 systemctl restart apache2
 echo "Please wait a few minutes for you instance installation to complete" > /var/www/html/index.html
