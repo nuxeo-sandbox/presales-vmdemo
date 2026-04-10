@@ -220,6 +220,8 @@ AUTO_PACKAGES="${AUTO_PACKAGES} nuxeo-api-playground"
 AUTO_PACKAGES="${AUTO_PACKAGES} nuxeo-admin-console"
 # Auto install OpenSearch 1.x search client
 AUTO_PACKAGES="${AUTO_PACKAGES} nuxeo-search-client-opensearch1"
+# Auto install OpenSearch 1.x audit client
+AUTO_PACKAGES="${AUTO_PACKAGES} nuxeo-audit-opensearch1"
 # Make sure to install S3 plugin if needed
 if [[ "${S3BUCKET}" == "true" || "${S3BUCKET}" == "Create" || "${S3BUCKET}" == "Shared" ]]; then
   AUTO_PACKAGES="${AUTO_PACKAGES} amazon-s3-online-storage"
