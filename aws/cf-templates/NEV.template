@@ -171,6 +171,11 @@
         "subnet": "subnet-dbc879bf",
         "defaultSG": "sg-d63eb3b1"
       },
+      "eu-west-2": {
+        "vpc": "vpc-d97e97b0",
+        "subnet": "subnet-5c21df35",
+        "defaultSG": "sg-73e81f1a"
+      },
       "sa-east-1": {
         "vpc": "vpc-0d2362c5f3e332f13",
         "subnet": "subnet-00c372f7bb8d17f3f",
