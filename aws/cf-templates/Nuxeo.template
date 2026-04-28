@@ -104,12 +104,12 @@
     },
     "GitBranchPresalesDocker": {
       "Type": "String",
-      "Default": "master",
+      "Default": "nos-deployment-workaround",
       "Description": "Nuxeo stack setup (https://github.com/nuxeo-sandbox/nuxeo-presales-docker branch)"
     },
     "GitBranch": {
       "Type": "String",
-      "Default": "master",
+      "Default": "nos-deployment-workaround",
       "Description": "EC2 instance setup (https://github.com/nuxeo-sandbox/presales-vmdemo branch)"
     },
     "Customer": {
@@ -281,6 +281,9 @@
       },
       "eu-west-1": {
         "64": "ami-021d26164629a8a37"
+      },
+      "eu-west-2": {
+        "64": "ami-0588ed4ddc9f4c43b"
       },
       "ap-northeast-1": {
         "64": "ami-0846d4a4cf2acbb03"
