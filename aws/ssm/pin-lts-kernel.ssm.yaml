@@ -55,6 +55,10 @@ mainSteps:
         - "sudo \"$script\""
         - "rc=$?"
         - "if [ \"$rc\" -eq 10 ]; then echo 'Reboot required; signaling SSM to reboot and re-run.'; exit 194; fi"
+        - "# Once on 6.8 (pin satisfied), bring the demo stack back up -- the host does NOT"
+        - "# reliably auto-restart containers after the reboot. Idempotent: no-op if already up."
+        - "compose_dir=/home/ubuntu/nuxeo-presales-docker"
+        - "if [ \"$rc\" -eq 0 ] && [[ \"$(uname -r)\" == 6.8.*-aws ]] && [ -f \"$compose_dir/docker-compose.yml\" ]; then echo 'Bringing demo stack up (docker compose up -d)'; (cd \"$compose_dir\" && docker compose up -d) || true; fi"
         - "exit \"$rc\""
 #
 # --- One-time registration ---------------------------------------------------
