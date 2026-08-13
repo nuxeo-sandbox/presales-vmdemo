@@ -52,4 +52,13 @@ build {
     scripts          = ["./scripts/common.sh", "./scripts/aws.sh"]
   }
 
+  # Pin to the 6.8 GA-LTS kernel so the image never boots a >= 6.19 kernel that
+  # MongoDB 8.x refuses to start on. Exit 10 ("reboot required") is expected at
+  # build time and must not fail the build; the baked GRUB default handles it.
+  provisioner "shell" {
+    execute_command  = "echo 'packer' | sudo -S env {{ .Vars }} {{ .Path }}"
+    scripts          = ["./scripts/pin-lts-kernel.sh"]
+    valid_exit_codes = [0, 10]
+  }
+
 }
