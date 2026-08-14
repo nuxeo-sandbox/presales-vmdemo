@@ -1,0 +1,84 @@
+# AWS SSM Command document: pin existing presales demo hosts to the 6.8 GA-LTS
+# kernel so MongoDB 8.x (kernel >= 6.19 guard) keeps working, WITHOUT freezing
+# kernel security updates (see _common/vm-image-builder/scripts/pin-lts-kernel.sh).
+#
+# This is the "existing instances" half of the fix; new instances are handled by
+# the AMI build (aws-ami.pkr.hcl -> pin-lts-kernel.sh). Single source of truth:
+# the document downloads the same script from the repo at run time.
+#
+# Register once, then enforce continuously with a State Manager association
+# (examples at the bottom of this file). After that it is zero-touch.
+#
+schemaVersion: "2.2"
+description: >-
+  Pin Ubuntu 24.04 AWS host to the 6.8 GA-LTS kernel and remove the rolling
+  linux-aws meta (MongoDB SERVER-121912 / SERVER-125742). Reboots if required.
+parameters:
+  owner:
+    type: String
+    default: nuxeo-sandbox
+    description: GitHub owner/org hosting the repo.
+  repository:
+    type: String
+    default: presales-vmdemo
+    description: GitHub repository name.
+  branch:
+    type: String
+    default: master
+    description: Branch to fetch the script from.
+  scriptPath:
+    type: String
+    default: _common/vm-image-builder/scripts/pin-lts-kernel.sh
+    description: Path to the pin script within the repo.
+mainSteps:
+  - action: aws:downloadContent
+    name: downloadPinScript
+    inputs:
+      sourceType: GitHub
+      sourceInfo: '{"owner":"{{ owner }}","repository":"{{ repository }}","path":"{{ scriptPath }}","getOptions":"branch:{{ branch }}"}'
+      destinationPath: /tmp/pin-lts-kernel
+  - action: aws:runShellScript
+    name: applyPin
+    inputs:
+      timeoutSeconds: "600"
+      runCommand:
+        - "#!/bin/bash"
+        - "set -o pipefail"
+        - "# Existing broken hosts have been crash-looping MongoDB against the kernel guard,"
+        - "# balloning container json logs (a reboot does NOT remove them). Clear that dead"
+        - "# bloat while still on the bad kernel; skip after reboot so healthy logs are kept."
+        - "if [[ \"$(uname -r)\" != 6.8.*-aws ]]; then echo 'Clearing pre-fix crash-loop container logs'; find /var/lib/docker/containers -maxdepth 2 -name '*-json.log' -exec truncate -s 0 {} + 2>/dev/null || true; fi"
+        - "dest=/tmp/pin-lts-kernel"
+        - "if [ -f \"$dest\" ]; then script=\"$dest\"; else script=\"$(find \"$dest\" -name pin-lts-kernel.sh | head -1)\"; fi"
+        - "if [ -z \"$script\" ] || [ ! -f \"$script\" ]; then echo 'pin script not found after download'; exit 1; fi"
+        - "chmod +x \"$script\""
+        - "sudo \"$script\""
+        - "rc=$?"
+        - "if [ \"$rc\" -eq 10 ]; then echo 'Reboot required; signaling SSM to reboot and re-run.'; exit 194; fi"
+        - "# Once on 6.8 (pin satisfied), bring the demo stack back up -- the host does NOT"
+        - "# reliably auto-restart containers after the reboot. Idempotent: no-op if already up."
+        - "compose_dir=/home/ubuntu/nuxeo-presales-docker"
+        - "if [ \"$rc\" -eq 0 ] && [[ \"$(uname -r)\" == 6.8.*-aws ]] && [ -f \"$compose_dir/docker-compose.yml\" ]; then echo 'Bringing demo stack up (docker compose up -d)'; (cd \"$compose_dir\" && docker compose up -d) || true; fi"
+        - "exit \"$rc\""
+#
+# --- One-time registration ---------------------------------------------------
+# aws ssm create-document \
+#   --name PresalesPinLtsKernel \
+#   --document-type Command \
+#   --document-format YAML \
+#   --content file://aws/ssm/pin-lts-kernel.ssm.yaml
+#
+# --- Continuous enforcement (self-healing) via State Manager -----------------
+# Target the tag your demo instances carry (adjust Key/Values):
+# aws ssm create-association \
+#   --name PresalesPinLtsKernel \
+#   --targets 'Key=tag:billing-category,Values=presales' \
+#   --schedule-expression 'rate(7 days)' \
+#   --max-concurrency 25% --max-errors 25% \
+#   --compliance-severity HIGH
+#
+# --- Or a one-shot fleet remediation (Run Command) ---------------------------
+# aws ssm send-command \
+#   --document-name PresalesPinLtsKernel \
+#   --targets 'Key=tag:billing-category,Values=presales' \
+#   --max-concurrency 25% --max-errors 25%
