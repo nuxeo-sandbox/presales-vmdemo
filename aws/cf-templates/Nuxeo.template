@@ -271,25 +271,25 @@
   "Mappings": {
     "AWSRegionArch2AMI": {
       "us-east-1": {
-        "64": "ami-04e25a98c5ca45646"
+        "64": "ami-0f2ce857aa5889940"
       },
       "us-west-1": {
-        "64": "ami-06e7816c5d91c3591"
+        "64": "ami-0afcdd1e489d504d2"
       },
       "us-west-2": {
-        "64": "ami-0066d03b1e547ddfe"
+        "64": "ami-0fb5cb59ad32f5495"
       },
       "eu-west-1": {
-        "64": "ami-021d26164629a8a37"
+        "64": "ami-052805fc87ff37a22"
       },
       "eu-west-2": {
-        "64": "ami-0588ed4ddc9f4c43b"
+        "64": "ami-03a0dbcf92f1839dc"
       },
       "ap-northeast-1": {
-        "64": "ami-0846d4a4cf2acbb03"
+        "64": "ami-015646e40498a48db"
       },
       "sa-east-1": {
-        "64": "ami-0c7d8ced904b350b0"
+        "64": "ami-067570f86b09bfa66"
       }
     },
     "AWSRegionSubnet": {
