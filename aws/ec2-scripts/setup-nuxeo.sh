@@ -69,6 +69,10 @@ cp ${COMPOSE_DIR}/conf.d/* ${CONF_DIR}
 # Secrets for instance
 MAIL_PASS=$(aws secretsmanager get-secret-value --secret-id workmail_default_password --region us-west-2 | jq -r '.SecretString|fromjson|.workmail_default_password')
 
+# Content Intelligence credentials for presales-nxai
+CIC_CLIENT_ID=$(aws secretsmanager get-secret-value --secret-id cic_presales_credential --region us-west-2 | jq -r '.SecretString|fromjson|.cic_client_id')
+CIC_CLIENT_SECRET=$(aws secretsmanager get-secret-value --secret-id cic_presales_credential --region us-west-2 | jq -r '.SecretString|fromjson|.cic_client_secret')
+
 # Support old style of creating a bucket
 S3_BUCKET="${STACK_ID}-bucket"
 S3_PREFIX="binary_store/"
@@ -129,26 +133,43 @@ nuxeo.s3storage.transient.roleArn=${UPLOAD_ROLE_ARN}
 nuxeo.s3storage.transient.bucket=${S3_BUCKET}
 nuxeo.s3storage.transient.bucket_prefix=${S3_UPLOAD_PREFIX}
 
-# Rekognition Configuration
-nuxeo.enrichment.save.facets=true
-nuxeo.enrichment.save.tags=true
-nuxeo.enrichment.raiseEvent=true
-nuxeo.ai.images.enabled=true
-nuxeo.enrichment.aws.images=true
-nuxeo.ai.video.enabled=true
-nuxeo.enrichment.aws.video=true
-#nuxeo.enrichment.aws.text=true
-#nuxeo.enrichment.aws.document.text=true
-#nuxeo.enrichment.aws.document.analyze=true
-nuxeo.ai.aws.rekognition.role.arn=${REKOGNITION_ROLE_ARN}
-nuxeo.enrichment.aws.sns.topic.arn=${SNS_TOPIC_ARN}
-nuxeo.enrichment.aws.transcribe.enabled=true
-
 # WOPI Configuration
 nuxeo.wopi.discoveryURL=https://onenote.officeapps.live.com/hosting/discovery
 nuxeo.wopi.baseURL=https://wopi.nuxeocloud.com/${FQDN}/nuxeo/
 # JWT token is required for WOPI
 nuxeo.jwt.secret=${JWT_SECRET}
+EOF
+
+# AI enrichment configuration for the presales-nxai multi-layer project.
+cat << EOF > ${CONF_DIR}/presales-nxai.conf
+# Settings for presales-nxai
+# Automatic enrichment of File, Picture, and Video using Hyland Content
+# Intelligence and AWS Rekognition
+
+# Nuxeo AI Content Intelligence Config
+nuxeo.hyland.cic.contextEnrichment.baseUrl=https://knowledge-enrichment.ai.experience.hyland.com/latest/api/context-enrichment
+nuxeo.hyland.cic.auth.baseUrl=https://auth.iam.experience.hyland.com/idp
+nuxeo.hyland.cic.enrichment.clientId=${CIC_CLIENT_ID}
+nuxeo.hyland.cic.enrichment.clientSecret=${CIC_CLIENT_SECRET}
+nuxeo.ai.contentintelligence.enabled=true
+nuxeo.ai.contentintelligence.documents.enabled=true
+
+# Nuxeo AI AWS Config
+nuxeo.ai.aws.rekognition.role.arn=${REKOGNITION_ROLE_ARN}
+nuxeo.enrichment.aws.sns.topic.arn=${SNS_TOPIC_ARN}
+nuxeo.enrichment.aws.transcribe.enabled=true
+nuxeo.enrichment.aws.images=false
+nuxeo.enrichment.aws.video=true
+#nuxeo.enrichment.aws.text=true
+#nuxeo.enrichment.aws.document.text=true
+#nuxeo.enrichment.aws.document.analyze=true
+
+# Nuxeo AI Base Config
+nuxeo.enrichment.save.facets=true
+nuxeo.enrichment.save.tags=false
+nuxeo.enrichment.raiseEvent=true
+nuxeo.ai.video.enabled=true
+nuxeo.ai.images.enabled=true
 EOF
 
 # NEV setup
