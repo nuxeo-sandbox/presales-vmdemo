@@ -1,5 +1,5 @@
 # AWS SSM Command document: pin existing presales demo hosts to the 6.8 GA-LTS
-# kernel so MongoDB 8.x (kernel >= 6.19 guard) keeps working, WITHOUT freezing
+# kernel so MongoDB 8.0.x (kernel >= 6.19 guard) keeps working, WITHOUT freezing
 # kernel security updates (see _common/vm-image-builder/scripts/pin-lts-kernel.sh).
 #
 # This is the "existing instances" half of the fix; new instances are handled by
