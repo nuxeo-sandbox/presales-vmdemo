@@ -45,7 +45,7 @@ npm run test
 To invoke locally, run the following
 
 ```bash
-sam local invoke --region <region> 
+sam local invoke --region <region>
 ```
 
 ## Fetch, tail, and filter Lambda function logs

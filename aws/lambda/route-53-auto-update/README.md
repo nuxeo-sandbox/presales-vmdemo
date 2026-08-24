@@ -54,7 +54,7 @@ cat << EOF >> ./events/instance-start-event.json
   }
 }
 EOF
-sam local invoke -e .\events\instance-start-event.json --region <region> 
+sam local invoke -e .\events\instance-start-event.json --region <region>
 ```
 
 To invoke locally an instance shutdown event, run the following
@@ -70,7 +70,7 @@ cat << EOF >> ./events/instance-shutdown-event.json
   }
 }
 EOF
-sam local invoke -e .\events\instance-shutdown-event.json --region <region> 
+sam local invoke -e .\events\instance-shutdown-event.json --region <region>
 ```
 
 ## Fetch, tail, and filter Lambda function logs
