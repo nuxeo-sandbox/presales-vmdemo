@@ -8,7 +8,14 @@ Provisioning scripts for the demo EC2 instances. The `setup-*` scripts run autom
 - `setup-nev.sh` — Equivalent for a standalone NEV instance. Clones the [nuxeo-presales-nev](https://github.com/nuxeo-sandbox/nuxeo-presales-nev) compose stack, pulls Docker credentials from Secrets Manager, and brings NEV up. Progress is logged to `/var/log/nev_install.log`.
 - `newDNS.sh` — Run by hand (as root) on an existing instance to move it to a new DNS name after you change its `dnsName` tag. It rewrites the FQDN across the host config (env file, Apache vhost, compose `.env`), reissues the TLS certificate via certbot, and optionally removes the old one. See the header comment in the script for the full procedure. Note: This is automatically installed on the instance.
 
-# About Nuxeo
-[Nuxeo](https://www.hyland.com/products/nuxeo-platform), leading Content Services Platform, is reinventing enterprise content management (ECM) and digital asset management (DAM). Nuxeo is fundamentally changing how people work with data and content to realize new value from digital information. Its cloud-native platform has been deployed by large enterprises, mid-sized businesses and government agencies worldwide. Customers like Verizon, Electronic Arts, ABN Amro, and the Department of Defense have used Nuxeo's technology to transform the way they do business.
+# About Hyland Nuxeo
 
-Learn more at https://www.hyland.com/products/nuxeo-platform.
+Hyland Nuxeo is an open source Content Services platform, written in Java. Data can be stored in both SQL & NoSQL databases. The development of the Nuxeo Platform is mostly done by Hyland employees with an open development model. The source code, documentation, roadmap, issue tracker, testing, benchmarks are all public.
+
+Organizations across industries such as financial services, insurance, manufacturing, healthcare, and government use Nuxeo to build a wide range of information management solutions on a single platform. Its schema-flexible metadata and content models let the same platform be adapted to different industries and their requirements.
+
+More information is available at [https://www.hyland.com/products/nuxeo-platform](https://www.hyland.com/products/nuxeo-platform).
+
+# About Hyland
+
+[Hyland](https://www.hyland.com) is a leading content services provider that enables thousands of organizations to deliver better experiences to the people they serve. Learn more at [hyland.com](https://www.hyland.com).

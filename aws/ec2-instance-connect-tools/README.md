@@ -17,7 +17,14 @@ Drop-in SSH client configuration that makes plain `ssh` and `scp` tunnel through
 - `unix/config` and `windows/config` — SSH config snippets to add to your `~/.ssh/config` (matches `i-*` hosts and routes them through the proxy).
 - `unix/aws-proxy.sh` and `windows/aws-proxy.bat` — Proxy helper invoked by the SSH config that pushes an ephemeral key and opens the EICE tunnel. Referenced by the config; not run directly.
 
-# About Nuxeo
-[Nuxeo](https://www.hyland.com/products/nuxeo-platform), leading Content Services Platform, is reinventing enterprise content management (ECM) and digital asset management (DAM). Nuxeo is fundamentally changing how people work with data and content to realize new value from digital information. Its cloud-native platform has been deployed by large enterprises, mid-sized businesses and government agencies worldwide. Customers like Verizon, Electronic Arts, ABN Amro, and the Department of Defense have used Nuxeo's technology to transform the way they do business.
+# About Hyland Nuxeo
 
-Learn more at https://www.hyland.com/products/nuxeo-platform.
+Hyland Nuxeo is an open source Content Services platform, written in Java. Data can be stored in both SQL & NoSQL databases. The development of the Nuxeo Platform is mostly done by Hyland employees with an open development model. The source code, documentation, roadmap, issue tracker, testing, benchmarks are all public.
+
+Organizations across industries such as financial services, insurance, manufacturing, healthcare, and government use Nuxeo to build a wide range of information management solutions on a single platform. Its schema-flexible metadata and content models let the same platform be adapted to different industries and their requirements.
+
+More information is available at [https://www.hyland.com/products/nuxeo-platform](https://www.hyland.com/products/nuxeo-platform).
+
+# About Hyland
+
+[Hyland](https://www.hyland.com) is a leading content services provider that enables thousands of organizations to deliver better experiences to the people they serve. Learn more at [hyland.com](https://www.hyland.com).
