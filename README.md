@@ -12,12 +12,10 @@ Cloud deployment resources used by the Nuxeo Presales Team. These are provided f
 A [packer.io](https://www.packer.io/) template to automate the creation of cloud images with all the required OS packages pre-installed. See the [README](_COMMON/vm-image-builder/README.md) to get more details about how to use it.
 
 ## AWS resources
-[AWS](aws/README.md) contains AWS CLoud Formation templates and scripts to deploy a demo instance on AWS.
-The folder also contains Lambda functions to automatically update DNS records and schedule instances uptime.
+The [aws](aws) folder contains AWS tooling to deploy a demo instance on AWS.
 
 ## GCP resources
-[GCP](gcp/README.md) contains terraform templates and scripts to deploy a demo instance on GCP.
-The folder also contains Cloud Functions to automatically update DNS records and schedule instances uptime.
+The [gcp](gcp) folder contains GCP tooling to deploy a demo instance on GCP.
 
 # Quick Links
 - [Create an AWS demo instance](aws/cf-templates/Nuxeo.template)
