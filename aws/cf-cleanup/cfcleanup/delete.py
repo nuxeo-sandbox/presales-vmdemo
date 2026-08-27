@@ -40,6 +40,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("region")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--batch")
+    ap.add_argument("--workbook", help="Path to the reviewed workbook (defaults to CF_WORKBOOK, then the batch's own).")
     args = ap.parse_args(argv)
 
     batch = cf.resolve_batch(args.batch)
@@ -47,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"=== Deleting stack: {args.stack} ({args.region})   [batch: {os.path.basename(batch)}] ===")
 
     # 0. Safety gate: a human must have marked this stack "Delete" in the workbook.
-    rc = decision_check(args.stack, batch)
+    rc = decision_check(args.stack, batch, args.workbook)
     if rc != 0:
         print("ABORT: not human-marked 'Delete' in the workbook. Set Decision='Delete' first.")
         return rc

@@ -171,6 +171,24 @@ def find_workbook(batch: str) -> str | None:
     return found
 
 
+def resolve_workbook(batch: str, supplied: str | None = None) -> str | None:
+    """Resolve the review workbook to read.
+
+    A supplied path (--workbook, or the CF_WORKBOOK env var) wins, so the copy
+    shared with the team can be processed in place without copying it back into
+    the batch. Falls back to a workbook found inside the batch. Returns None if a
+    supplied path is missing, or if nothing is found in the batch.
+    """
+    supplied = supplied or os.environ.get("CF_WORKBOOK")
+    if supplied:
+        p = os.path.abspath(os.path.expanduser(supplied))
+        if not os.path.isfile(p):
+            print(f"ERROR: supplied workbook not found: {p}", file=sys.stderr)
+            return None
+        return p
+    return find_workbook(batch)
+
+
 # ---- row loading -----------------------------------------------------------
 def load_rows(batch: str) -> tuple[list[dict], datetime]:
     """Parse every stacks/<region>.json in a batch into flat row dicts."""

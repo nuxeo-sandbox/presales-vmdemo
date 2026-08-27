@@ -34,11 +34,13 @@ python3 -m cfcleanup workbook             # write the <date>-cf-cleanup.xlsx wor
 
 # Review the workbook and set the Decision column per stack.
 # Only stacks with Decision = "Delete" are eligible.
+# Pass the reviewed copy with --workbook PATH (or set CF_WORKBOOK);
+# without it, the workbook inside the batch is used.
 
-python3 -m cfcleanup delete <stack> <region> --dry-run   # preview
-python3 -m cfcleanup delete <stack> <region>             # empty bucket + initiate delete
-python3 -m cfcleanup status                              # poll until DELETE_COMPLETE
-python3 -m cfcleanup log <stack>                         # record the deletion in the workbook
+python3 -m cfcleanup delete <stack> <region> --dry-run --workbook PATH   # preview
+python3 -m cfcleanup delete <stack> <region> --workbook PATH             # empty bucket + initiate delete
+python3 -m cfcleanup status                                              # poll until DELETE_COMPLETE
+python3 -m cfcleanup log <stack> --workbook PATH                         # record the deletion in the workbook
 ```
 
 ## Batch contents

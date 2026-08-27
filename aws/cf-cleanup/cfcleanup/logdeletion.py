@@ -35,10 +35,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("stack")
     ap.add_argument("--batch")
     ap.add_argument("--date", default=date.today().isoformat())
+    ap.add_argument("--workbook", help="Path to the reviewed workbook (defaults to CF_WORKBOOK, then the batch's own).")
     args = ap.parse_args(argv)
 
     batch = cf.resolve_batch(args.batch)
-    wb_path = cf.find_workbook(batch)
+    wb_path = cf.resolve_workbook(batch, args.workbook)
     if wb_path is None:
         sys.exit(f"ERROR: no review workbook (*-cf-cleanup.xlsx) in batch {batch}")
 

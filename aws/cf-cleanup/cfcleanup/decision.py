@@ -31,9 +31,9 @@ def col_index(ws, header: str) -> int:
     sys.exit(1)
 
 
-def check(stack: str, batch: str) -> int:
+def check(stack: str, batch: str, workbook: str | None = None) -> int:
     """Return 0 if the stack's Decision is 'Delete', 2 if other/blank, 1 if absent."""
-    wb_path = cf.find_workbook(batch)
+    wb_path = cf.resolve_workbook(batch, workbook)
     if wb_path is None:
         print(f"ERROR: no review workbook (*-cf-cleanup.xlsx) in batch {batch}", file=sys.stderr)
         return 1
@@ -60,5 +60,6 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python3 -m cfcleanup check")
     ap.add_argument("stack")
     ap.add_argument("--batch")
+    ap.add_argument("--workbook", help="Path to the reviewed workbook (defaults to CF_WORKBOOK, then the batch's own).")
     args = ap.parse_args(argv)
-    return check(args.stack, cf.resolve_batch(args.batch))
+    return check(args.stack, cf.resolve_batch(args.batch), args.workbook)
