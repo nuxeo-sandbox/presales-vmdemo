@@ -58,7 +58,7 @@ deletion-log.csv       audit trail
 
 ## Workbook columns
 
-* `Decision`, `Owner confirmed?`, and `Notes` are human-editable (highlighted yellow).
+* `Decision` and `Notes` are human-editable (highlighted yellow).
 * `Deleted?` is set to `Yes` by the `log` command, which also appends a
   `Deleted <date>` stamp to `Notes`, preserving any text already there.
 

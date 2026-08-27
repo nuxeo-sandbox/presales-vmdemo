@@ -98,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
     nrows = len(demo)
     style_header(ws, ncols)
 
-    widths = [14, 40, 24, 18, 16, 26, 8, 13, 8, 22, 24, 10, 14]
+    widths = [11.5, 30.3, 24.0, 15.8, 21.5, 26.0, 8.0, 13.0, 8.0, 27.0, 20.2, 9.8, 53.5]
     for i, w in enumerate(widths, start=1):
         ws.column_dimensions[get_column_letter(i)].width = w
 
