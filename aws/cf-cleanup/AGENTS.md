@@ -37,6 +37,11 @@ step, run in order. There are no shell scripts, and no human runs this by hand.
 - Python 3 with `openpyxl`.
 - Run every command from the `aws/cf-cleanup/` directory so the `cfcleanup`
   package resolves.
+- **Disable the AWS CLI pager first.** In a fresh shell, run `export AWS_PAGER=""`
+  once before any `aws` command. Otherwise the CLI opens `less` (the terminal's
+  alternate screen) and an automation-driven terminal hangs, with later commands
+  piling up behind the stuck pager. Per-command flags like `--no-cli-pager` do not
+  recover a terminal that is already stuck — open a new shell and export it there.
 
 ## Commands
 
