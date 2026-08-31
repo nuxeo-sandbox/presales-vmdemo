@@ -11,6 +11,15 @@ storage first) and record each deletion. The tooling is a Python package
 (`cfcleanup/`) driven as `python3 -m cfcleanup <command>`; each command is one
 step, run in order. There are no shell scripts, and no human runs this by hand.
 
+**Review is incremental, not one-shot.** The human does not review the whole
+workbook in a single sitting. They mark a few rows `Delete` whenever they get to
+it and check in over time; each session you process only the rows that are newly
+`Delete` and not yet `Deleted? = Yes`, then stop. The set of `Delete` rows grows
+between sessions. "Continue the batch" means re-read the current workbook fresh
+and pick up the newly-approved rows — it does **not** mean `gather` a new batch.
+The same batch dir stays current across all these sessions until the whole sheet
+is reviewed.
+
 ## Guardrails (do not violate)
 
 1. **Never delete without human confirmation.** Only delete a stack whose
@@ -30,6 +39,21 @@ step, run in order. There are no shell scripts, and no human runs this by hand.
    reviewed workbook path and pass it with `--workbook`; re-read it right
    before every decision check; never act on `Decision`/`Deleted?` values
    remembered from earlier in the session.
+7. **One stack at a time.** Fully finish a stack (`delete` → `status` to
+   `DELETE_COMPLETE` → `log`) and get the human's confirmation before starting the
+   next one. Never initiate multiple deletes back-to-back, even when several rows
+   are marked `Delete`. Skip any row already `Deleted? = Yes`; never re-delete.
+8. **Never `--retain-resources`.** The point of deleting via CloudFormation is to
+   fully clean up the resources; retaining orphans them. If a delete fails on a
+   stuck resource, clear the blocker so a normal full delete succeeds (see
+   Troubleshooting) — do not fall back to retain. (A retain is only ever
+   acceptable as an explicit, human-authorized one-off when the resource is
+   already verified gone and retaining orphans nothing; do not generalize it.)
+9. **Never regenerate a real batch's workbook or report.** The `.xlsx` holds the
+   team's hand-entered `Decision` values and hand-tuned formatting, and there is
+   no backup. Do not run `gather`/`workbook`/`report` against a live batch to
+   "refresh" or test — it overwrites those edits. To test code changes, build a
+   disposable throwaway batch and run against `--batch <that>`.
 
 ## Preconditions
 
@@ -66,15 +90,24 @@ invoked directly.
 
 ## Typical run
 
+One-time setup of a batch (rare — only when starting a brand-new cleanup):
+
 1. `python3 -m cfcleanup gather` — new batch.
 2. `python3 -m cfcleanup report` and `python3 -m cfcleanup workbook`.
-3. Wait for humans to fill `Decision` in the workbook.
-4. For each stack marked `Delete`:
+3. Humans fill `Decision` in the workbook over time.
+
+Ongoing incremental sessions (the common case):
+
+1. Confirm the account (`aws sts get-caller-identity`) and the reviewed workbook
+   path; re-read the workbook fresh.
+2. Find rows where `Decision = Delete` and `Deleted?` is blank.
+3. For **one** such stack at a time:
    - `python3 -m cfcleanup delete <stack> <region> --dry-run` → show the preview
      and get confirmation.
    - `python3 -m cfcleanup delete <stack> <region>`.
    - `python3 -m cfcleanup status` until the stack is `DELETE_COMPLETE`.
    - `python3 -m cfcleanup log <stack>`.
+   - Confirm with the human before moving to the next stack.
 
 ## Decision values
 
@@ -100,6 +133,21 @@ Its contents can change between steps, so:
   on every call. Do not substitute values seen in an earlier view.
 - Don't hold the file open longer than a single command; an external editor may
   have it open at the same time.
+
+## Troubleshooting
+
+**`DELETE_FAILED` on an `AWS::EC2::SecurityGroup`** with a reason like *"No
+default VPC for this user. GroupName is only supported for EC2-Classic and
+default VPC."* Old NEV/Nuxeo templates identify the SG by `GroupName`, and
+`DeleteSecurityGroup`-by-name is an `InvalidRequest` in this account (no default
+VPC). First check whether the SG even still exists:
+`aws ec2 describe-security-groups --region <r> --query
+'SecurityGroups[].[GroupId,GroupName,VpcId]' --output text | grep -i <stack>`.
+If the instance that used it is already `DELETE_COMPLETE`, the SG is usually
+already gone too. If it still exists, delete it by its `sg-…` id and re-run
+`delete-stack`. If it is already gone, you cannot delete it to unblock and a plain
+retry re-hits the same by-name error — surface this to the human rather than
+silently retaining (see guardrail 8).
 
 ## Batch layout
 
