@@ -27,13 +27,24 @@ def aws_json(args: list[str]) -> dict:
 
 
 def bucket_exists(bucket: str) -> bool:
-    return (
-        subprocess.run(
-            ["aws", "s3api", "head-bucket", "--bucket", bucket],
-            capture_output=True,
-            text=True,
-        ).returncode
-        == 0
+    """True if the bucket exists and is accessible.
+
+    A genuine 404 (bucket gone) returns False; an auth/permission failure such as
+    an expired token is raised, never silently treated as 'already gone' - so a
+    stack delete can't skip bucket emptying just because credentials lapsed.
+    """
+    out = subprocess.run(
+        ["aws", "s3api", "head-bucket", "--bucket", bucket],
+        capture_output=True,
+        text=True,
+    )
+    if out.returncode == 0:
+        return True
+    low = (out.stderr or "").lower()
+    if "404" in low or "not found" in low or "nosuchbucket" in low:
+        return False
+    raise RuntimeError(
+        (out.stderr or "").strip() or f"head-bucket {bucket} failed (rc={out.returncode})"
     )
 
 

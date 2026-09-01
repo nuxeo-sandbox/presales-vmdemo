@@ -29,9 +29,8 @@ from .decision import check as decision_check
 from .s3 import empty_location
 
 
-def aws_text(args: list[str]) -> str:
-    out = subprocess.run(["aws", *args], capture_output=True, text=True)
-    return out.stdout.strip() if out.returncode == 0 else ""
+def aws_run(args: list[str]) -> subprocess.CompletedProcess:
+    return subprocess.run(["aws", *args], capture_output=True, text=True)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -47,24 +46,41 @@ def main(argv: list[str] | None = None) -> int:
     log = os.path.join(batch, "deletion-log.csv")
     print(f"=== Deleting stack: {args.stack} ({args.region})   [batch: {os.path.basename(batch)}] ===")
 
-    # 0. Safety gate: a human must have marked this stack "Delete" in the workbook.
+    # 1. Require a human "Delete" decision in the workbook before doing anything.
     rc = decision_check(args.stack, batch, args.workbook)
     if rc != 0:
         print("ABORT: not human-marked 'Delete' in the workbook. Set Decision='Delete' first.")
         return rc
 
-    # 1. Determine bucket mode from the stack's parameters.
-    mode = (
-        aws_text(
-            [
-                "cloudformation", "describe-stacks", "--stack-name", args.stack,
-                "--region", args.region,
-                "--query", "Stacks[0].Parameters[?ParameterKey=='UseS3Bucket'].ParameterValue | [0]",
-                "--output", "text",
-            ]
-        )
-        or "MISSING"
+    # 2. Confirm the AWS session is valid up front, so a lapsed token can't masquerade
+    # downstream as an empty bucket or a missing stack.
+    who = aws_run(["sts", "get-caller-identity", "--query", "Arn", "--output", "text"])
+    if who.returncode != 0:
+        print("ABORT: AWS credentials are not valid (often an expired SSO session). "
+              "Re-authenticate and retry.")
+        err = (who.stderr or "").strip()
+        if err:
+            print(f"  aws error: {err}")
+        return 1
+
+    # 3. Read the bucket mode from the stack's parameters. No UseS3Bucket parameter
+    # reads back as "None"; a failed call aborts rather than deleting blindly.
+    params = aws_run(
+        [
+            "cloudformation", "describe-stacks", "--stack-name", args.stack,
+            "--region", args.region,
+            "--query", "Stacks[0].Parameters[?ParameterKey=='UseS3Bucket'].ParameterValue | [0]",
+            "--output", "text",
+        ]
     )
+    if params.returncode != 0:
+        print("ABORT: could not read the stack's bucket mode (describe-stacks failed) - "
+              "refusing to delete without knowing what to empty.")
+        err = (params.stderr or "").strip()
+        if err:
+            print(f"  aws error: {err}")
+        return 1
+    mode = params.stdout.strip() or "None"
     print(f"UseS3Bucket = {mode}")
 
     bucket = prefix = ""
@@ -77,11 +93,11 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print(f"WARNING: unknown/missing bucket mode ('{mode}'); skipping bucket emptying.")
 
-    # 2. Empty the bucket (or just the stack's folder in the shared bucket).
+    # 4. Empty the bucket (or just the stack's folder in the shared bucket).
     if bucket:
         empty_location(bucket, prefix, args.dry_run)
 
-    # 3. Initiate stack deletion. NON-BLOCKING: returns immediately.
+    # 5. Initiate stack deletion. NON-BLOCKING: returns immediately.
     if args.dry_run:
         print(f"DRY-RUN> aws cloudformation delete-stack --stack-name {args.stack} --region {args.region}")
     else:
@@ -91,9 +107,9 @@ def main(argv: list[str] | None = None) -> int:
         if r.returncode != 0:
             return r.returncode
 
-    # 4. Append an "initiated" event to the paper-trail log.
+    # 6. Append an "initiated" event to the paper-trail log.
     if not args.dry_run:
-        arn = aws_text(["sts", "get-caller-identity", "--query", "Arn", "--output", "text"])
+        arn = who.stdout.strip()
         by = arn.rsplit("/", 1)[-1] if arn else ""
         ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         new = not os.path.exists(log)
