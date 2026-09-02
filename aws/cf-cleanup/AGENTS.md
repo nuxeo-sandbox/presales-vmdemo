@@ -75,7 +75,7 @@ No command reads the reviewed workbook.
 | Workbook | `python3 -m cfcleanup workbook [--batch B]` | Writes `<date>-cf-cleanup.xlsx` for humans to review. |
 | Delete (preview) | `python3 -m cfcleanup delete <stack> [region] --dry-run [--batch B]` | Shows bucket + delete actions, changes nothing. Region is optional (resolved from the batch). |
 | Delete | `python3 -m cfcleanup delete <stack> [region] [--batch B]` | Empty S3 → initiate delete. Non-blocking. Appends to `deletion-log.csv`. |
-| Poll | `python3 -m cfcleanup status [--batch B] [<stack> <region>]` | Exit `3` = still in progress, `0` = done. Re-run to refresh. |
+| Poll | `python3 -m cfcleanup status <stack> <region> [--batch B]` | One stack. Exit `3` = still in progress, `0` = done. Re-run to refresh. |
 | Run (one-shot) | `python3 -m cfcleanup run <stack> [region] [--batch B]` | Human-driven: inspect → prompt `[y/N]` → empty S3 + delete → block until `DELETE_COMPLETE`. Always prompts for confirmation. |
 
 The normal, human-driven path is the `./cfcleanup.sh` wrapper at the tool root:

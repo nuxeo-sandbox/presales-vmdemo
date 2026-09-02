@@ -123,7 +123,7 @@ def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
             w.writerow(["timestamp_utc", "stack", "region", "bucket_mode", "bucket", "phase", "deleted_by"])
         w.writerow([ts, stack, region, mode, bucket or "none", "initiated", by])
     print(f"Delete initiated and logged to {log}")
-    print("Monitor with:  python3 -m cfcleanup status")
+    print(f"Monitor with:  python3 -m cfcleanup status {stack} {region}")
     return 0
 
 
