@@ -80,9 +80,10 @@ No command reads the reviewed workbook.
 
 The normal, human-driven path is the `./cfcleanup.sh` wrapper at the tool root:
 `./cfcleanup.sh <stack-id>` sets `AWS_PAGER=""` and calls `run`. A bare stack id
-routes to `run`; `gather`/`report`/`workbook`/`delete`/`status`/`run` still work
-by name. `delete` and `status` are non-blocking building blocks that `run`
-orchestrates.
+routes to `run`; `setup`/`gather`/`report`/`workbook`/`delete`/`status`/`run`
+still work by name. `run` prompts `[y/N]`, so it suits a human at a terminal; an
+agent uses the `delete` (non-blocking) and `status` (single-stack poll)
+primitives instead.
 
 The `cfcleanup/s3.py` module is a helper used by the `delete` command; it is not
 invoked directly.
@@ -99,16 +100,19 @@ Ongoing sessions (the common case):
 The human runs `./cfcleanup.sh <stack-id>` for each stack, which inspects,
 prompts, deletes, and monitors on its own.
 
-If an agent is asked to do it anyway:
+If an agent drives it instead (`run` prompts interactively, so an agent uses the
+primitives):
 
 1. Confirm the account (`aws sts get-caller-identity`).
 2. The human gives you a stack id. The region is optional - it is resolved from
    the batch's gather data (with a live region scan as fallback); only ask for
    it if resolution reports the name as ambiguous or not found.
-3. Delete that **one** stack with `python3 -m cfcleanup run <stack>`. It prints
-   the inspection, waits at the `[y/N]` prompt (relay it to the human - never
-   auto-answer), then deletes and blocks until `DELETE_COMPLETE`. Do not use the
-   `--dry-run`/`delete`/`status` primitives separately unless `run` can't be used.
+3. For that **one** stack:
+   - `python3 -m cfcleanup delete <stack> --dry-run` → show the preview and get
+     the human's explicit OK.
+   - `python3 -m cfcleanup delete <stack>` → empties S3 and initiates the delete.
+   - `python3 -m cfcleanup status <stack> <region>` → re-run until it prints
+     `DELETE_COMPLETE`.
 4. Wait for the next stack id. Do not work ahead or infer other stacks.
 
 ## Decision values (human-facing)

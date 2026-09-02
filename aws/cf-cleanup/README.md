@@ -24,6 +24,10 @@ A few things make this fiddly:
 
 ## Usage
 
+### Agent-Supported
+
+You can use the tooling via an agent. The deletion is handled a little differently (as described in AGENTS.md). But the token burn is probably not worth it at this point, the below process is simple enough.
+
 ### Create a Batch
 
 ```
