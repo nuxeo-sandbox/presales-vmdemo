@@ -1,5 +1,7 @@
 # CloudFormation Demo Stack Cleanup
 
+IMPORTANT: This is completely vibe-coded using Claude Opus 4.8.
+
 Inventory the presales CloudFormation demo stacks, collect keep/delete decisions
 in an Excel workbook, and delete stacks (emptying their S3 storage first) by the
 stack ids a human hands off from that review, recording each deletion.
