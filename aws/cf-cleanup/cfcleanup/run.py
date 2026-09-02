@@ -2,8 +2,8 @@
 
 Interrogates the stack, reports the inspection (what would be emptied and
 deleted), prompts for confirmation, deletes, then blocks - polling - until the
-stack reaches DELETE_COMPLETE. This is the command a human runs directly (see
-the `cfcleanup.sh` wrapper).
+deletion completes. This is the command a human runs directly (see the
+`cfcleanup.sh` wrapper).
 
 Run as:
     python3 -m cfcleanup run <stack> [region] [--batch NAME|DIR]
@@ -52,13 +52,13 @@ def main(argv: list[str] | None = None) -> int:
         return rc
 
     # 4. Monitor until the stack is gone.
-    print("\nMonitoring until DELETE_COMPLETE ...")
+    print("\nMonitoring the deletion ...")
     status_args = (["--batch", args.batch] if args.batch else []) + [args.stack, region]
     while status.main(status_args) == 3:
         time.sleep(POLL_SECONDS)
 
     final = status.stack_status(args.stack, region)
-    if final == "GONE":
+    if final == "DELETE_COMPLETE":
         print(f"\n{args.stack} Deleted {date.today().isoformat()}")
         return 0
     print(f"\n{args.stack}: {final}")
