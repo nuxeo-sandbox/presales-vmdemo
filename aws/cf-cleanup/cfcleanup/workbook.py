@@ -15,6 +15,7 @@ import os
 from collections import defaultdict
 
 from openpyxl import Workbook
+from openpyxl.formatting.rule import FormulaRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
@@ -124,6 +125,26 @@ def main(argv: list[str] | None = None) -> int:
     deleted_dv = DataValidation(type="list", formula1='"Yes,No"', allow_blank=True)
     ws.add_data_validation(deleted_dv)
     deleted_dv.add(f"{get_column_letter(deleted_col)}2:{get_column_letter(deleted_col)}{nrows + 1}")
+
+    # Colour the Deleted? column by outcome.
+    dcol = get_column_letter(deleted_col)
+    ccol = get_column_letter(decision_col)
+    deleted_range = f"{dcol}2:{dcol}{nrows + 1}"
+    ws.conditional_formatting.add(
+        deleted_range,
+        FormulaRule(formula=[f'${dcol}2="Yes"'],
+                    fill=PatternFill(patternType="solid", bgColor="C6EFCE"), font=Font(color="006100")),
+    )
+    ws.conditional_formatting.add(
+        deleted_range,
+        FormulaRule(formula=[f'AND(${ccol}2="Delete",${dcol}2="")'],
+                    fill=PatternFill(patternType="solid", bgColor="FFC7CE"), font=Font(color="9C0006")),
+    )
+    ws.conditional_formatting.add(
+        deleted_range,
+        FormulaRule(formula=[f'AND(${ccol}2<>"",${ccol}2<>"Delete",${dcol}2="")'],
+                    fill=PatternFill(patternType="solid", bgColor="808080")),
+    )
 
     ws.freeze_panes = "C2"
     ws.auto_filter.ref = f"A1:{get_column_letter(ncols)}{nrows + 1}"
