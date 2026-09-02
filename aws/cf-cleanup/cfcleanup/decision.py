@@ -16,8 +16,6 @@ from __future__ import annotations
 import argparse
 import sys
 
-from openpyxl import load_workbook
-
 from . import common as cf
 
 SHEET = "Cleanup"
@@ -38,7 +36,7 @@ def check(stack: str, batch: str, workbook: str | None = None) -> int:
         print(f"ERROR: no review workbook (*-cf-cleanup.xlsx) in batch {batch}", file=sys.stderr)
         return 1
 
-    wb = load_workbook(wb_path, read_only=True)
+    wb = cf.open_workbook_readonly(wb_path)
     ws = wb[SHEET]
     stack_col = col_index(ws, "Stack")
     decision_col = col_index(ws, "Decision")

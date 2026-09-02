@@ -120,5 +120,5 @@ def main(argv: list[str] | None = None) -> int:
             w.writerow([ts, args.stack, args.region, mode, bucket or "none", "initiated", by])
         print(f"Delete initiated and logged to {log}")
         print("Monitor with:  python3 -m cfcleanup status")
-        print(f"When DELETE_COMPLETE, record it with:  python3 -m cfcleanup log {args.stack}")
+        print(f"When DELETE_COMPLETE, get the manual workbook entry with:  python3 -m cfcleanup log {args.stack}")
     return 0

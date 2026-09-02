@@ -7,7 +7,8 @@ CloudFormation stacks, so follow the guardrails exactly.
 
 A batch-based cleanup: enumerate demo stacks, produce a review workbook, let
 humans mark keep/delete, then delete the approved stacks (emptying their S3
-storage first) and record each deletion. The tooling is a Python package
+storage first) and record each deletion in a local CSV audit trail. The tooling
+is a Python package
 (`cfcleanup/`) driven as `python3 -m cfcleanup <command>`; each command is one
 step, run in order. There are no shell scripts, and no human runs this by hand.
 
@@ -25,8 +26,11 @@ is reviewed.
 1. **Never delete without human confirmation.** Only delete a stack whose
    `Decision` is `Delete` in the workbook. The `delete` command enforces this and
    aborts otherwise — do not work around it.
-2. **Never set or edit the `Decision` column.** It is human-owned. The agent
-   reads it; it does not write it.
+2. **Never write the workbook.** The entire `.xlsx` is human-owned: `Decision`,
+   `Deleted?`, and `Notes` are all filled in by hand. The agent only ever reads it
+   (read-only) and must never save/rewrite it. Rewriting the shared, often
+   OneDrive-synced file in place corrupts its sync state. The `log` command *prints*
+   the `Deleted?`/`Notes` values for a human to enter; it does not write them.
 3. **Never target excluded stacks.** Platform/automation/governance stacks
    (`INFRA_PATTERNS` in `cfcleanup/common.py`) and nested `NestedStackNEV-*`
    stacks are not cleanup targets. They never appear in the cleanup list.
@@ -83,7 +87,7 @@ fall back to a workbook inside the batch when neither is given.
 | Delete (preview) | `python3 -m cfcleanup delete <stack> <region> --dry-run [--batch B] [--workbook PATH]` | Runs the gate, shows bucket + delete actions, changes nothing. |
 | Delete | `python3 -m cfcleanup delete <stack> <region> [--batch B] [--workbook PATH]` | Gate → empty S3 → initiate delete. Non-blocking. |
 | Poll | `python3 -m cfcleanup status [--batch B] [<stack> <region>]` | Exit `3` = still in progress, `0` = done. Re-run to refresh. |
-| Record | `python3 -m cfcleanup log <stack> [--batch B] [--date YYYY-MM-DD] [--workbook PATH]` | Sets `Deleted? = Yes` and appends `Deleted <date>` to `Notes`. |
+| Record | `python3 -m cfcleanup log <stack> [--batch B] [--date YYYY-MM-DD] [--workbook PATH]` | Read-only. Prints the `Deleted? = Yes` and `Notes` values for a human to hand-enter; changes nothing. |
 
 The `cfcleanup/s3.py` module is a helper used by the `delete` command; it is not
 invoked directly.
@@ -106,7 +110,8 @@ Ongoing incremental sessions (the common case):
      and get confirmation.
    - `python3 -m cfcleanup delete <stack> <region>`.
    - `python3 -m cfcleanup status` until the stack is `DELETE_COMPLETE`.
-   - `python3 -m cfcleanup log <stack>`.
+   - `python3 -m cfcleanup log <stack>` → it prints the `Deleted?`/`Notes` values;
+     the human hand-enters them in the workbook (the tool never writes it).
    - Confirm with the human before moving to the next stack.
 
 ## Decision values
@@ -121,7 +126,10 @@ The reviewed workbook (`<date>-cf-cleanup.xlsx`) lives outside the batch, shared
 with the team and edited there. Ask the human for its path and pass it to the
 decision-reading commands with `--workbook PATH` (or set `CF_WORKBOOK` once for
 the session). `check`, `delete`, and `log` accept it; without it they fall back
-to a workbook inside the batch.
+to a workbook inside the batch. **All three open it read-only — the agent never
+writes this file.** `Deleted?` and `Notes` are updated by the human by hand,
+using the values the `log` command prints. The machine-written audit trail is the
+batch's `deletion-log.csv` (local, not synced), appended by `delete` and `status`.
 
 Its contents can change between steps, so:
 

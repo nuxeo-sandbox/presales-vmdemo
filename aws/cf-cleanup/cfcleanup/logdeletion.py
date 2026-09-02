@@ -1,33 +1,44 @@
-"""Record a completed stack deletion in a batch's cleanup workbook.
+"""Show the manual workbook edit for a completed deletion (READ-ONLY).
 
-Sets the tool-owned Deleted? column and appends a deletion stamp to Notes on the
-matching 'Cleanup' row:
+The reviewed workbook is HUMAN-OWNED. This tool never writes it: rewriting the
+shared/OneDrive-synced .xlsx in place corrupts the file's sync state. So instead
+of editing the workbook, this command reads it read-only and prints the exact
+cells for a human to fill in by hand on the matching 'Cleanup' row:
+
     Deleted?  ->  Yes
-    Notes     ->  existing text + "Deleted YYYY-MM-DD" (appended, never overwritten)
+    Notes     ->  <existing text>; Deleted YYYY-MM-DD
 
-Notes is a free-form, human-editable column; any reviewer text is preserved.
+The authoritative, machine-written audit trail is the batch's deletion-log.csv,
+appended by 'delete' (initiated) and 'status' (complete). This command reports
+only; it changes nothing.
 
 Run as:
-    python3 -m cfcleanup log <stack-name> [--batch NAME|DIR] [--date YYYY-MM-DD]
+    python3 -m cfcleanup log <stack-name> [--batch NAME|DIR] [--date YYYY-MM-DD] [--workbook PATH]
 """
 from __future__ import annotations
 
 import argparse
+import csv
+import os
 import sys
 from datetime import date
-
-from openpyxl import load_workbook
 
 from . import common as cf
 
 SHEET = "Cleanup"
 
 
-def col_index(ws, header: str) -> int:
-    for c in range(1, ws.max_column + 1):
-        if (ws.cell(row=1, column=c).value or "").strip().lower() == header.lower():
-            return c
-    raise SystemExit(f"ERROR: column '{header}' not found on '{ws.title}' sheet.")
+def _csv_phase(batch: str, stack: str) -> str | None:
+    """Latest deletion-log.csv phase recorded for the stack, or None if absent."""
+    log = os.path.join(batch, "deletion-log.csv")
+    if not os.path.exists(log):
+        return None
+    phase = None
+    with open(log, newline="") as fh:
+        for row in csv.DictReader(fh):
+            if row.get("stack") == stack:
+                phase = row.get("phase")
+    return phase
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -43,22 +54,46 @@ def main(argv: list[str] | None = None) -> int:
     if wb_path is None:
         sys.exit(f"ERROR: no review workbook (*-cf-cleanup.xlsx) in batch {batch}")
 
-    wb = load_workbook(wb_path)
+    phase = _csv_phase(batch, args.stack)
+    if phase is None:
+        print(f"WARNING: '{args.stack}' has no entry in deletion-log.csv - has it actually been deleted?")
+    elif phase != "complete":
+        print(f"NOTE: '{args.stack}' is logged as '{phase}', not yet 'complete'. "
+              "Run 'status' until DELETE_COMPLETE before recording it.")
+
+    # Read-only: locate the stack's row and its existing Notes in a single pass.
+    wb = cf.open_workbook_readonly(wb_path)
     ws = wb[SHEET]
-    stack_col = col_index(ws, "Stack")
-    deleted_col = col_index(ws, "Deleted?")
-    notes_col = col_index(ws, "Notes")
+    stack_i = notes_i = None
+    found_row = None
+    existing_notes = ""
+    for n, row in enumerate(ws.iter_rows(), start=1):
+        if n == 1:
+            header = [(str(c.value).strip().lower() if c.value is not None else "") for c in row]
+            try:
+                stack_i, notes_i = header.index("stack"), header.index("notes")
+            except ValueError as exc:
+                wb.close()
+                sys.exit(f"ERROR: expected column missing on '{SHEET}' sheet: {exc}")
+            continue
+        val = row[stack_i].value
+        if val is not None and str(val).strip() == args.stack:
+            found_row = n
+            nv = row[notes_i].value
+            existing_notes = str(nv).strip() if nv is not None else ""
+            break
+    wb.close()
 
-    for row in range(2, ws.max_row + 1):
-        if (ws.cell(row=row, column=stack_col).value or "").strip() == args.stack:
-            ws.cell(row=row, column=deleted_col).value = "Yes"
-            notes_cell = ws.cell(row=row, column=notes_col)
-            existing = (notes_cell.value or "").strip()
-            stamp = f"Deleted {args.date}"
-            notes_cell.value = f"{existing}; {stamp}" if existing else stamp
-            wb.save(wb_path)
-            print(f"Marked '{args.stack}' deleted ({args.date}) on row {row}.")
-            return 0
+    if found_row is None:
+        print(f"ERROR: stack '{args.stack}' not found on '{SHEET}' sheet.")
+        return 1
 
-    print(f"ERROR: stack '{args.stack}' not found on '{SHEET}' sheet.")
-    return 1
+    stamp = f"Deleted {args.date}"
+    new_notes = f"{existing_notes}; {stamp}" if existing_notes else stamp
+    print()
+    print("MANUAL WORKBOOK UPDATE - this tool does not write the workbook.")
+    print(f"On the '{SHEET}' sheet, row {found_row} ({args.stack}), enter by hand:")
+    print("  Deleted?  ->  Yes")
+    print(f"  Notes     ->  {new_notes}")
+    print()
+    return 0

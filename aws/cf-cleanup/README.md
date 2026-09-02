@@ -40,7 +40,7 @@ python3 -m cfcleanup workbook             # write the <date>-cf-cleanup.xlsx wor
 python3 -m cfcleanup delete <stack> <region> --dry-run --workbook PATH   # preview
 python3 -m cfcleanup delete <stack> <region> --workbook PATH             # empty bucket + initiate delete
 python3 -m cfcleanup status                                              # poll until DELETE_COMPLETE
-python3 -m cfcleanup log <stack> --workbook PATH                         # record the deletion in the workbook
+python3 -m cfcleanup log <stack> --workbook PATH                         # print the Deleted?/Notes values to hand-enter (read-only)
 ```
 
 ## Batch contents
@@ -60,9 +60,10 @@ deletion-log.csv       audit trail
 
 ## Workbook columns
 
-* `Decision` and `Notes` are human-editable (highlighted yellow).
-* `Deleted?` is set to `Yes` by the `log` command, which also appends a
-  `Deleted <date>` stamp to `Notes`, preserving any text already there.
+* `Decision`, `Deleted?`, and `Notes` are all human-editable (highlighted yellow).
+* The tooling never writes the workbook — it opens it read-only. After a stack is
+  deleted, `log` *prints* the `Deleted? = Yes` and `Deleted <date>` Notes values;
+  a human enters them by hand. The machine-written audit trail is `deletion-log.csv`.
 
 ## Bucket handling
 

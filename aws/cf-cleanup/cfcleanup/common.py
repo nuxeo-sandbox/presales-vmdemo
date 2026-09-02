@@ -189,6 +189,20 @@ def resolve_workbook(batch: str, supplied: str | None = None) -> str | None:
     return find_workbook(batch)
 
 
+def open_workbook_readonly(path: str):
+    """Open a reviewed workbook STRICTLY for reading.
+
+    The reviewed workbook is human-owned and shared (often on OneDrive). This
+    tool must NEVER write it: rewriting the synced .xlsx in place corrupts the
+    file's sync state. Every read goes through here in read_only mode, and
+    openpyxl refuses to save a read_only workbook - so there is no code path
+    that can write a reviewed workbook.
+    """
+    from openpyxl import load_workbook
+
+    return load_workbook(path, read_only=True, data_only=True)
+
+
 # ---- row loading -----------------------------------------------------------
 def load_rows(batch: str) -> tuple[list[dict], datetime]:
     """Parse every stacks/<region>.json in a batch into flat row dicts."""

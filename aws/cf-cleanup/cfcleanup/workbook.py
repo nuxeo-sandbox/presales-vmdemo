@@ -2,11 +2,11 @@
 
 Writes <batch>/<date>-cf-cleanup.xlsx. With no --batch, uses the most recent batch.
 
-Columns:
-  Human-owned (yellow, editable): Decision, Notes
-  Tool-owned:                     Deleted?   (set by the log command)
+Columns (all human-owned):
+  Yellow, editable: Decision, Deleted?, Notes
 
-The log command appends a "Deleted YYYY-MM-DD" stamp to whatever Notes already holds.
+The tool never writes this workbook. The log command reads it read-only and
+prints the Deleted?/Notes values for a human to enter by hand.
 
 Run as:
     python3 -m cfcleanup workbook [--batch NAME|DIR]
@@ -89,8 +89,8 @@ def main(argv: list[str] | None = None) -> int:
                 round(r["age_months"], 0) if r["age_months"] is not None else "",
                 r["class"],
                 "",  # Decision (human)
-                "",  # Deleted? (tool)
-                "",  # Notes (free-form; the log command appends the deletion stamp)
+                "",  # Deleted? (human)
+                "",  # Notes (free-form; human enters the deletion stamp)
             ]
         )
 
@@ -110,8 +110,8 @@ def main(argv: list[str] | None = None) -> int:
             cell.alignment = CENTER if ci in (1, 7, 9, 12) else LEFT
         r = demo[ri - 2]
         ws.cell(row=ri, column=age_col).fill = AGE_FILLS[age_bucket(r["age_months"])]
-        # Decision and Notes are human-editable (yellow).
-        for ci in (decision_col, notes_col):
+        # Decision, Deleted? and Notes are human-editable (yellow).
+        for ci in (decision_col, deleted_col, notes_col):
             ws.cell(row=ri, column=ci).fill = INPUT_FILL
 
     decision_dv = DataValidation(
@@ -171,9 +171,9 @@ def main(argv: list[str] | None = None) -> int:
         ("\u2022 Fill the yellow column: Decision.", False),
         ("\u2022 Decision options: Keep - active engagement / Keep - generic demo /", False),
         ("  Delete / Investigate (dropdown).", False),
-        ("\u2022 Deleted? is set automatically by the tooling once a stack is deleted.", False),
-        ("\u2022 Notes is free-form: add your own remarks; the tooling also appends a", False),
-        ("  \"Deleted YYYY-MM-DD\" stamp when a stack is removed.", False),
+        ("\u2022 Deleted?: set it to Yes yourself once the tooling reports DELETE_COMPLETE.", False),
+        ("\u2022 Notes is free-form: add your own remarks and the \"Deleted YYYY-MM-DD\"", False),
+        ("  stamp the tooling prints for you when a stack is removed.", False),
         ("\u2022 Use the header filters to sort by Region, Age, Class, or Owner.", False),
         ("\u2022 Age colouring: red >12mo, orange 6-12mo, green <6mo.", False),
         ("\u2022 Default is deletion \u2014 anything left without a 'Keep' will be removed.", False),

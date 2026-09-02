@@ -10,7 +10,7 @@ Commands:
     check      report a stack's human Decision (safety gate)
     delete     empty S3 + initiate a stack delete (gated by Decision)
     status     poll in-flight deletions
-    log        record a completed deletion in the workbook
+    log        print the manual Deleted?/Notes entry for a completed deletion (read-only)
 """
 from __future__ import annotations
 
