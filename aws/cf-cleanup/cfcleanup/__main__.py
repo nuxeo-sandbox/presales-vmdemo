@@ -7,25 +7,21 @@ Commands:
     gather     enumerate stacks across regions into a new batch
     report     write report.md for a batch
     workbook   write the <date>-cf-cleanup.xlsx review workbook
-    check      report a stack's human Decision (safety gate)
-    delete     empty S3 + initiate a stack delete (gated by Decision)
+    delete     empty S3 + initiate a stack delete (by stack id)
     status     poll in-flight deletions
-    log        print the manual Deleted?/Notes entry for a completed deletion (read-only)
 """
 from __future__ import annotations
 
 import sys
 
-from . import decision, delete, gather, logdeletion, report, status, workbook
+from . import delete, gather, report, status, workbook
 
 COMMANDS = {
     "gather": gather.main,
     "report": report.main,
     "workbook": workbook.main,
-    "check": decision.main,
     "delete": delete.main,
     "status": status.main,
-    "log": logdeletion.main,
 }
 
 

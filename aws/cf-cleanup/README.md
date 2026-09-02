@@ -1,8 +1,8 @@
 # CloudFormation Demo Stack Cleanup
 
 Inventory the presales CloudFormation demo stacks, collect keep/delete decisions
-in an Excel workbook, and delete the approved stacks, emptying their S3 storage
-first and recording each deletion.
+in an Excel workbook, and delete stacks (emptying their S3 storage first) by the
+stack ids a human hands off from that review, recording each deletion.
 
 A few things make this fiddly:
 
@@ -32,15 +32,12 @@ python3 -m cfcleanup gather               # enumerate stacks across all regions 
 python3 -m cfcleanup report               # write report.md
 python3 -m cfcleanup workbook             # write the <date>-cf-cleanup.xlsx workbook
 
-# Review the workbook and set the Decision column per stack.
-# Only stacks with Decision = "Delete" are eligible.
-# Pass the reviewed copy with --workbook PATH (or set CF_WORKBOOK);
-# without it, the workbook inside the batch is used.
+# A human reviews the workbook, sets the Decision column, and hands the agent
+# the stack ids to delete. The tooling itself never reads the workbook.
 
-python3 -m cfcleanup delete <stack> <region> --dry-run --workbook PATH   # preview
-python3 -m cfcleanup delete <stack> <region> --workbook PATH             # empty bucket + initiate delete
-python3 -m cfcleanup status                                              # poll until DELETE_COMPLETE
-python3 -m cfcleanup log <stack> --workbook PATH                         # print the Deleted?/Notes values to hand-enter (read-only)
+python3 -m cfcleanup delete <stack> --dry-run   # preview (region auto-resolved from the batch)
+python3 -m cfcleanup delete <stack>             # empty bucket + initiate delete
+python3 -m cfcleanup status                     # poll until DELETE_COMPLETE
 ```
 
 ## Batch contents
@@ -61,9 +58,9 @@ deletion-log.csv       audit trail
 ## Workbook columns
 
 * `Decision`, `Deleted?`, and `Notes` are all human-editable (highlighted yellow).
-* The tooling never writes the workbook — it opens it read-only. After a stack is
-  deleted, `log` *prints* the `Deleted? = Yes` and `Deleted <date>` Notes values;
-  a human enters them by hand. The machine-written audit trail is `deletion-log.csv`.
+* The tooling only *creates* the workbook (`workbook`); it never reads or writes
+  it afterward. Humans review it, decide, and hand the agent the stack ids to
+  delete. The machine-written audit trail is `deletion-log.csv`.
 
 ## Bucket handling
 

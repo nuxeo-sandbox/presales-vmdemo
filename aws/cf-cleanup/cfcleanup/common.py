@@ -150,59 +150,6 @@ def workbook_path(batch: str) -> str:
     return p
 
 
-def find_workbook(batch: str) -> str | None:
-    """Locate an existing review workbook, tolerant of a copied-back rename.
-
-    Prefers the canonical dated name; otherwise the single *.xlsx in the batch.
-    Excel lock files (~$...) are ignored. Returns None if none is found.
-    """
-    canonical = workbook_path(batch)
-    if os.path.exists(canonical):
-        return canonical
-    candidates = [
-        c for c in sorted(glob.glob(os.path.join(batch, "*.xlsx")))
-        if not os.path.basename(c).startswith("~$")
-    ]
-    if len(candidates) == 1:
-        found = candidates[0]
-    else:
-        dated = [c for c in candidates if c.endswith("-cf-cleanup.xlsx")]
-        found = dated[0] if len(dated) == 1 else None
-    return found
-
-
-def resolve_workbook(batch: str, supplied: str | None = None) -> str | None:
-    """Resolve the review workbook to read.
-
-    A supplied path (--workbook, or the CF_WORKBOOK env var) wins, so the copy
-    shared with the team can be processed in place without copying it back into
-    the batch. Falls back to a workbook found inside the batch. Returns None if a
-    supplied path is missing, or if nothing is found in the batch.
-    """
-    supplied = supplied or os.environ.get("CF_WORKBOOK")
-    if supplied:
-        p = os.path.abspath(os.path.expanduser(supplied))
-        if not os.path.isfile(p):
-            print(f"ERROR: supplied workbook not found: {p}", file=sys.stderr)
-            return None
-        return p
-    return find_workbook(batch)
-
-
-def open_workbook_readonly(path: str):
-    """Open a reviewed workbook STRICTLY for reading.
-
-    The reviewed workbook is human-owned and shared (often on OneDrive). This
-    tool must NEVER write it: rewriting the synced .xlsx in place corrupts the
-    file's sync state. Every read goes through here in read_only mode, and
-    openpyxl refuses to save a read_only workbook - so there is no code path
-    that can write a reviewed workbook.
-    """
-    from openpyxl import load_workbook
-
-    return load_workbook(path, read_only=True, data_only=True)
-
-
 # ---- row loading -----------------------------------------------------------
 def load_rows(batch: str) -> tuple[list[dict], datetime]:
     """Parse every stacks/<region>.json in a batch into flat row dicts."""
@@ -252,3 +199,10 @@ def split_rows(rows: list[dict]) -> tuple[list[dict], list[dict]]:
         )
     )
     return demo, infra
+
+
+def find_stack_regions(batch: str, stack: str) -> list[str]:
+    """Regions where a stack of this exact name appears in the batch's gather data."""
+    rows, _ = load_rows(batch)
+    regions = {r["region"] for r in rows if r["name"] == stack}
+    return sort_regions(regions)

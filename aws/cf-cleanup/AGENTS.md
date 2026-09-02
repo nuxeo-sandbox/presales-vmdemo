@@ -5,63 +5,45 @@ CloudFormation stacks, so follow the guardrails exactly.
 
 ## What this is
 
-A batch-based cleanup: enumerate demo stacks, produce a review workbook, let
-humans mark keep/delete, then delete the approved stacks (emptying their S3
-storage first) and record each deletion in a local CSV audit trail. The tooling
-is a Python package
-(`cfcleanup/`) driven as `python3 -m cfcleanup <command>`; each command is one
-step, run in order. There are no shell scripts, and no human runs this by hand.
+A batch-based cleanup: enumerate demo stacks and produce a review workbook for
+humans to mark keep/delete. Humans review it out-of-band and hand you the stack
+ids to delete; you delete each one (emptying its S3 storage first) and record it
+in a local CSV audit trail. The tooling is a Python package (`cfcleanup/`) driven
+as `python3 -m cfcleanup <command>`. There are no shell scripts, and no human
+runs this by hand.
 
-**Review is incremental, not one-shot.** The human does not review the whole
-workbook in a single sitting. They mark a few rows `Delete` whenever they get to
-it and check in over time; each session you process only the rows that are newly
-`Delete` and not yet `Deleted? = Yes`, then stop. The set of `Delete` rows grows
-between sessions. "Continue the batch" means re-read the current workbook fresh
-and pick up the newly-approved rows — it does **not** mean `gather` a new batch.
-The same batch dir stays current across all these sessions until the whole sheet
-is reviewed.
+**The agent never reads the workbook.** The workbook is a human artifact for
+deciding what to delete. You act only on the stack ids the human gives you - you
+do not open, parse, or derive anything from the `.xlsx`. `gather`/`report`/
+`workbook` create it; `delete`/`status` operate on stack ids and the local
+deletion log. The same batch dir stays current across sessions.
 
 ## Guardrails (do not violate)
 
-1. **Never delete without human confirmation.** Only delete a stack whose
-   `Decision` is `Delete` in the workbook. The `delete` command enforces this and
-   aborts otherwise — do not work around it.
-2. **Never write the workbook.** The entire `.xlsx` is human-owned: `Decision`,
-   `Deleted?`, and `Notes` are all filled in by hand. The agent only ever reads it
-   (read-only) and must never save/rewrite it. Rewriting the shared, often
-   OneDrive-synced file in place corrupts its sync state. The `log` command *prints*
-   the `Deleted?`/`Notes` values for a human to enter; it does not write them.
-3. **Never target excluded stacks.** Platform/automation/governance stacks
-   (`INFRA_PATTERNS` in `cfcleanup/common.py`) and nested `NestedStackNEV-*`
-   stacks are not cleanup targets. They never appear in the cleanup list.
+1. **Never delete without human confirmation.** Only delete a stack the human
+   has explicitly named, and always show the `--dry-run` preview and get an OK
+   before the real delete. The human naming the stack id is the approval.
+2. **The agent never reads or writes the reviewed workbook.** It is human-owned.
+   Do not open, parse, or derive the delete list from the `.xlsx`; act only on
+   the stack ids you are given.
+3. **Only delete the exact stack id(s) you are given.** Do not infer, expand, or
+   guess additional stacks. Never touch platform/automation/governance stacks
+   (`INFRA_PATTERNS` in `cfcleanup/common.py`) or nested `NestedStackNEV-*`
+   stacks even if named by mistake - flag them instead.
 4. **Preview first.** Run `delete ... --dry-run` and show the result
    before a real deletion.
 5. **One account.** Confirm `aws sts get-caller-identity` points at the intended
-   presales account before gathering or deleting.
-6. **Always read the workbook fresh from disk; it changes under you.**
-   Co-workers edit the reviewed workbook live, out-of-band, so `Decision` and
-   `Deleted?` can change at any moment (see Workbook handoff). Re-read it fresh
-   from disk immediately before every action - both to pick the next stack and
-   before every decision check. Pull each stack from the workbook one at a time;
-   never build, cache, or work from a remembered list of pending stacks, and
-   never announce "the next stack" from memory. The workbook's *path* is supplied
-   once per session (set `CF_WORKBOOK`, or pass `--workbook` once) - do not
-   re-ask or re-pass it each time. "Fresh" means re-reading the file's *contents*
-   every iteration, which each command does automatically.
-7. **One stack at a time.** Fully finish a stack (`delete` → `status` to
-   `DELETE_COMPLETE` → `log`) and get the human's confirmation before starting the
-   next one. Never initiate multiple deletes back-to-back, even when several rows
-   are marked `Delete`. Select that next stack by re-reading the workbook fresh
-   (guardrail 6) and taking the first row with `Decision = Delete` and `Deleted?`
-   blank - not from an earlier scan. Skip any row already `Deleted? = Yes`; never
-   re-delete.
-8. **Never `--retain-resources`.** The point of deleting via CloudFormation is to
+   presales account before deleting.
+6. **One stack at a time.** Fully finish a stack (`delete` → `status` to
+   `DELETE_COMPLETE`) and get the human's confirmation before starting the next
+   one. Never initiate multiple deletes back-to-back, even when given several ids.
+7. **Never `--retain-resources`.** The point of deleting via CloudFormation is to
    fully clean up the resources; retaining orphans them. If a delete fails on a
    stuck resource, clear the blocker so a normal full delete succeeds (see
    Troubleshooting) — do not fall back to retain. (A retain is only ever
    acceptable as an explicit, human-authorized one-off when the resource is
    already verified gone and retaining orphans nothing; do not generalize it.)
-9. **Never regenerate a real batch's workbook or report.** The `.xlsx` holds the
+8. **Never regenerate a real batch's workbook or report.** The `.xlsx` holds the
    team's hand-entered `Decision` values and hand-tuned formatting, and there is
    no backup. Do not run `gather`/`workbook`/`report` against a live batch to
    "refresh" or test — it overwrites those edits. To test code changes, build a
@@ -82,20 +64,16 @@ is reviewed.
 ## Commands
 
 All commands act on the most recent batch unless `--batch <name|dir>` is given.
-Commands that read decisions (`check`, `delete`, `log`) read the reviewed
-workbook supplied with `--workbook <path>` (or the `CF_WORKBOOK` env var), and
-fall back to a workbook inside the batch when neither is given.
+No command reads the reviewed workbook.
 
 | Step | Command | Notes |
 |---|---|---|
 | Enumerate | `python3 -m cfcleanup gather [--name NAME] [--regions "r1 r2 …"]` | Creates a new batch under `batches/`. Regions are auto-discovered (every region enabled for the account); override with `--regions` or `CF_REGIONS`. |
 | Report | `python3 -m cfcleanup report [--batch B]` | Writes `report.md`. |
-| Workbook | `python3 -m cfcleanup workbook [--batch B]` | Writes `<date>-cf-cleanup.xlsx`. |
-| Check decision | `python3 -m cfcleanup check <stack> [--batch B] [--workbook PATH]` | Gate only. Exit `0` = Delete, `2` = other/blank, `1` = not found. |
-| Delete (preview) | `python3 -m cfcleanup delete <stack> <region> --dry-run [--batch B] [--workbook PATH]` | Runs the gate, shows bucket + delete actions, changes nothing. |
-| Delete | `python3 -m cfcleanup delete <stack> <region> [--batch B] [--workbook PATH]` | Gate → empty S3 → initiate delete. Non-blocking. |
+| Workbook | `python3 -m cfcleanup workbook [--batch B]` | Writes `<date>-cf-cleanup.xlsx` for humans to review. |
+| Delete (preview) | `python3 -m cfcleanup delete <stack> [region] --dry-run [--batch B]` | Shows bucket + delete actions, changes nothing. Region is optional (resolved from the batch). |
+| Delete | `python3 -m cfcleanup delete <stack> [region] [--batch B]` | Empty S3 → initiate delete. Non-blocking. Appends to `deletion-log.csv`. |
 | Poll | `python3 -m cfcleanup status [--batch B] [<stack> <region>]` | Exit `3` = still in progress, `0` = done. Re-run to refresh. |
-| Record | `python3 -m cfcleanup log <stack> [--batch B] [--date YYYY-MM-DD] [--workbook PATH]` | Read-only. Prints the `Deleted? = Yes` and `Notes` values for a human to hand-enter; changes nothing. |
 
 The `cfcleanup/s3.py` module is a helper used by the `delete` command; it is not
 invoked directly.
@@ -106,56 +84,35 @@ One-time setup of a batch (rare — only when starting a brand-new cleanup):
 
 1. `python3 -m cfcleanup gather` — new batch.
 2. `python3 -m cfcleanup report` and `python3 -m cfcleanup workbook`.
-3. Humans fill `Decision` in the workbook over time.
+3. Humans review the workbook and decide what to delete.
 
-Ongoing incremental sessions (the common case):
+Ongoing sessions (the common case):
 
-1. Confirm the account (`aws sts get-caller-identity`) and the reviewed workbook
-   path.
-2. Re-read the workbook fresh from disk and take the **first** row where
-   `Decision = Delete` and `Deleted?` is blank. That single row is the next
-   stack. The set of eligible rows changes between iterations as co-workers edit
-   the file, so do not remember it - derive it fresh every time.
+1. Confirm the account (`aws sts get-caller-identity`).
+2. The human gives you a stack id to delete. The region is optional - it is
+   resolved from the batch's gather data (with a live region scan as fallback);
+   only ask for it if resolution reports the name as ambiguous or not found.
 3. Process that **one** stack:
-   - `python3 -m cfcleanup delete <stack> <region> --dry-run` → show the preview
+   - `python3 -m cfcleanup delete <stack> --dry-run` → show the preview
      and get confirmation.
-   - `python3 -m cfcleanup delete <stack> <region>`.
+   - `python3 -m cfcleanup delete <stack>`.
    - `python3 -m cfcleanup status` until the stack is `DELETE_COMPLETE`.
-   - `python3 -m cfcleanup log <stack>` → it prints the `Deleted?`/`Notes` values;
-     the human hand-enters them in the workbook (the tool never writes it).
    - Confirm with the human.
-4. Go back to step 2 and re-read the workbook fresh for the next stack. Never
-   carry a pending list forward from a previous iteration.
+4. Wait for the next stack id. Do not work ahead or infer other stacks.
 
-## Decision values
+## Decision values (human-facing)
 
-The `Decision` dropdown is `Keep - active engagement`, `Keep - generic demo`,
-`Delete`, `Investigate`. Only `Delete` is eligible; treat everything else
-(including blank) as keep.
+The workbook's `Decision` dropdown is `Keep - active engagement`,
+`Keep - generic demo`, `Delete`, `Investigate`. Humans use it to decide; the
+agent does not read it - the human tells the agent which stacks to delete.
 
-## Workbook handoff
+## The workbook is human-owned
 
-The reviewed workbook (`<date>-cf-cleanup.xlsx`) lives outside the batch, shared
-with the team and edited there. Ask the human for its path and pass it to the
-decision-reading commands with `--workbook PATH` (or set `CF_WORKBOOK` once for
-the session). `check`, `delete`, and `log` accept it; without it they fall back
-to a workbook inside the batch. **All three open it read-only — the agent never
-writes this file.** `Deleted?` and `Notes` are updated by the human by hand,
-using the values the `log` command prints. The machine-written audit trail is the
-batch's `deletion-log.csv` (local, not synced), appended by `delete` and `status`.
-
-Its contents can change between steps - co-workers edit it live while you work -
-so:
-
-- Ask the human for the workbook path at the start of a deletion cycle. Do not
-  assume a fixed location.
-- Always re-read it from disk immediately before use, including when selecting
-  which stack to process next. Never cache `Decision`, `Deleted?`, or `Notes` in
-  the agent's own context and reason from that.
-- Go through the commands (`check`, `delete`, `log`); each opens the file fresh
-  on every call. Do not substitute values seen in an earlier view.
-- Don't hold the file open longer than a single command; an external editor may
-  have it open at the same time.
+The reviewed workbook (`<date>-cf-cleanup.xlsx`) is created by `workbook`, then
+shared with the team and reviewed out-of-band. The agent never opens it - not to
+read and not to write. Humans decide from it and hand the agent the stack ids to
+delete. The machine-written audit trail is the batch's `deletion-log.csv`,
+appended by `delete` and `status`.
 
 ## Troubleshooting
 
