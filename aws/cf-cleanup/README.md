@@ -28,7 +28,9 @@ A few things make this fiddly:
 ./cfcleanup.sh setup
 ```
 
-Inspect `batches/<yyyy-mm-dd>-cf-cleanup-batch/<date>-cf-cleanup.xlsx`. It contains columns to track the decision (keep/delete), whether the stack was deleted, and notes.
+Inspect `batches/<yyyy-mm-dd>-cf-cleanup-batch/<date>-cf-cleanup.xlsx`. It
+contains columns to track the decision (keep/delete), whether the stack was
+deleted, and notes.
 
 ### Delete a Stack
 
@@ -76,7 +78,8 @@ right location before deleting:
 
 Platform, automation, and AWS governance stacks (StackSets, CDKToolkit, Macie,
 route53/scheduler automation) match `INFRA_PATTERNS` in `cfcleanup/common.py`
-and appear only on the workbook's "Excluded infra" sheet. Nested NEV stacks (those with a `NestedStackNEV-` prefix) are also omitted.
+and appear only on the workbook's "Excluded infra" sheet. Nested NEV stacks
+(those with a `NestedStackNEV-` prefix) are also omitted.
 
 # About Hyland Nuxeo
 
