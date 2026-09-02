@@ -72,22 +72,22 @@ def main(argv: list[str] | None = None) -> int:
     ws = wb.active
     ws.title = "Cleanup"
     headers = [
-        "Region", "Stack", "Customer", "Owner", "Manager", "Studio project",
-        "Nuxeo", "Last activity", "Age (mo)", "Class",
-        "Decision", "Deleted?", "Notes",
+        "Region", "Stack", "Decision", "Deleted?", "Notes",
+        "Customer", "Owner", "Manager", "Studio project", "Nuxeo",
+        "Last activity", "Age (mo)", "Class",
     ]
     ws.append(headers)
     for r in demo:
         ws.append(
             [
-                r["region"], r["name"], r["customer"], r["owner"], r["manager"],
-                r["studio"], r["nuxeo"],
-                r["last_activity"].date().isoformat() if r["last_activity"] else "",
-                round(r["age_months"], 0) if r["age_months"] is not None else "",
-                r["class"],
+                r["region"], r["name"],
                 "",  # Decision (human)
                 "",  # Deleted? (human)
                 "",  # Notes (free-form; human enters the deletion stamp)
+                r["customer"], r["owner"], r["manager"], r["studio"], r["nuxeo"],
+                r["last_activity"].date().isoformat() if r["last_activity"] else "",
+                round(r["age_months"], 0) if r["age_months"] is not None else "",
+                r["class"],
             ]
         )
 
@@ -95,16 +95,16 @@ def main(argv: list[str] | None = None) -> int:
     nrows = len(demo)
     style_header(ws, ncols)
 
-    widths = [11.5, 30.3, 24.0, 15.8, 21.5, 26.0, 8.0, 13.0, 8.0, 27.0, 20.2, 9.8, 53.5]
+    widths = [11.5, 30.3, 20.2, 12.5, 53.5, 24.0, 15.8, 21.5, 26.0, 8.0, 13.0, 8.0, 27.0]
     for i, w in enumerate(widths, start=1):
         ws.column_dimensions[get_column_letter(i)].width = w
 
-    age_col, decision_col, deleted_col, notes_col = 9, 11, 12, 13
+    decision_col, deleted_col, notes_col, age_col = 3, 4, 5, 12
     for ri in range(2, nrows + 2):
         for ci in range(1, ncols + 1):
             cell = ws.cell(row=ri, column=ci)
             cell.border = BORDER
-            cell.alignment = CENTER if ci in (1, 7, 9, 12) else LEFT
+            cell.alignment = CENTER if ci in (1, 4, 10, 12) else LEFT
         r = demo[ri - 2]
         ws.cell(row=ri, column=age_col).fill = AGE_FILLS[age_bucket(r["age_months"])]
         # Decision, Deleted? and Notes are human-editable (yellow).
