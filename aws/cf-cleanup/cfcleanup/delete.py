@@ -69,19 +69,7 @@ def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
     label = "Inspecting" if dry_run else "Deleting"
     print(f"=== {label} stack: {stack} ({region})   [batch: {os.path.basename(batch)}] ===")
 
-    # 1. Confirm the AWS session is valid up front, so a lapsed token can't masquerade
-    # downstream as an empty bucket or a missing stack.
-    who = aws_run(["sts", "get-caller-identity", "--query", "Arn", "--output", "text"])
-    if who.returncode != 0:
-        print("ABORT: AWS credentials are not valid (often an expired SSO session). "
-              "Re-authenticate and retry.")
-        err = (who.stderr or "").strip()
-        if err:
-            print(f"  aws error: {err}")
-        return 1
-
-    # 2. Read the bucket mode from the stack's parameters. No UseS3Bucket parameter
-    # reads back as "None"; a failed call aborts rather than deleting blindly.
+    # 1. Read the bucket mode. A missing UseS3Bucket parameter reads back as "None".
     params = aws_run(
         [
             "cloudformation", "describe-stacks", "--stack-name", stack,
@@ -91,8 +79,7 @@ def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
         ]
     )
     if params.returncode != 0:
-        print("ABORT: could not read the stack's bucket mode (describe-stacks failed) - "
-              "refusing to delete without knowing what to empty.")
+        print("ABORT: could not read the stack's bucket mode (describe-stacks failed).")
         err = (params.stderr or "").strip()
         if err:
             print(f"  aws error: {err}")
@@ -110,11 +97,11 @@ def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
     else:
         print(f"WARNING: unknown/missing bucket mode ('{mode}'); skipping bucket emptying.")
 
-    # 3. Empty the bucket (or just the stack's folder in the shared bucket).
+    # 2. Empty the bucket (or just the stack's folder in the shared bucket).
     if bucket:
         empty_location(bucket, prefix, dry_run)
 
-    # 4. Initiate stack deletion. NON-BLOCKING: returns immediately.
+    # 3. Initiate stack deletion. NON-BLOCKING: returns immediately.
     if dry_run:
         print(f"DRY-RUN> aws cloudformation delete-stack --stack-name {stack} --region {region}")
         return 0
@@ -125,9 +112,9 @@ def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
     if r.returncode != 0:
         return r.returncode
 
-    # 5. Append an "initiated" event to the paper-trail log.
-    arn = who.stdout.strip()
-    by = arn.rsplit("/", 1)[-1] if arn else ""
+    # 4. Append the deletion to the log.
+    who = aws_run(["sts", "get-caller-identity", "--query", "Arn", "--output", "text"])
+    by = who.stdout.strip().rsplit("/", 1)[-1] if who.returncode == 0 else ""
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     new = not os.path.exists(log)
     with open(log, "a", newline="") as fh:

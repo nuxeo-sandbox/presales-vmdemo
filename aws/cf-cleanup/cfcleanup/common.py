@@ -18,12 +18,30 @@ import glob
 import json
 import os
 import re
+import subprocess
 import sys
 from datetime import datetime, timezone
 
 PKG_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(PKG_DIR)
 BATCHES_DIR = os.path.join(ROOT, "batches")
+
+
+def ensure_session() -> bool:
+    """True if the AWS session is valid; print an abort message and return False otherwise."""
+    out = subprocess.run(
+        ["aws", "sts", "get-caller-identity", "--query", "Account", "--output", "text"],
+        capture_output=True,
+        text=True,
+    )
+    if out.returncode == 0:
+        return True
+    print("ABORT: AWS credentials are not valid (often an expired SSO session). "
+          "Re-authenticate with 'aws sso login' and retry.")
+    err = (out.stderr or "").strip()
+    if err:
+        print(f"  aws error: {err}")
+    return False
 
 # Preferred display order. gather auto-discovers the regions to scan, so any
 # region not listed here still appears in reports/workbook, ordered after these.

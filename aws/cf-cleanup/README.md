@@ -72,11 +72,6 @@ right location before deleting:
 * `Shared`: shared bucket `<region>-demo-bucket`, only the `<stack>/` folder
 * `None`: no bucket
 
-`delete` verifies the AWS session is valid before it starts, and aborts if the
-`UseS3Bucket` parameter can't be read (for example because credentials expired)
-rather than deleting a stack without emptying its bucket. An expired session is a
-common cause — re-run `aws sso login` and try again.
-
 ## Excluded stacks
 
 Platform, automation, and AWS governance stacks (StackSets, CDKToolkit, Macie,

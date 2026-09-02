@@ -1,8 +1,7 @@
 """Empty an S3 location: all current objects, non-current versions, and delete
 markers under a bucket (optionally restricted to a key prefix / "folder").
 
-Used by the delete command so the tricky version-purge logic lives in Python
-rather than fragile shell. Shells out to the AWS CLI (no boto3 dependency).
+Shells out to the AWS CLI.
 
 Exits 0 on success (including when nothing needed deleting or the bucket is
 missing), non-zero only on an actual error.
@@ -29,9 +28,7 @@ def aws_json(args: list[str]) -> dict:
 def bucket_exists(bucket: str) -> bool:
     """True if the bucket exists and is accessible.
 
-    A genuine 404 (bucket gone) returns False; an auth/permission failure such as
-    an expired token is raised, never silently treated as 'already gone' - so a
-    stack delete can't skip bucket emptying just because credentials lapsed.
+    A 404 (bucket gone) returns False; an auth/permission failure is raised.
     """
     out = subprocess.run(
         ["aws", "s3api", "head-bucket", "--bucket", bucket],

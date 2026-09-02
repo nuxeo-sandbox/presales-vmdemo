@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import sys
 
-from . import delete, gather, report, run, setup, status, workbook
+from . import common, delete, gather, report, run, setup, status, workbook
 
 COMMANDS = {
     "setup": setup.main,
@@ -27,6 +27,9 @@ COMMANDS = {
     "status": status.main,
     "run": run.main,
 }
+
+# Commands that hit AWS; the session is validated once before these run.
+AWS_COMMANDS = {"setup", "gather", "delete", "status", "run"}
 
 
 def usage() -> str:
@@ -48,6 +51,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"unknown command: {cmd}\n", file=sys.stderr)
         print(usage(), file=sys.stderr)
         return 2
+
+    if cmd in AWS_COMMANDS and not common.ensure_session():
+        return 1
 
     ret = fn(rest)
     return ret
