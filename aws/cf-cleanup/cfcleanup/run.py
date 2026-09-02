@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import time
+from datetime import date
 
 from . import common as cf
 from . import delete, status
@@ -55,4 +56,10 @@ def main(argv: list[str] | None = None) -> int:
     status_args = (["--batch", args.batch] if args.batch else []) + [args.stack, region]
     while status.main(status_args) == 3:
         time.sleep(POLL_SECONDS)
-    return 0
+
+    final = status.stack_status(args.stack, region)
+    if final == "GONE":
+        print(f"\n{args.stack} Deleted {date.today().isoformat()}")
+        return 0
+    print(f"\n{args.stack}: {final}")
+    return 1
