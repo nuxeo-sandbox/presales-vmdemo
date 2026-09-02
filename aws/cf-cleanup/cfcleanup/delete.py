@@ -1,7 +1,6 @@
 """Delete a presales CloudFormation demo stack, emptying its S3 storage first.
 
-The caller supplies the stack id directly; naming it (and approving the dry-run)
-is the human gate. This command does not read any workbook.
+The caller supplies the stack id and, optionally, its region.
 
 Paper-trail tool: every run appends a line to the batch's deletion-log.csv.
 
@@ -60,24 +59,15 @@ def _resolve_region(batch: str, stack: str) -> tuple[str | None, str]:
     return None, f"'{stack}' not found in the batch or any enabled region - check the name"
 
 
-def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="python3 -m cfcleanup delete")
-    ap.add_argument("stack")
-    ap.add_argument("region", nargs="?")
-    ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--batch")
-    args = ap.parse_args(argv)
+def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
+    """Interrogate the stack, empty its S3 storage, and (unless dry_run) delete it.
 
-    batch = cf.resolve_batch(args.batch)
-    region = args.region
-    if not region:
-        region, note = _resolve_region(batch, args.stack)
-        if region is None:
-            print(f"ABORT: {note}")
-            return 1
-        print(f"Region for '{args.stack}': {region} ({note})")
+    With dry_run=True this only inspects and reports what would happen - it
+    changes nothing. Shared by the `delete` and `run` commands.
+    """
     log = os.path.join(batch, "deletion-log.csv")
-    print(f"=== Deleting stack: {args.stack} ({region})   [batch: {os.path.basename(batch)}] ===")
+    label = "Inspecting" if dry_run else "Deleting"
+    print(f"=== {label} stack: {stack} ({region})   [batch: {os.path.basename(batch)}] ===")
 
     # 1. Confirm the AWS session is valid up front, so a lapsed token can't masquerade
     # downstream as an empty bucket or a missing stack.
@@ -94,7 +84,7 @@ def main(argv: list[str] | None = None) -> int:
     # reads back as "None"; a failed call aborts rather than deleting blindly.
     params = aws_run(
         [
-            "cloudformation", "describe-stacks", "--stack-name", args.stack,
+            "cloudformation", "describe-stacks", "--stack-name", stack,
             "--region", region,
             "--query", "Stacks[0].Parameters[?ParameterKey=='UseS3Bucket'].ParameterValue | [0]",
             "--output", "text",
@@ -112,9 +102,9 @@ def main(argv: list[str] | None = None) -> int:
 
     bucket = prefix = ""
     if mode == "Create":
-        bucket = f"{args.stack}-bucket"
+        bucket = f"{stack}-bucket"
     elif mode == "Shared":
-        bucket, prefix = f"{region}-demo-bucket", f"{args.stack}/"
+        bucket, prefix = f"{region}-demo-bucket", f"{stack}/"
     elif mode == "None":
         print("No bucket to empty.")
     else:
@@ -122,29 +112,56 @@ def main(argv: list[str] | None = None) -> int:
 
     # 3. Empty the bucket (or just the stack's folder in the shared bucket).
     if bucket:
-        empty_location(bucket, prefix, args.dry_run)
+        empty_location(bucket, prefix, dry_run)
 
     # 4. Initiate stack deletion. NON-BLOCKING: returns immediately.
-    if args.dry_run:
-        print(f"DRY-RUN> aws cloudformation delete-stack --stack-name {args.stack} --region {region}")
-    else:
-        r = subprocess.run(
-            ["aws", "cloudformation", "delete-stack", "--stack-name", args.stack, "--region", region]
-        )
-        if r.returncode != 0:
-            return r.returncode
+    if dry_run:
+        print(f"DRY-RUN> aws cloudformation delete-stack --stack-name {stack} --region {region}")
+        return 0
+
+    r = subprocess.run(
+        ["aws", "cloudformation", "delete-stack", "--stack-name", stack, "--region", region]
+    )
+    if r.returncode != 0:
+        return r.returncode
 
     # 5. Append an "initiated" event to the paper-trail log.
-    if not args.dry_run:
-        arn = who.stdout.strip()
-        by = arn.rsplit("/", 1)[-1] if arn else ""
-        ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        new = not os.path.exists(log)
-        with open(log, "a", newline="") as fh:
-            w = csv.writer(fh)
-            if new:
-                w.writerow(["timestamp_utc", "stack", "region", "bucket_mode", "bucket", "phase", "deleted_by"])
-            w.writerow([ts, args.stack, region, mode, bucket or "none", "initiated", by])
-        print(f"Delete initiated and logged to {log}")
-        print("Monitor with:  python3 -m cfcleanup status")
+    arn = who.stdout.strip()
+    by = arn.rsplit("/", 1)[-1] if arn else ""
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    new = not os.path.exists(log)
+    with open(log, "a", newline="") as fh:
+        w = csv.writer(fh)
+        if new:
+            w.writerow(["timestamp_utc", "stack", "region", "bucket_mode", "bucket", "phase", "deleted_by"])
+        w.writerow([ts, stack, region, mode, bucket or "none", "initiated", by])
+    print(f"Delete initiated and logged to {log}")
+    print("Monitor with:  python3 -m cfcleanup status")
     return 0
+
+
+def resolve_region(batch: str, stack: str, given: str | None) -> str | None:
+    """Return the region to act on: the one given, else resolved from the batch."""
+    if given:
+        return given
+    region, note = _resolve_region(batch, stack)
+    if region is None:
+        print(f"ABORT: {note}")
+        return None
+    print(f"Region for '{stack}': {region} ({note})")
+    return region
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(prog="python3 -m cfcleanup delete")
+    ap.add_argument("stack")
+    ap.add_argument("region", nargs="?")
+    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--batch")
+    args = ap.parse_args(argv)
+
+    batch = cf.resolve_batch(args.batch)
+    region = resolve_region(batch, args.stack, args.region)
+    if region is None:
+        return 1
+    return perform(args.stack, region, batch, args.dry_run)

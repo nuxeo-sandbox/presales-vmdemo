@@ -5,9 +5,6 @@ Writes <batch>/<date>-cf-cleanup.xlsx. With no --batch, uses the most recent bat
 Columns (all human-owned):
   Yellow, editable: Decision, Deleted?, Notes
 
-The tool never writes this workbook. The log command reads it read-only and
-prints the Deleted?/Notes values for a human to enter by hand.
-
 Run as:
     python3 -m cfcleanup workbook [--batch NAME|DIR]
 """

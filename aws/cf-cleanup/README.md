@@ -13,39 +13,40 @@ A few things make this fiddly:
   alone.
 * Stacks are spread across many regions.
 
-Highly recommended to run this using an agent, it's designed to be driven by one
-rather than executed manually.
-
 ## Requirements
 
 * AWS CLI v2, authenticated to the presales account (hint: `aws sso login`)
 * Python 3 with `openpyxl`.
+* Run every command from the `aws/cf-cleanup/` directory so the `cfcleanup`
+  package resolves.
 
-This tooling is driven by an agent, not run by hand; see [AGENTS.md](AGENTS.md).
-It is a Python package under `cfcleanup/`, invoked as `python3 -m cfcleanup <command>`
-with the working directory at `aws/cf-cleanup/`.
+## Usage
 
-## Workflow
+### Create a Batch
 
 ```
-python3 -m cfcleanup gather               # enumerate stacks across all regions into a new batch
-python3 -m cfcleanup report               # write report.md
-python3 -m cfcleanup workbook             # write the <date>-cf-cleanup.xlsx workbook
-
-# A human reviews the workbook, sets the Decision column, and hands the agent
-# the stack ids to delete. The tooling itself never reads the workbook.
-
-python3 -m cfcleanup delete <stack> --dry-run   # preview (region auto-resolved from the batch)
-python3 -m cfcleanup delete <stack>             # empty bucket + initiate delete
-python3 -m cfcleanup status                     # poll until DELETE_COMPLETE
+./cfcleanup.sh setup
 ```
+
+Inspect `batches/<yyyy-mm-dd>-cf-cleanup-batch/<date>-cf-cleanup.xlsx`. It contains columns to track the decision (keep/delete), whether the stack was deleted, and notes.
+
+### Delete a Stack
+
+```
+./cfcleanup.sh <stack-id>
+```
+
+That one command interrogates the stack, reports what will be emptied and
+deleted, prompts `Delete <stack> (<region>)? [y/N]`, and - on `y` - empties S3,
+deletes the stack, and blocks until `DELETE_COMPLETE`. The region is resolved
+automatically from the batch.
 
 ## Batch contents
 
 A batch is one cleanup cycle. This is not an ongoing rolling list. Run it once
 and process the whole batch; if you don't finish, just start a fresh batch when
 you come back in six months. Its output lives under a dated root folder
-`batches/<yyyy-mm-dd-cf-cleanup-batch>/`, which is gitignored:
+`batches/<yyyy-mm-dd>-cf-cleanup-batch/`, which is gitignored:
 
 ```
 stacks/<region>.json   raw describe-stacks output
@@ -57,10 +58,10 @@ deletion-log.csv       audit trail
 
 ## Workbook columns
 
-* `Decision`, `Deleted?`, and `Notes` are all human-editable (highlighted yellow).
-* The tooling only *creates* the workbook (`workbook`); it never reads or writes
-  it afterward. Humans review it, decide, and hand the agent the stack ids to
-  delete. The machine-written audit trail is `deletion-log.csv`.
+* `Decision`, `Deleted?`, and `Notes` are the ones to focus on.
+* The workbook is a human review artifact: people decide from it, then run
+  `./cfcleanup.sh <stack-id>` per stack. The machine-written record of deletions
+  is `deletion-log.csv`.
 
 ## Bucket handling
 
@@ -80,8 +81,7 @@ common cause — re-run `aws sso login` and try again.
 
 Platform, automation, and AWS governance stacks (StackSets, CDKToolkit, Macie,
 route53/scheduler automation) match `INFRA_PATTERNS` in `cfcleanup/common.py`
-and appear only on the workbook's "Excluded infra" sheet. Nested
-`NestedStackNEV-*` stacks are omitted.
+and appear only on the workbook's "Excluded infra" sheet. Nested NEV stacks (those with a `NestedStackNEV-` prefix) are also omitted.
 
 # About Hyland Nuxeo
 

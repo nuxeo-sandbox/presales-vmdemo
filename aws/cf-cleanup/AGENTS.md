@@ -6,16 +6,17 @@ CloudFormation stacks, so follow the guardrails exactly.
 ## What this is
 
 A batch-based cleanup: enumerate demo stacks and produce a review workbook for
-humans to mark keep/delete. Humans review it out-of-band and hand you the stack
-ids to delete; you delete each one (emptying its S3 storage first) and record it
-in a local CSV audit trail. The tooling is a Python package (`cfcleanup/`) driven
-as `python3 -m cfcleanup <command>`. There are no shell scripts, and no human
-runs this by hand.
+humans to mark keep/delete. Humans review it out-of-band and delete each approved
+stack (emptying its S3 storage first) with `./cfcleanup.sh <stack-id>`, which is
+recorded in a local CSV audit trail. The tooling is a Python package (`cfcleanup/`)
+driven as `python3 -m cfcleanup <command>`, with a `./cfcleanup.sh` wrapper as the
+human entry point. It is human-driven; an agent, if used, just relays stack ids
+and the confirmation prompt.
 
-**The agent never reads the workbook.** The workbook is a human artifact for
-deciding what to delete. You act only on the stack ids the human gives you - you
-do not open, parse, or derive anything from the `.xlsx`. `gather`/`report`/
-`workbook` create it; `delete`/`status` operate on stack ids and the local
+**Nothing here reads the workbook.** The workbook is a human artifact for
+deciding what to delete. Deletion acts only on the stack id given - the tooling
+does not open, parse, or derive anything from the `.xlsx`. `gather`/`report`/
+`workbook` create it; `run`/`delete`/`status` operate on stack ids and the local
 deletion log. The same batch dir stays current across sessions.
 
 ## Guardrails (do not violate)
@@ -23,7 +24,7 @@ deletion log. The same batch dir stays current across sessions.
 1. **Never delete without human confirmation.** Only delete a stack the human
    has explicitly named, and always show the `--dry-run` preview and get an OK
    before the real delete. The human naming the stack id is the approval.
-2. **The agent never reads or writes the reviewed workbook.** It is human-owned.
+2. **Do not read or derive deletions from the workbook.** It is human-owned.
    Do not open, parse, or derive the delete list from the `.xlsx`; act only on
    the stack ids you are given.
 3. **Only delete the exact stack id(s) you are given.** Do not infer, expand, or
@@ -68,12 +69,20 @@ No command reads the reviewed workbook.
 
 | Step | Command | Notes |
 |---|---|---|
+| Setup | `python3 -m cfcleanup setup [--name NAME] [--regions "r1 r2 …"]` | One-shot: `gather` + `report` + `workbook`. Creates a new batch and its review workbook. |
 | Enumerate | `python3 -m cfcleanup gather [--name NAME] [--regions "r1 r2 …"]` | Creates a new batch under `batches/`. Regions are auto-discovered (every region enabled for the account); override with `--regions` or `CF_REGIONS`. |
 | Report | `python3 -m cfcleanup report [--batch B]` | Writes `report.md`. |
 | Workbook | `python3 -m cfcleanup workbook [--batch B]` | Writes `<date>-cf-cleanup.xlsx` for humans to review. |
 | Delete (preview) | `python3 -m cfcleanup delete <stack> [region] --dry-run [--batch B]` | Shows bucket + delete actions, changes nothing. Region is optional (resolved from the batch). |
 | Delete | `python3 -m cfcleanup delete <stack> [region] [--batch B]` | Empty S3 → initiate delete. Non-blocking. Appends to `deletion-log.csv`. |
 | Poll | `python3 -m cfcleanup status [--batch B] [<stack> <region>]` | Exit `3` = still in progress, `0` = done. Re-run to refresh. |
+| Run (one-shot) | `python3 -m cfcleanup run <stack> [region] [--batch B]` | Human-driven: inspect → prompt `[y/N]` → empty S3 + delete → block until `DELETE_COMPLETE`. Always prompts for confirmation. |
+
+The normal, human-driven path is the `./cfcleanup.sh` wrapper at the tool root:
+`./cfcleanup.sh <stack-id>` sets `AWS_PAGER=""` and calls `run`. A bare stack id
+routes to `run`; `gather`/`report`/`workbook`/`delete`/`status`/`run` still work
+by name. `delete` and `status` are non-blocking building blocks that `run`
+orchestrates.
 
 The `cfcleanup/s3.py` module is a helper used by the `delete` command; it is not
 invoked directly.
@@ -82,37 +91,38 @@ invoked directly.
 
 One-time setup of a batch (rare — only when starting a brand-new cleanup):
 
-1. `python3 -m cfcleanup gather` — new batch.
-2. `python3 -m cfcleanup report` and `python3 -m cfcleanup workbook`.
-3. Humans review the workbook and decide what to delete.
+1. `python3 -m cfcleanup setup` (or `./cfcleanup.sh setup`) — gather + report + workbook.
+2. Humans review the workbook and decide what to delete.
 
 Ongoing sessions (the common case):
 
+The human runs `./cfcleanup.sh <stack-id>` for each stack, which inspects,
+prompts, deletes, and monitors on its own.
+
+If an agent is asked to do it anyway:
+
 1. Confirm the account (`aws sts get-caller-identity`).
-2. The human gives you a stack id to delete. The region is optional - it is
-   resolved from the batch's gather data (with a live region scan as fallback);
-   only ask for it if resolution reports the name as ambiguous or not found.
-3. Process that **one** stack:
-   - `python3 -m cfcleanup delete <stack> --dry-run` → show the preview
-     and get confirmation.
-   - `python3 -m cfcleanup delete <stack>`.
-   - `python3 -m cfcleanup status` until the stack is `DELETE_COMPLETE`.
-   - Confirm with the human.
+2. The human gives you a stack id. The region is optional - it is resolved from
+   the batch's gather data (with a live region scan as fallback); only ask for
+   it if resolution reports the name as ambiguous or not found.
+3. Delete that **one** stack with `python3 -m cfcleanup run <stack>`. It prints
+   the inspection, waits at the `[y/N]` prompt (relay it to the human - never
+   auto-answer), then deletes and blocks until `DELETE_COMPLETE`. Do not use the
+   `--dry-run`/`delete`/`status` primitives separately unless `run` can't be used.
 4. Wait for the next stack id. Do not work ahead or infer other stacks.
 
 ## Decision values (human-facing)
 
 The workbook's `Decision` dropdown is `Keep - active engagement`,
-`Keep - generic demo`, `Delete`, `Investigate`. Humans use it to decide; the
-agent does not read it - the human tells the agent which stacks to delete.
+`Keep - generic demo`, `Delete`, `Investigate`. Humans use it to decide, then
+tell the agent which stacks to delete.
 
 ## The workbook is human-owned
 
 The reviewed workbook (`<date>-cf-cleanup.xlsx`) is created by `workbook`, then
-shared with the team and reviewed out-of-band. The agent never opens it - not to
-read and not to write. Humans decide from it and hand the agent the stack ids to
-delete. The machine-written audit trail is the batch's `deletion-log.csv`,
-appended by `delete` and `status`.
+shared with the team and reviewed out-of-band. Humans decide from it and give the
+agent the stack ids to delete. The machine-written audit trail is the batch's
+`deletion-log.csv`, appended by `delete` and `status`.
 
 ## Troubleshooting
 
