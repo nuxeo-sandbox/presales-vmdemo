@@ -38,15 +38,23 @@ is reviewed.
    before a real deletion.
 5. **One account.** Confirm `aws sts get-caller-identity` points at the intended
    presales account before gathering or deleting.
-6. **Always read the workbook fresh from disk.** It is shared with the team
-   out-of-band and edited elsewhere (see Workbook handoff). Ask the human for the
-   reviewed workbook path and pass it with `--workbook`; re-read it right
-   before every decision check; never act on `Decision`/`Deleted?` values
-   remembered from earlier in the session.
+6. **Always read the workbook fresh from disk; it changes under you.**
+   Co-workers edit the reviewed workbook live, out-of-band, so `Decision` and
+   `Deleted?` can change at any moment (see Workbook handoff). Re-read it fresh
+   from disk immediately before every action - both to pick the next stack and
+   before every decision check. Pull each stack from the workbook one at a time;
+   never build, cache, or work from a remembered list of pending stacks, and
+   never announce "the next stack" from memory. The workbook's *path* is supplied
+   once per session (set `CF_WORKBOOK`, or pass `--workbook` once) - do not
+   re-ask or re-pass it each time. "Fresh" means re-reading the file's *contents*
+   every iteration, which each command does automatically.
 7. **One stack at a time.** Fully finish a stack (`delete` → `status` to
    `DELETE_COMPLETE` → `log`) and get the human's confirmation before starting the
    next one. Never initiate multiple deletes back-to-back, even when several rows
-   are marked `Delete`. Skip any row already `Deleted? = Yes`; never re-delete.
+   are marked `Delete`. Select that next stack by re-reading the workbook fresh
+   (guardrail 6) and taking the first row with `Decision = Delete` and `Deleted?`
+   blank - not from an earlier scan. Skip any row already `Deleted? = Yes`; never
+   re-delete.
 8. **Never `--retain-resources`.** The point of deleting via CloudFormation is to
    fully clean up the resources; retaining orphans them. If a delete fails on a
    stuck resource, clear the blocker so a normal full delete succeeds (see
@@ -103,16 +111,21 @@ One-time setup of a batch (rare — only when starting a brand-new cleanup):
 Ongoing incremental sessions (the common case):
 
 1. Confirm the account (`aws sts get-caller-identity`) and the reviewed workbook
-   path; re-read the workbook fresh.
-2. Find rows where `Decision = Delete` and `Deleted?` is blank.
-3. For **one** such stack at a time:
+   path.
+2. Re-read the workbook fresh from disk and take the **first** row where
+   `Decision = Delete` and `Deleted?` is blank. That single row is the next
+   stack. The set of eligible rows changes between iterations as co-workers edit
+   the file, so do not remember it - derive it fresh every time.
+3. Process that **one** stack:
    - `python3 -m cfcleanup delete <stack> <region> --dry-run` → show the preview
      and get confirmation.
    - `python3 -m cfcleanup delete <stack> <region>`.
    - `python3 -m cfcleanup status` until the stack is `DELETE_COMPLETE`.
    - `python3 -m cfcleanup log <stack>` → it prints the `Deleted?`/`Notes` values;
      the human hand-enters them in the workbook (the tool never writes it).
-   - Confirm with the human before moving to the next stack.
+   - Confirm with the human.
+4. Go back to step 2 and re-read the workbook fresh for the next stack. Never
+   carry a pending list forward from a previous iteration.
 
 ## Decision values
 
@@ -131,12 +144,14 @@ writes this file.** `Deleted?` and `Notes` are updated by the human by hand,
 using the values the `log` command prints. The machine-written audit trail is the
 batch's `deletion-log.csv` (local, not synced), appended by `delete` and `status`.
 
-Its contents can change between steps, so:
+Its contents can change between steps - co-workers edit it live while you work -
+so:
 
 - Ask the human for the workbook path at the start of a deletion cycle. Do not
   assume a fixed location.
-- Always re-read it from disk immediately before use. Never cache `Decision`,
-  `Deleted?`, or `Notes` in the agent's own context and reason from that.
+- Always re-read it from disk immediately before use, including when selecting
+  which stack to process next. Never cache `Decision`, `Deleted?`, or `Notes` in
+  the agent's own context and reason from that.
 - Go through the commands (`check`, `delete`, `log`); each opens the file fresh
   on every call. Do not substitute values seen in an earlier view.
 - Don't hold the file open longer than a single command; an external editor may
