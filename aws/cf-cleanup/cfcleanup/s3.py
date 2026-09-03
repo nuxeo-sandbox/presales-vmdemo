@@ -80,20 +80,15 @@ def delete_batch(bucket: str, batch: list[dict]) -> None:
         raise RuntimeError(out.stderr.strip() or "delete-objects failed")
 
 
-def empty_location(bucket: str, prefix: str = "", dry_run: bool = False) -> str:
-    """Empty a bucket (or one prefix within it); return a one-line summary."""
-    loc = f"s3://{bucket}/{prefix}"
-    if not bucket_exists(bucket):
-        return f"{loc}: not found"
+def delete_all(bucket: str, items: list[dict], progress=None) -> None:
+    """Delete every given object version/marker from the bucket, in batches.
 
-    items = collect_versions(bucket, prefix)
-    if not items:
-        return f"{loc}: empty"
-
-    n = len(items)
-    if dry_run:
-        return f"{loc}: {n} object version(s)/delete-marker(s) to remove."
-
-    for i in range(0, n, 1000):
-        delete_batch(bucket, items[i : i + 1000])
-    return f"{loc}: emptied {n} item(s)."
+    If given, progress(done, total) is called before each batch of 1000, where
+    done is the running total that batch will bring the deletion to.
+    """
+    total = len(items)
+    for i in range(0, total, 1000):
+        chunk = items[i : i + 1000]
+        if progress:
+            progress(min(i + 1000, total), total)
+        delete_batch(bucket, chunk)

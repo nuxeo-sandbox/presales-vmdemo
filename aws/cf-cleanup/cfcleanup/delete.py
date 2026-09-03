@@ -30,7 +30,7 @@ from datetime import datetime, timezone
 
 from . import common as cf
 from . import gather
-from .s3 import empty_location
+from .s3 import bucket_exists, collect_versions, delete_all
 
 
 def aws_run(args: list[str]) -> subprocess.CompletedProcess:
@@ -86,14 +86,13 @@ def _resolve_region(batch: str, stack: str) -> tuple[str | None, str]:
     return None, f"'{stack}' not found in the batch or any enabled region - check the name"
 
 
-def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
-    """Interrogate the stack, empty its S3 storage, and (unless dry_run) delete it."""
-    log = os.path.join(batch, "deletion-log.csv")
-
+def inspect(stack: str, region: str, batch: str):
+    """Read the stack's S3 targets, print the report header, and return
+    (mode, targets, inspected). Returns None if the stack can't be read."""
     buckets = stack_buckets(stack, region)
     if buckets is None:
         print("ABORT: could not read the stack's resources (describe-stack-resources failed).")
-        return 1
+        return None
     mode = bucket_mode(stack, region)
     if buckets:
         s3 = "Created" if mode == "Create" else "Dedicated"
@@ -105,19 +104,35 @@ def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
     if mode == "Shared":
         targets.append((f"{region}-demo-bucket", f"{stack}/"))
 
+    inspected = []
+    for b, p in targets:
+        items = collect_versions(b, p) if bucket_exists(b) else None
+        inspected.append((b, p, items))
+
     bar = "=" * 80
-    print(f"{bar}\n{stack}\n{bar}")
+    print(f"{bar}\nDelete {stack}\n{bar}")
     print(f"Batch: {os.path.basename(batch)}")
     print(f"Region: {region}")
-    print(f"s3: {s3}")
-    print(f"=== {'Dry Run' if dry_run else 'Delete'} ===")
-    for target_bucket, target_prefix in targets:
-        print(f"Bucket: {empty_location(target_bucket, target_prefix, dry_run)}")
-    print(f"Command: aws cloudformation delete-stack --stack-name {stack} --region {region}")
+    print(f"S3: {s3}")
+    for b, p, items in inspected:
+        print(f"Bucket: s3://{b}/{p}")
+        print("Objects: bucket not found" if items is None else f"Objects: {len(items)} to delete")
+    return mode, targets, inspected
 
-    if dry_run:
-        return 0
 
+def execute(stack: str, region: str, batch: str, mode: str, targets, inspected) -> int:
+    """Empty the inspected S3 targets and initiate the stack deletion."""
+    log = os.path.join(batch, "deletion-log.csv")
+
+    print()
+    print("=== Starting Deletion ===")
+    for b, _, items in inspected:
+        if items:
+            total = len(items)
+            print("Deleting objects...", flush=True)
+            delete_all(b, items, progress=lambda done, tot: print(f"  deleting {done}/{tot}", flush=True))
+            print(f"...{total} objects deleted")
+    print("Deleting stack...")
     r = subprocess.run(
         ["aws", "cloudformation", "delete-stack", "--stack-name", stack, "--region", region]
     )
@@ -134,8 +149,23 @@ def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
             w.writerow(["timestamp_utc", "stack", "region", "bucket_mode", "bucket", "phase", "deleted_by"])
         w.writerow([ts, stack, region, mode,
                     ";".join(b for b, _ in targets) or "none", "initiated", by])
-    print(f"Monitor: python3 -m cfcleanup status {stack} {region}")
     return 0
+
+
+def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
+    """Interrogate the stack, empty its S3 storage, and (unless dry_run) delete it."""
+    result = inspect(stack, region, batch)
+    if result is None:
+        return 1
+    mode, targets, inspected = result
+
+    if dry_run:
+        print()
+        print("=== Dry Run ===")
+        print(f"Command: aws cloudformation delete-stack --stack-name {stack} --region {region}")
+        return 0
+
+    return execute(stack, region, batch, mode, targets, inspected)
 
 
 def resolve_region(batch: str, stack: str, given: str | None) -> str | None:
@@ -161,4 +191,7 @@ def main(argv: list[str] | None = None) -> int:
     region = resolve_region(batch, args.stack, args.region)
     if region is None:
         return 1
-    return perform(args.stack, region, batch, args.dry_run)
+    rc = perform(args.stack, region, batch, args.dry_run)
+    if rc == 0 and not args.dry_run:
+        print(f"Monitor: python3 -m cfcleanup status {args.stack} {region}")
+    return rc

@@ -11,6 +11,7 @@ Run as:
 from __future__ import annotations
 
 import argparse
+import os
 import time
 from datetime import date
 
@@ -33,13 +34,13 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     # 1. Interrogate and report (inspection only - changes nothing).
-    rc = delete.perform(args.stack, region, batch, dry_run=True)
-    if rc != 0:
-        return rc
+    result = delete.inspect(args.stack, region, batch)
+    if result is None:
+        return 1
 
     # 2. Prompt for execution (always interactive).
     try:
-        answer = input(f"\nDelete {args.stack} ({region})? [y/N] ").strip().lower()
+        answer = input(f"\nReady to delete {args.stack}? [y/N] ").strip().lower()
     except EOFError:
         answer = ""
     if answer not in ("y", "yes"):
@@ -47,19 +48,21 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     # 3. Execute.
-    rc = delete.perform(args.stack, region, batch, dry_run=False)
+    mode, targets, inspected = result
+    rc = delete.execute(args.stack, region, batch, mode, targets, inspected)
     if rc != 0:
         return rc
 
     # 4. Monitor until the stack is gone.
-    print("\nMonitoring the deletion ...")
-    status_args = (["--batch", args.batch] if args.batch else []) + [args.stack, region]
-    while status.main(status_args) == 3:
+    log = os.path.join(batch, "deletion-log.csv")
+    while True:
+        st = status.stack_status(args.stack, region)
+        print(f"  {args.stack} {st}")
+        if st == "DELETE_COMPLETE":
+            status.append_complete(log, args.stack, region)
+            print(f"...Stack {args.stack} Deleted {date.today().isoformat()}")
+            return 0
+        if st == "NOT_FOUND" or st.endswith("FAILED") or st.startswith("ERROR"):
+            print(f"...{args.stack} {st}")
+            return 1
         time.sleep(POLL_SECONDS)
-
-    final = status.stack_status(args.stack, region)
-    if final == "DELETE_COMPLETE":
-        print(f"\n{args.stack} Deleted {date.today().isoformat()}")
-        return 0
-    print(f"\n{args.stack}: {final}")
-    return 1
