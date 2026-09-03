@@ -8,10 +8,9 @@ NON-BLOCKING: empties the bucket (fast), then initiates the stack delete and
 returns immediately. It does NOT wait for DELETE_COMPLETE. Poll with the
 status command.
 
-Bucket modes (from aws/cf-templates/Nuxeo.template UseS3Bucket):
-    Create -> dedicated bucket "<stack>-bucket"      (whole bucket emptied)
-    Shared -> shared bucket   "<region>-demo-bucket" (only "<stack>/" folder)
-    None   -> no bucket
+The stack's own S3 buckets (its AWS::S3::Bucket resources) are emptied entirely.
+When the stack's UseS3Bucket parameter is "Shared", its "<stack>/" folder in the
+shared bucket "<region>-demo-bucket" is emptied too.
 
 Requires: awscli v2, authenticated to the target account.
 
@@ -36,6 +35,34 @@ from .s3 import empty_location
 
 def aws_run(args: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(["aws", *args], capture_output=True, text=True)
+
+
+def stack_buckets(stack: str, region: str) -> list[str] | None:
+    """Physical names of the stack's own S3 buckets; None if resources can't be read."""
+    out = aws_run(
+        [
+            "cloudformation", "describe-stack-resources", "--stack-name", stack,
+            "--region", region,
+            "--query", "StackResources[?ResourceType=='AWS::S3::Bucket'].PhysicalResourceId",
+            "--output", "text",
+        ]
+    )
+    if out.returncode != 0:
+        return None
+    return out.stdout.split()
+
+
+def bucket_mode(stack: str, region: str) -> str:
+    """The stack's UseS3Bucket parameter value ('Create'/'Shared'/'None')."""
+    out = aws_run(
+        [
+            "cloudformation", "describe-stacks", "--stack-name", stack,
+            "--region", region,
+            "--query", "Stacks[0].Parameters[?ParameterKey=='UseS3Bucket'].ParameterValue | [0]",
+            "--output", "text",
+        ]
+    )
+    return out.stdout.strip() or "None"
 
 
 def _resolve_region(batch: str, stack: str) -> tuple[str | None, str]:
@@ -69,37 +96,22 @@ def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
     label = "Inspecting" if dry_run else "Deleting"
     print(f"=== {label} stack: {stack} ({region})   [batch: {os.path.basename(batch)}] ===")
 
-    # 1. Read the bucket mode. A missing UseS3Bucket parameter reads back as "None".
-    params = aws_run(
-        [
-            "cloudformation", "describe-stacks", "--stack-name", stack,
-            "--region", region,
-            "--query", "Stacks[0].Parameters[?ParameterKey=='UseS3Bucket'].ParameterValue | [0]",
-            "--output", "text",
-        ]
-    )
-    if params.returncode != 0:
-        print("ABORT: could not read the stack's bucket mode (describe-stacks failed).")
-        err = (params.stderr or "").strip()
-        if err:
-            print(f"  aws error: {err}")
+    # 1. Empty the stack's own S3 buckets (from its resources), plus its folder in
+    # the shared bucket when it is configured to use one.
+    buckets = stack_buckets(stack, region)
+    if buckets is None:
+        print("ABORT: could not read the stack's resources (describe-stack-resources failed).")
         return 1
-    mode = params.stdout.strip() or "None"
-    print(f"UseS3Bucket = {mode}")
+    mode = bucket_mode(stack, region)
+    targets = [(b, "") for b in buckets]
+    if mode == "Shared":
+        targets.append((f"{region}-demo-bucket", f"{stack}/"))
 
-    bucket = prefix = ""
-    if mode == "Create":
-        bucket = f"{stack}-bucket"
-    elif mode == "Shared":
-        bucket, prefix = f"{region}-demo-bucket", f"{stack}/"
-    elif mode == "None":
-        print("No bucket to empty.")
-    else:
-        print(f"WARNING: unknown/missing bucket mode ('{mode}'); skipping bucket emptying.")
-
-    # 2. Empty the bucket (or just the stack's folder in the shared bucket).
-    if bucket:
-        empty_location(bucket, prefix, dry_run)
+    # 2. Empty each target.
+    if not targets:
+        print("No S3 storage to empty.")
+    for target_bucket, target_prefix in targets:
+        empty_location(target_bucket, target_prefix, dry_run)
 
     # 3. Initiate stack deletion. NON-BLOCKING: returns immediately.
     if dry_run:
@@ -121,7 +133,8 @@ def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
         w = csv.writer(fh)
         if new:
             w.writerow(["timestamp_utc", "stack", "region", "bucket_mode", "bucket", "phase", "deleted_by"])
-        w.writerow([ts, stack, region, mode, bucket or "none", "initiated", by])
+        w.writerow([ts, stack, region, mode,
+                    ";".join(b for b, _ in targets) or "none", "initiated", by])
     print(f"Delete initiated and logged to {log}")
     print(f"Monitor with:  python3 -m cfcleanup status {stack} {region}")
     return 0

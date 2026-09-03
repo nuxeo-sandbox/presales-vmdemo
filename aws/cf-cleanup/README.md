@@ -73,12 +73,11 @@ deletion-log.csv       audit trail
 
 ## Bucket handling
 
-The `delete` command reads each stack's `UseS3Bucket` parameter and empties the
-right location before deleting:
+Before deleting, `delete` empties the S3 storage the stack uses:
 
-* `Create`: dedicated bucket `<stack>-bucket` (emptied entirely)
-* `Shared`: shared bucket `<region>-demo-bucket`, only the `<stack>/` folder
-* `None`: no bucket
+* Any bucket the stack owns (its `AWS::S3::Bucket` resources) is emptied entirely.
+* When the stack's `UseS3Bucket` parameter is `Shared`, its `<stack>/` folder in
+  the shared bucket `<region>-demo-bucket` is emptied too.
 
 ## Excluded stacks
 
