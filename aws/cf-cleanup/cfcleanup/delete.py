@@ -87,35 +87,35 @@ def _resolve_region(batch: str, stack: str) -> tuple[str | None, str]:
 
 
 def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
-    """Interrogate the stack, empty its S3 storage, and (unless dry_run) delete it.
-
-    With dry_run=True this only inspects and reports what would happen - it
-    changes nothing. Shared by the `delete` and `run` commands.
-    """
+    """Interrogate the stack, empty its S3 storage, and (unless dry_run) delete it."""
     log = os.path.join(batch, "deletion-log.csv")
-    label = "Inspecting" if dry_run else "Deleting"
-    print(f"=== {label} stack: {stack} ({region})   [batch: {os.path.basename(batch)}] ===")
 
-    # 1. Empty the stack's own S3 buckets (from its resources), plus its folder in
-    # the shared bucket when it is configured to use one.
     buckets = stack_buckets(stack, region)
     if buckets is None:
         print("ABORT: could not read the stack's resources (describe-stack-resources failed).")
         return 1
     mode = bucket_mode(stack, region)
+    if buckets:
+        s3 = "Created" if mode == "Create" else "Dedicated"
+    elif mode == "Shared":
+        s3 = "Shared"
+    else:
+        s3 = "None"
     targets = [(b, "") for b in buckets]
     if mode == "Shared":
         targets.append((f"{region}-demo-bucket", f"{stack}/"))
 
-    # 2. Empty each target.
-    if not targets:
-        print("No S3 storage to empty.")
+    bar = "=" * 80
+    print(f"{bar}\n{stack}\n{bar}")
+    print(f"Batch: {os.path.basename(batch)}")
+    print(f"Region: {region}")
+    print(f"s3: {s3}")
+    print(f"=== {'Dry Run' if dry_run else 'Delete'} ===")
     for target_bucket, target_prefix in targets:
-        empty_location(target_bucket, target_prefix, dry_run)
+        print(f"Bucket: {empty_location(target_bucket, target_prefix, dry_run)}")
+    print(f"Command: aws cloudformation delete-stack --stack-name {stack} --region {region}")
 
-    # 3. Initiate stack deletion. NON-BLOCKING: returns immediately.
     if dry_run:
-        print(f"DRY-RUN> aws cloudformation delete-stack --stack-name {stack} --region {region}")
         return 0
 
     r = subprocess.run(
@@ -124,7 +124,6 @@ def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
     if r.returncode != 0:
         return r.returncode
 
-    # 4. Append the deletion to the log.
     who = aws_run(["sts", "get-caller-identity", "--query", "Arn", "--output", "text"])
     by = who.stdout.strip().rsplit("/", 1)[-1] if who.returncode == 0 else ""
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -135,8 +134,7 @@ def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
             w.writerow(["timestamp_utc", "stack", "region", "bucket_mode", "bucket", "phase", "deleted_by"])
         w.writerow([ts, stack, region, mode,
                     ";".join(b for b, _ in targets) or "none", "initiated", by])
-    print(f"Delete initiated and logged to {log}")
-    print(f"Monitor with:  python3 -m cfcleanup status {stack} {region}")
+    print(f"Monitor: python3 -m cfcleanup status {stack} {region}")
     return 0
 
 
@@ -148,7 +146,6 @@ def resolve_region(batch: str, stack: str, given: str | None) -> str | None:
     if region is None:
         print(f"ABORT: {note}")
         return None
-    print(f"Region for '{stack}': {region} ({note})")
     return region
 
 

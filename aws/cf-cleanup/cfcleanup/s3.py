@@ -2,9 +2,6 @@
 markers under a bucket (optionally restricted to a key prefix / "folder").
 
 Shells out to the AWS CLI.
-
-Exits 0 on success (including when nothing needed deleting or the bucket is
-missing), non-zero only on an actual error.
 """
 from __future__ import annotations
 
@@ -83,24 +80,20 @@ def delete_batch(bucket: str, batch: list[dict]) -> None:
         raise RuntimeError(out.stderr.strip() or "delete-objects failed")
 
 
-def empty_location(bucket: str, prefix: str = "", dry_run: bool = False) -> int:
-    """Empty a bucket (or one prefix within it); return 0 on success."""
+def empty_location(bucket: str, prefix: str = "", dry_run: bool = False) -> str:
+    """Empty a bucket (or one prefix within it); return a one-line summary."""
     loc = f"s3://{bucket}/{prefix}"
     if not bucket_exists(bucket):
-        print(f"Bucket {bucket} not found (already gone?); nothing to empty.")
-        return 0
+        return f"{loc}: not found"
 
     items = collect_versions(bucket, prefix)
     if not items:
-        print(f"{loc}: already empty (0 objects/versions).")
-        return 0
+        return f"{loc}: empty"
 
-    print(f"{loc}: {len(items)} object version(s)/delete-marker(s) to remove.")
+    n = len(items)
     if dry_run:
-        print(f"DRY-RUN> would delete {len(items)} item(s) from {loc}")
-        return 0
+        return f"{loc}: {n} object version(s)/delete-marker(s) to remove."
 
-    for i in range(0, len(items), 1000):
+    for i in range(0, n, 1000):
         delete_batch(bucket, items[i : i + 1000])
-    print(f"Emptied {loc} ({len(items)} item(s) deleted).")
-    return 0
+    return f"{loc}: emptied {n} item(s)."
