@@ -45,7 +45,7 @@ deleted, and notes.
 ```
 
 That one command interrogates the stack, reports what will be emptied and
-deleted, prompts `Delete <stack> (<region>)? [y/N]`, and - on `y` - empties S3,
+deleted, prompts `Ready to delete <stack>? [y/N]`, and - on `y` - empties S3,
 deletes the stack, and blocks until `DELETE_COMPLETE`. The region is resolved
 automatically from the batch.
 

@@ -141,7 +141,7 @@ If the instance that used it is already `DELETE_COMPLETE`, the SG is usually
 already gone too. If it still exists, delete it by its `sg-…` id and re-run
 `delete-stack`. If it is already gone, you cannot delete it to unblock and a plain
 retry re-hits the same by-name error - surface this to the human rather than
-silently retaining (see guardrail 8).
+silently retaining (see guardrail 7).
 
 ## Batch layout
 
