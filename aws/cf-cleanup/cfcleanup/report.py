@@ -40,7 +40,7 @@ def main(argv: list[str] | None = None) -> int:
     L.append(
         f"Account **{account}** \u00b7 generated {now.date()} \u00b7 "
         f"**{len(demo)} Nuxeo demo/customer stacks** "
-        f"(plus {len(infra)} platform/infra stacks excluded \u2014 see appendix)"
+        f"(plus {len(infra)} platform/infra stacks excluded - see appendix)"
     )
     L.append("")
 
@@ -78,10 +78,10 @@ def main(argv: list[str] | None = None) -> int:
             )
         L.append("")
 
-    L.append("## Appendix \u2014 excluded platform & automation stacks")
+    L.append("## Appendix - excluded platform & automation stacks")
     L.append("")
     L.append(
-        "These are AWS governance and presales-platform automation stacks \u2014 not Nuxeo "
+        "These are AWS governance and presales-platform automation stacks - not Nuxeo "
         "demo/customer environments. They are **kept in place** and excluded from the cleanup "
         "tables above."
     )

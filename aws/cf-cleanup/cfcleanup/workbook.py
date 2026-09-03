@@ -181,7 +181,7 @@ def main(argv: list[str] | None = None) -> int:
         (f"Account {account}  |  generated {now.date()}", False),
         ("", False),
         (f"{nrows} Nuxeo demo/customer stacks are listed on the 'Cleanup' tab.", False),
-        ("Nested (NestedStackNEV-*) stacks are omitted \u2014 deleted with their parent.", False),
+        ("Nested (NestedStackNEV-*) stacks are omitted - deleted with their parent.", False),
         (f"{len(infra_by_name)} platform/automation stacks are on 'Excluded infra'", False),
         ("(kept in place, not for deletion).", False),
         ("", False),
@@ -194,7 +194,7 @@ def main(argv: list[str] | None = None) -> int:
         ("  stamp the tooling prints for you when a stack is removed.", False),
         ("\u2022 Use the header filters to sort by Region, Age, Class, or Owner.", False),
         ("\u2022 Age colouring: red >12mo, orange 6-12mo, green <6mo.", False),
-        ("\u2022 Default is deletion \u2014 anything left without a 'Keep' will be removed.", False),
+        ("\u2022 Default is deletion - anything left without a 'Keep' will be removed.", False),
     ]
     for i, (text, bold) in enumerate(readme, start=1):
         c = ws3.cell(row=i, column=1, value=text)

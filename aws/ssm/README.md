@@ -4,7 +4,7 @@ AWS Systems Manager documents for maintaining and remediating existing demo inst
 
 # Documents
 
-- `pin-lts-kernel.ssm.yaml` — Temporary workaround. Pins Ubuntu 24.04 hosts to the 6.8 GA-LTS kernel so MongoDB 8.0.x keeps working, without freezing kernel security updates. It downloads and runs the same pin script used by the AMI build, so new and existing instances stay consistent, and can be enforced continuously via a State Manager association. This is the "existing instances" half of the MongoDB kernel workaround and should be removed once the upstream issue ([MongoDB SERVER-131779](https://jira.mongodb.org/browse/SERVER-131779)) is fixed.
+- `pin-lts-kernel.ssm.yaml` - Temporary workaround. Pins Ubuntu 24.04 hosts to the 6.8 GA-LTS kernel so MongoDB 8.0.x keeps working, without freezing kernel security updates. It downloads and runs the same pin script used by the AMI build, so new and existing instances stay consistent, and can be enforced continuously via a State Manager association. This is the "existing instances" half of the MongoDB kernel workaround and should be removed once the upstream issue ([MongoDB SERVER-131779](https://jira.mongodb.org/browse/SERVER-131779)) is fixed.
 
 # About Hyland Nuxeo
 

@@ -4,9 +4,9 @@ Serverless automation for the presales demo fleet. Each subfolder is a self-cont
 
 # Functions
 
-- `scheduled-ec2-instances-start` — Starts instances on a daily schedule (e.g. Mon–Fri, 06:00 UTC). Only instances whose `startDailyUntil` tag is empty or set to a future ISO date are started.
-- `scheduled-ec2-instances-stop` — Stops instances on a schedule.
-- `route-53-auto-update` — Keeps Route 53 records in sync, updating an instance's DNS record when it is started or stopped.
+- `scheduled-ec2-instances-start` - Starts instances on a daily schedule (e.g. Mon-Fri, 06:00 UTC). Only instances whose `startDailyUntil` tag is empty or set to a future ISO date are started.
+- `scheduled-ec2-instances-stop` - Stops instances on a schedule.
+- `route-53-auto-update` - Keeps Route 53 records in sync, updating an instance's DNS record when it is started or stopped.
 
 Note: the workmail-related resources are from an experiment in automatic creation of email accounts for demos. The exercise is incomplete. Consider these stale.
 

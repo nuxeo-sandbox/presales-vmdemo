@@ -1,4 +1,4 @@
-# AGENTS.md — CloudFormation Demo Stack Cleanup
+# AGENTS.md - CloudFormation Demo Stack Cleanup
 
 Operating guide for an agent driving this tooling. It deletes AWS
 CloudFormation stacks, so follow the guardrails exactly.
@@ -41,13 +41,13 @@ deletion log. The same batch dir stays current across sessions.
 7. **Never `--retain-resources`.** The point of deleting via CloudFormation is to
    fully clean up the resources; retaining orphans them. If a delete fails on a
    stuck resource, clear the blocker so a normal full delete succeeds (see
-   Troubleshooting) — do not fall back to retain. (A retain is only ever
+   Troubleshooting) - do not fall back to retain. (A retain is only ever
    acceptable as an explicit, human-authorized one-off when the resource is
    already verified gone and retaining orphans nothing; do not generalize it.)
 8. **Never regenerate a real batch's workbook or report.** The `.xlsx` holds the
    team's hand-entered `Decision` values and hand-tuned formatting, and there is
    no backup. Do not run `gather`/`workbook`/`report` against a live batch to
-   "refresh" or test — it overwrites those edits. To test code changes, build a
+   "refresh" or test - it overwrites those edits. To test code changes, build a
    disposable throwaway batch and run against `--batch <that>`.
 
 ## Preconditions
@@ -60,7 +60,7 @@ deletion log. The same batch dir stays current across sessions.
   once before any `aws` command. Otherwise the CLI opens `less` (the terminal's
   alternate screen) and an automation-driven terminal hangs, with later commands
   piling up behind the stuck pager. Per-command flags like `--no-cli-pager` do not
-  recover a terminal that is already stuck — open a new shell and export it there.
+  recover a terminal that is already stuck - open a new shell and export it there.
 
 ## Commands
 
@@ -90,9 +90,9 @@ invoked directly.
 
 ## Typical run
 
-One-time setup of a batch (rare — only when starting a brand-new cleanup):
+One-time setup of a batch (rare - only when starting a brand-new cleanup):
 
-1. `python3 -m cfcleanup setup` (or `./cfcleanup.sh setup`) — gather + report + workbook.
+1. `python3 -m cfcleanup setup` (or `./cfcleanup.sh setup`) - gather + report + workbook.
 2. Humans review the workbook and decide what to delete.
 
 Ongoing sessions (the common case):
@@ -140,7 +140,7 @@ VPC). First check whether the SG even still exists:
 If the instance that used it is already `DELETE_COMPLETE`, the SG is usually
 already gone too. If it still exists, delete it by its `sg-…` id and re-run
 `delete-stack`. If it is already gone, you cannot delete it to unblock and a plain
-retry re-hits the same by-name error — surface this to the human rather than
+retry re-hits the same by-name error - surface this to the human rather than
 silently retaining (see guardrail 8).
 
 ## Batch layout

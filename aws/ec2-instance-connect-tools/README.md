@@ -6,16 +6,16 @@ Tooling required to reach the presales demo servers, which are only accessible v
 
 Wrappers around the AWS CLI that resolve an instance identifier (ID, Name, dnsName, or host) to an instance and act on it. All accept `-p <profile>` and `-r <region>`; run any script with no arguments to see full usage.
 
-- `nxpssh.sh` — SSH into an instance, or `scp` files to/from it (`-d` to download instead of upload, `-u` to override the default `ubuntu` OS user).
-- `nxpstart.sh` — Start a stopped instance.
-- `nxpstop.sh` — Stop a running instance.
+- `nxpssh.sh` - SSH into an instance, or `scp` files to/from it (`-d` to download instead of upload, `-u` to override the default `ubuntu` OS user).
+- `nxpstart.sh` - Start a stopped instance.
+- `nxpstop.sh` - Stop a running instance.
 
 # ssh-config
 
 Drop-in SSH client configuration that makes plain `ssh` and `scp` tunnel through an EC2 Instance Connect Endpoint, so a host matching an Instance ID (`i-*`) connects without a bastion or a permanent key. Provided for both platforms; use the copy matching your OS.
 
-- `unix/config` and `windows/config` — SSH config snippets to add to your `~/.ssh/config` (matches `i-*` hosts and routes them through the proxy).
-- `unix/aws-proxy.sh` and `windows/aws-proxy.bat` — Proxy helper invoked by the SSH config that pushes an ephemeral key and opens the EICE tunnel. Referenced by the config; not run directly.
+- `unix/config` and `windows/config` - SSH config snippets to add to your `~/.ssh/config` (matches `i-*` hosts and routes them through the proxy).
+- `unix/aws-proxy.sh` and `windows/aws-proxy.bat` - Proxy helper invoked by the SSH config that pushes an ephemeral key and opens the EICE tunnel. Referenced by the config; not run directly.
 
 # About Hyland Nuxeo
 
