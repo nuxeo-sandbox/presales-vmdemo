@@ -33,6 +33,11 @@ def main(argv: list[str] | None = None) -> int:
     if region is None:
         return 1
 
+    # Header first (local data only), then the session check, then AWS work.
+    delete.print_header(args.stack, batch, region)
+    if not cf.ensure_session():
+        return 1
+
     # 1. Interrogate and report (inspection only - changes nothing).
     result = delete.inspect(args.stack, region, batch)
     if result is None:
@@ -57,7 +62,7 @@ def main(argv: list[str] | None = None) -> int:
     log = os.path.join(batch, "deletion-log.csv")
     while True:
         st = status.stack_status(args.stack, region)
-        print(f"  {args.stack} {st}")
+        print(f"  {args.stack} {st}", flush=True)
         if st == "DELETE_COMPLETE":
             status.append_complete(log, args.stack, region)
             print(f"...Stack {args.stack} Deleted {date.today().isoformat()}")

@@ -28,8 +28,9 @@ COMMANDS = {
     "run": run.main,
 }
 
-# Commands that hit AWS; the session is validated once before these run.
-AWS_COMMANDS = {"setup", "gather", "delete", "status", "run"}
+# Commands that hit AWS but self-manage their session check (so they can print
+# a header first). The rest are validated once here before they run.
+AWS_COMMANDS = {"setup", "gather", "status"}
 
 
 def usage() -> str:

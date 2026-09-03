@@ -76,6 +76,7 @@ def _resolve_region(batch: str, stack: str) -> tuple[str | None, str]:
         return regions[0], "from batch data"
     if len(regions) > 1:
         return None, f"ambiguous - '{stack}' appears in {regions}; pass the region explicitly"
+    print(f"'{stack}' not in batch data - scanning enabled regions...", flush=True)
     for region in gather.discover_regions():
         got = aws_run(
             ["cloudformation", "describe-stacks", "--stack-name", stack, "--region", region,
@@ -86,9 +87,22 @@ def _resolve_region(batch: str, stack: str) -> tuple[str | None, str]:
     return None, f"'{stack}' not found in the batch or any enabled region - check the name"
 
 
+def print_header(stack: str, batch: str, region: str) -> None:
+    """Print the report header. Uses only local data so it shows instantly,
+    before any AWS round-trip."""
+    bar = "=" * 80
+    print(f"{bar}\nDelete {stack}\n{bar}")
+    print(f"Batch: {os.path.basename(batch)}")
+    print(f"Region: {region}", flush=True)
+
+
 def inspect(stack: str, region: str, batch: str):
-    """Read the stack's S3 targets, print the report header, and return
-    (mode, targets, inspected). Returns None if the stack can't be read."""
+    """Read the stack's S3 targets, print the S3 lines, and return
+    (mode, targets, inspected). Returns None if the stack can't be read.
+
+    The header (print_header) is expected to have been printed already; the
+    S3/Bucket/Objects lines here stream out as each value resolves.
+    """
     buckets = stack_buckets(stack, region)
     if buckets is None:
         print("ABORT: could not read the stack's resources (describe-stack-resources failed).")
@@ -100,23 +114,18 @@ def inspect(stack: str, region: str, batch: str):
         s3 = "Shared"
     else:
         s3 = "None"
+    print(f"S3: {s3}", flush=True)
+
     targets = [(b, "") for b in buckets]
     if mode == "Shared":
         targets.append((f"{region}-demo-bucket", f"{stack}/"))
 
     inspected = []
     for b, p in targets:
+        print(f"Bucket: s3://{b}/{p}", flush=True)
         items = collect_versions(b, p) if bucket_exists(b) else None
+        print("Objects: bucket not found" if items is None else f"Objects: {len(items)} to delete", flush=True)
         inspected.append((b, p, items))
-
-    bar = "=" * 80
-    print(f"{bar}\nDelete {stack}\n{bar}")
-    print(f"Batch: {os.path.basename(batch)}")
-    print(f"Region: {region}")
-    print(f"S3: {s3}")
-    for b, p, items in inspected:
-        print(f"Bucket: s3://{b}/{p}")
-        print("Objects: bucket not found" if items is None else f"Objects: {len(items)} to delete")
     return mode, targets, inspected
 
 
@@ -125,14 +134,14 @@ def execute(stack: str, region: str, batch: str, mode: str, targets, inspected) 
     log = os.path.join(batch, "deletion-log.csv")
 
     print()
-    print("=== Starting Deletion ===")
+    print("=== Starting Deletion ===", flush=True)
     for b, _, items in inspected:
         if items:
             total = len(items)
             print("Deleting objects...", flush=True)
             delete_all(b, items, progress=lambda done, tot: print(f"  deleting {done}/{tot}", flush=True))
-            print(f"...{total} objects deleted")
-    print("Deleting stack...")
+            print(f"...{total} objects deleted", flush=True)
+    print("Deleting stack...", flush=True)
     r = subprocess.run(
         ["aws", "cloudformation", "delete-stack", "--stack-name", stack, "--region", region]
     )
@@ -190,6 +199,9 @@ def main(argv: list[str] | None = None) -> int:
     batch = cf.resolve_batch(args.batch)
     region = resolve_region(batch, args.stack, args.region)
     if region is None:
+        return 1
+    print_header(args.stack, batch, region)
+    if not cf.ensure_session():
         return 1
     rc = perform(args.stack, region, batch, args.dry_run)
     if rc == 0 and not args.dry_run:
