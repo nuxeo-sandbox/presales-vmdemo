@@ -189,12 +189,11 @@ def main(argv: list[str] | None = None) -> int:
         ("\u2022 Fill the yellow column: Decision.", False),
         ("\u2022 Decision options: Keep - active engagement / Keep - generic demo /", False),
         ("  Delete / Investigate (dropdown).", False),
-        ("\u2022 Deleted?: set it to Yes yourself once the tooling reports DELETE_COMPLETE.", False),
-        ("\u2022 Notes is free-form: add your own remarks and the \"Deleted YYYY-MM-DD\"", False),
-        ("  stamp the tooling prints for you when a stack is removed.", False),
+        ("\u2022 Deleted?: set it to Yes once the stack is deleted.", False),
+        ("\u2022 Notes: add your own remarks; useful to add \"Deleted YYYY-MM-DD\"", False),
+        (" when a stack is removed.", False),
         ("\u2022 Use the header filters to sort by Region, Age, Class, or Owner.", False),
-        ("\u2022 Age colouring: red >12mo, orange 6-12mo, green <6mo.", False),
-        ("\u2022 Default is deletion - anything left without a 'Keep' will be removed.", False),
+        ("\u2022 Age coloring: red >12mo, orange 6-12mo, green <6mo.", False),
     ]
     for i, (text, bold) in enumerate(readme, start=1):
         c = ws3.cell(row=i, column=1, value=text)
