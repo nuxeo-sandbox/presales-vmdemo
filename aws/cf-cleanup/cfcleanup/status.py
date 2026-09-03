@@ -12,6 +12,7 @@ import argparse
 import csv
 import os
 import subprocess
+from datetime import datetime, timezone
 
 from . import common as cf
 
@@ -48,19 +49,20 @@ def _deleted_in_history(stack: str, region: str) -> bool:
     return out.returncode == 0 and stack in out.stdout.split()
 
 
-def mark_complete(log: str, stack: str) -> None:
+def append_complete(log: str, stack: str, region: str) -> None:
+    """Append a 'complete' event for the stack (once, if it was initiated)."""
     if not os.path.exists(log):
         return
     rows = list(csv.reader(open(log)))
     hdr, body = rows[0], rows[1:]
-    pi, si = hdr.index("phase"), hdr.index("stack")
-    for r in body:
-        if r[si] == stack and r[pi] == "initiated":
-            r[pi] = "complete"
-    with open(log, "w", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(hdr)
-        w.writerows(body)
+    si, pi = hdr.index("stack"), hdr.index("phase")
+    initiated = any(r[si] == stack and r[pi] == "initiated" for r in body)
+    completed = any(r[si] == stack and r[pi] == "complete" for r in body)
+    if not initiated or completed:
+        return
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    with open(log, "a", newline="") as f:
+        csv.writer(f).writerow([ts, stack, region, "", "", "complete", ""])
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -78,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{args.stack:<32} {args.region:<15} not found")
         return 0
     if st == "DELETE_COMPLETE":
-        mark_complete(log, args.stack)
+        append_complete(log, args.stack, args.region)
     print(f"{args.stack:<32} {args.region:<15} {st}")
     if st == "DELETE_COMPLETE" or st.endswith("FAILED"):
         return 0
