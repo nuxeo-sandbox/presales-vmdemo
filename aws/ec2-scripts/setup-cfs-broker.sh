@@ -132,8 +132,8 @@ cat << EOF | tee -a ${INSTALL_LOG}
 ${LOG_PREFIX} HOST PREP COMPLETE.
 
 NEXT STEPS (manual, run as the 'ubuntu' user):
-  1. Copy the CF Broker OCI image tarball (from Hyland Community) to ${BROKER_DIR}.
-     e.g. from your laptop:  nxpssh.sh -u ubuntu <name> :  scp broker.tar.gz to the host
+  1. Copy the CF Broker OCI image tarball (from Hyland Community) to ${BROKER_DIR}
+     from your laptop using nxpssh.sh.
   2. cd ${BROKER_DIR} && docker load -i <broker-oci-image.tar.gz>
   3. docker images --no-trunc   # copy the sha256:... id
   4. Edit ${BROKER_DIR}/.env :
