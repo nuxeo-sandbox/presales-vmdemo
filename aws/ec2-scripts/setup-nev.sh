@@ -4,19 +4,18 @@
 # You can tail -F /var/log/nev_install.log to see basic install progress
 # You can tail -F /var/log/syslog to see the full startup and check for errors
 
-# Start of installation script
-
-echo "Nuxeo Presales Installation Script (NPIS): Starting [${STACK_ID}]" > ${INSTALL_LOG}
-
 source /etc/profile.d/load_env.sh
 
 # Variables for installation
 INSTALL_LOG="/var/log/nev_install.log"
+LOG_PREFIX="NPIS:"
 
 COMPOSE_REPO="https://github.com/nuxeo-sandbox/nuxeo-presales-nev"
 COMPOSE_DIR="/home/ubuntu/nuxeo-presales-nev"
-
 NEV_ENV="${COMPOSE_DIR}/.env"
+
+# Start of installation script
+echo "Nuxeo Presales Installation Script (NPIS): Starting [${STACK_ID}]" > ${INSTALL_LOG}
 
 # Check DNS Name
 if [ -z "${RESOURCE_PREFIX}" ]; then
@@ -33,14 +32,14 @@ hostname ${RESOURCE_PREFIX}
 echo "Domains=cloud.nuxeo.com" >> /etc/systemd/resolved.conf
 
 #== Install NEV Tooling ========================================================
-echo "NPIS: Install NEV Tooling" | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Install NEV Tooling" | tee -a ${INSTALL_LOG}
 
 # Make directories and clone compose stack
 mkdir -p ${COMPOSE_DIR}
 git clone ${COMPOSE_REPO} ${COMPOSE_DIR}
 
 #== Install NEV ================================================================
-echo "NPIS: Install NEV" | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Install NEV" | tee -a ${INSTALL_LOG}
 
 # Home required by 'docker'
 export HOME="/home/ubuntu"
@@ -76,20 +75,20 @@ chown -R ubuntu:ubuntu ${COMPOSE_DIR} ${HOME}/.docker
 cd ${COMPOSE_DIR}
 
 #  Pull images
-echo "NPIS: Pulling images..." | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Pulling images..." | tee -a ${INSTALL_LOG}
 docker compose --ansi never pull | tee -a ${INSTALL_LOG}
 
 if [[ "${AUTO_START}" == "true" ]]; then
-  echo "NPIS: Start NEV..." | tee -a ${INSTALL_LOG}
+  echo "${LOG_PREFIX} Start NEV..." | tee -a ${INSTALL_LOG}
   docker compose --ansi never up --detach --no-color 2>&1 | tee -a ${INSTALL_LOG}
 fi
 
-echo "NPIS: Install Misc." | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Install Misc." | tee -a ${INSTALL_LOG}
 # Update some defaults
 update-alternatives --set editor /usr/bin/vim.basic
 
 # Configure reverse-proxy
-echo "NPIS: Configure reverse-proxy" | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Configure reverse-proxy" | tee -a ${INSTALL_LOG}
 
 cat << EOF > /etc/apache2/sites-available/nev.conf
 <VirtualHost _default_:80>
@@ -132,10 +131,10 @@ a2ensite nev
 apache2ctl -k graceful
 
 # Enable SSL certs
-echo "NPIS: Enable Certbot Certificate" | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Enable Certbot Certificate" | tee -a ${INSTALL_LOG}
 certbot -q --apache --redirect --hsts --uir --agree-tos -m wwpresalesdemos@hyland.com -d ${FQDN} | tee -a ${INSTALL_LOG}
 
-echo "NPIS: Setup profile, ubuntu, etc." | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Setup profile, ubuntu, etc." | tee -a ${INSTALL_LOG}
 
 #set up ubuntu user
 cat << EOF >> /home/ubuntu/.profile
@@ -153,7 +152,7 @@ source ${COMPOSE_DIR}/aliases.sh
 # Override some of the above for AWS usage
 alias nev='make -e -f ${COMPOSE_DIR}/Makefile'
 
-figlet $RESOURCE_PREFIX.cloud.nuxeo.com
+figlet $FQDN
 EOF
 
 # Set up vim for ubuntu user
@@ -163,4 +162,4 @@ cat << EOF > /home/ubuntu/.vimrc
 au BufRead,BufNewFile *.conf setfiletype conf
 EOF
 
-echo "NPIS: Complete" | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Complete" | tee -a ${INSTALL_LOG}

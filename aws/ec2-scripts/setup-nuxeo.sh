@@ -11,7 +11,8 @@ source /etc/profile.d/load_env.sh
 
 # Variables for this script
 INSTALL_LOG="/var/log/nuxeo_install.log"
-INSTALL_LOG_PREFIX="NXP Install Script:"
+LOG_PREFIX="NPIS:"
+
 COMPOSE_REPO="https://github.com/nuxeo-sandbox/nuxeo-presales-docker"
 COMPOSE_DIR="/home/ubuntu/nuxeo-presales-docker"
 CONF_DIR="${COMPOSE_DIR}/conf"
@@ -28,7 +29,7 @@ OPENSEARCH_IMAGE="opensearchproject/opensearch:"${OPENSEARCH_VERSION}
 OPENSEARCH_DASHBOARDS_IMAGE="opensearchproject/opensearch-dashboards:"${OPENSEARCH_VERSION}
 
 # Start of installation steps
-echo "${INSTALL_LOG_PREFIX} Starting [${STACK_ID}]" > ${INSTALL_LOG}
+echo "Nuxeo Presales Installation Script (NPIS): Starting [${STACK_ID}]" > ${INSTALL_LOG}
 
 # set memory settings
 # https://opensearch.org/docs/1.3/install-and-configure/install-opensearch/index/#important-settings
@@ -53,15 +54,15 @@ hostname ${RESOURCE_PREFIX}
 echo "Domains=cloud.nuxeo.com" >> /etc/systemd/resolved.conf
 
 # Install Nuxeo
-echo "${INSTALL_LOG_PREFIX} Install Nuxeo" | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Install Nuxeo" | tee -a ${INSTALL_LOG}
 
 # Make directories and clone compose stack
 mkdir -p ${COMPOSE_DIR} ${NUXEO_DATA_DIR} ${NUXEO_LOG_DIR} ${TMP_DIR}
 git clone -b ${PRESALES_DOCKER_BRANCH} ${COMPOSE_REPO} ${COMPOSE_DIR}
 mkdir -p ${CONF_DIR}
-echo "${INSTALL_LOG_PREFIX} Install Nuxeo => DONE" | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Install Nuxeo => DONE" | tee -a ${INSTALL_LOG}
 
-echo "${INSTALL_LOG_PREFIX} Configure Nuxeo" | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Configure Nuxeo" | tee -a ${INSTALL_LOG}
 
 # Copy default conf.d files
 cp ${COMPOSE_DIR}/conf.d/* ${CONF_DIR}
@@ -310,26 +311,26 @@ if [ -n "${NX_STUDIO}" ]; then
 
   # Build / Pull images
   echo "Pulling other images..." | tee -a ${INSTALL_LOG}
-  docker compose --project-directory ${COMPOSE_DIR} --no-ansi pull | tee -a ${INSTALL_LOG}
+  docker compose --project-directory ${COMPOSE_DIR} --ansi never pull | tee -a ${INSTALL_LOG}
 
   if [[ "${AUTO_START}" == "true" ]]; then
     echo "Building images..." | tee -a ${INSTALL_LOG}
-    docker compose --project-directory ${COMPOSE_DIR} --no-ansi build --progress plain 2>&1 | tee -a ${INSTALL_LOG}
+    docker compose --project-directory ${COMPOSE_DIR} --ansi never build --progress plain 2>&1 | tee -a ${INSTALL_LOG}
 
     echo "Starting Nuxeo stack" | tee -a ${INSTALL_LOG}
-    docker compose --project-directory ${COMPOSE_DIR} --no-ansi up --detach --no-color 2>&1 | tee -a ${INSTALL_LOG}
+    docker compose --project-directory ${COMPOSE_DIR} --ansi never up --detach --no-color 2>&1 | tee -a ${INSTALL_LOG}
   fi
 
   # Fix up permissions
   chown -R ubuntu:ubuntu ${HOME}/.docker
 
 fi
-echo "${INSTALL_LOG_PREFIX} Configure Nuxeo => DONE" | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Configure Nuxeo => DONE" | tee -a ${INSTALL_LOG}
 
-echo "${INSTALL_LOG_PREFIX} Install Misc." | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Install Misc." | tee -a ${INSTALL_LOG}
 # Update some defaults
 update-alternatives --set editor /usr/bin/vim.basic
-echo "${INSTALL_LOG_PREFIX} Install Misc. => DONE" | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Install Misc. => DONE" | tee -a ${INSTALL_LOG}
 
 # Configure reverse-proxy
 cat << EOF > /etc/apache2/sites-available/nuxeo.conf
@@ -431,10 +432,10 @@ echo "Restarting Apache"
 systemctl restart apache2
 
 # Enable SSL certs
-echo "${INSTALL_LOG_PREFIX} Enable Certbot Certificate" | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Enable Certbot Certificate" | tee -a ${INSTALL_LOG}
 certbot -q --apache --redirect --hsts --uir --agree-tos -m wwpresalesdemos@hyland.com -d ${FQDN} | tee -a ${INSTALL_LOG}
 
-echo "${INSTALL_LOG_PREFIX} Setup profile, ubuntu, etc." | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Setup profile, ubuntu, etc." | tee -a ${INSTALL_LOG}
 
 #set up ubuntu user
 cat << EOF >> /home/ubuntu/.profile
@@ -466,6 +467,6 @@ cat << EOF > /home/ubuntu/.vimrc
 " 'filetype' has not already been set
 au BufRead,BufNewFile *.conf setfiletype conf
 EOF
-echo "${INSTALL_LOG_PREFIX} Setup profile, ubuntu, etc. => DONE" | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Setup profile, ubuntu, etc. => DONE" | tee -a ${INSTALL_LOG}
 
-echo "${INSTALL_LOG_PREFIX} Complete" | tee -a ${INSTALL_LOG}
+echo "${LOG_PREFIX} Complete" | tee -a ${INSTALL_LOG}
