@@ -1,0 +1,476 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Hyland CFS Broker Presales Demo Template (Ubuntu 24.04). Provisions a single-purpose EC2 host, Docker-ready for the Content Federation Services (CFS) broker OCI container. Host prep is automated; loading the broker image, entering CIC credentials, and `docker compose up` are done by hand (see setup-cfs-broker.sh).",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "General"
+          },
+          "Parameters": [
+            "GitBranch",
+            "Customer",
+            "DnsName",
+            "Contact",
+            "ManagerName",
+            "OnwerName",
+            "OnwerEmail"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Broker Setup"
+          },
+          "Parameters": [
+            "InstanceType",
+            "DiskSize",
+            "CicRegion",
+            "BrokerName"
+          ]
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "DnsName": {
+      "Description": "(REQUIRED) Host prefix (e.g. you enter 'cfs-broker', the host will be 'cfs-broker.cloud.nuxeo.com')",
+      "Type": "String",
+      "AllowedPattern": "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9]))*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$",
+      "MinLength": 1,
+      "ConstraintDescription": "Please specify a valid DNS host prefix"
+    },
+    "InstanceType": {
+      "Description": "Type of EC2 instance. The broker is lightweight (~169MB image + .NET runtime); t3.small is plenty for a demo.",
+      "Type": "String",
+      "Default": "t3.small",
+      "AllowedValues": [
+        "t3.micro",
+        "t3.small",
+        "t3.medium",
+        "t3.large"
+      ]
+    },
+    "GitBranch": {
+      "Type": "String",
+      "Default": "master",
+      "Description": "EC2 instance setup (https://github.com/nuxeo-sandbox/presales-vmdemo branch) that setup-cfs-broker.sh is fetched from"
+    },
+    "Customer": {
+      "Type": "String",
+      "Default": "generic",
+      "Description": "Prospect name, or 'generic' for a shared broker",
+      "MinLength": 1,
+      "ConstraintDescription": "Please specify a customer"
+    },
+    "CicRegion": {
+      "Type": "String",
+      "Default": "US",
+      "AllowedValues": [
+        "US",
+        "EU",
+        "AU"
+      ],
+      "Description": "The CIC region the broker connects to (GatewayConfiguration.Region). Must match the region hosting your CIC environment."
+    },
+    "BrokerName": {
+      "Type": "String",
+      "Default": "presales-cfs-broker",
+      "Description": "A unique, human-readable name used to identify this registered broker instance in CIC."
+    },
+    "Contact": {
+      "Type": "String",
+      "Default": "wwpresalesdemos@hyland.com",
+      "Description": "Contact email address for questions about the instance"
+    },
+    "ManagerName": {
+      "Type": "String",
+      "Default": "Nuxeo Presales",
+      "Description": "For cross-team demos, 'Tara Francois', otherwise enter your manager's name",
+      "MinLength": 1,
+      "ConstraintDescription": "Manager is required - please specify manager"
+    },
+    "OnwerName": {
+      "Type": "String",
+      "Default": "Nuxeo Presales",
+      "Description": "For cross-team demos, 'Nuxeo Presales', otherwise enter your name",
+      "MinLength": 1,
+      "ConstraintDescription": "Owner is required - please specify owner"
+    },
+    "OnwerEmail": {
+      "Type": "String",
+      "Default": "wwpresalesdemos@hyland.com",
+      "Description": "For cross-team demos, 'wwpresalesdemos@hyland.com', otherwise enter your email",
+      "AllowedPattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+      "ConstraintDescription": "Valid email address is required - please enter email"
+    },
+    "DiskSize": {
+      "Type": "Number",
+      "Default": 20,
+      "Description": "Disk size (in GB) for root volume of EC2 instance."
+    }
+  },
+  "Mappings": {
+    "AWSRegionArch2AMI": {
+      "us-east-1": {
+        "64": "ami-0f2ce857aa5889940"
+      },
+      "us-west-1": {
+        "64": "ami-0afcdd1e489d504d2"
+      },
+      "us-west-2": {
+        "64": "ami-0fb5cb59ad32f5495"
+      },
+      "eu-west-1": {
+        "64": "ami-052805fc87ff37a22"
+      },
+      "eu-west-2": {
+        "64": "ami-03a0dbcf92f1839dc"
+      },
+      "ap-northeast-1": {
+        "64": "ami-015646e40498a48db"
+      },
+      "sa-east-1": {
+        "64": "ami-067570f86b09bfa66"
+      }
+    },
+    "AWSRegionSubnet": {
+      "us-east-1": {
+        "vpc": "vpc-01311a6a321841d60",
+        "subnet": "subnet-0d192be7ed6d2faa2",
+        "defaultSG": "sg-062c837c3212332af"
+      },
+      "us-west-1": {
+        "vpc": "vpc-420fa925",
+        "subnet": "subnet-5d71ff06",
+        "defaultSG": "sg-03ed657a"
+      },
+      "us-west-2": {
+        "vpc": "vpc-0e6cdc3402852ec63",
+        "subnet": "subnet-070006c83fad19822",
+        "defaultSG": "sg-0f3a23a4873fb211c"
+      },
+      "ap-northeast-1": {
+        "vpc": "vpc-73016014",
+        "subnet": "subnet-f3daebba",
+        "defaultSG": "sg-1d5b9365"
+      },
+      "eu-west-1": {
+        "vpc": "vpc-5420e830",
+        "subnet": "subnet-dbc879bf",
+        "defaultSG": "sg-d63eb3b1"
+      },
+      "eu-west-2": {
+        "vpc": "vpc-d97e97b0",
+        "subnet": "subnet-5c21df35",
+        "defaultSG": "sg-73e81f1a"
+      },
+      "sa-east-1": {
+        "vpc": "vpc-0d2362c5f3e332f13",
+        "subnet": "subnet-00c372f7bb8d17f3f",
+        "defaultSG": "sg-059186871b0fd77b1"
+      }
+    }
+  },
+  "Resources": {
+    "BrokerInstance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "BrokerSecurity",
+              "GroupId"
+            ]
+          }
+        ],
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/sda1",
+            "Ebs": {
+              "VolumeSize": {
+                "Ref": "DiskSize"
+              }
+            }
+          }
+        ],
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegionArch2AMI",
+            {
+              "Ref": "AWS::Region"
+            },
+            "64"
+          ]
+        },
+        "SubnetId": {
+          "Fn::FindInMap": [
+            "AWSRegionSubnet",
+            {
+              "Ref": "AWS::Region"
+            },
+            "subnet"
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "contact",
+            "Value": {
+              "Ref": "Contact"
+            }
+          },
+          {
+            "Key": "Manager",
+            "Value": {
+              "Ref": "ManagerName"
+            }
+          },
+          {
+            "Key": "Owner",
+            "Value": {
+              "Ref": "OnwerName"
+            }
+          },
+          {
+            "Key": "Email",
+            "Value": {
+              "Ref": "OnwerEmail"
+            }
+          },
+          {
+            "Key": "environment",
+            "Value": "dev"
+          },
+          {
+            "Key": "cfTemplateVersion",
+            "Value": "1.0.0"
+          },
+          {
+            "Key": "billing-category",
+            "Value": "presales"
+          },
+          {
+            "Key": "billing-subcategory",
+            "Value": {
+              "Ref": "Customer"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "AWS::StackName"
+            }
+          },
+          {
+            "Key": "dnsName",
+            "Value": {
+              "Ref": "DnsName"
+            }
+          }
+        ],
+        "PropagateTagsToVolumeOnCreation": true,
+        "IamInstanceProfile": {
+          "Ref": "InstanceProfile"
+        },
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Sub": [
+              "#!/bin/bash\n\nwget https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/${branch}/aws/ec2-scripts/setup-cfs-broker.sh\necho export STACK_ID=${stack} DNS_NAME=${dnsName} REGION=${region} NX_BRANCH=${branch} CIC_REGION=${cicRegion} BROKER_NAME=${brokerName} >> /etc/profile.d/load_env.sh\nbash setup-cfs-broker.sh\n",
+              {
+                "stack": {
+                  "Ref": "AWS::StackName"
+                },
+                "dnsName": {
+                  "Ref": "DnsName"
+                },
+                "region": {
+                  "Ref": "AWS::Region"
+                },
+                "branch": {
+                  "Ref": "GitBranch"
+                },
+                "cicRegion": {
+                  "Ref": "CicRegion"
+                },
+                "brokerName": {
+                  "Ref": "BrokerName"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "BrokerSecurity": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupName": {
+          "Fn::Sub": [
+            "${name}-sg",
+            {
+              "name": {
+                "Ref": "AWS::StackName"
+              }
+            }
+          ]
+        },
+        "VpcId": {
+          "Fn::FindInMap": [
+            "AWSRegionSubnet",
+            {
+              "Ref": "AWS::Region"
+            },
+            "vpc"
+          ]
+        },
+        "GroupDescription": "Allow port 22 (SSH) from the EC2 Instance Connect endpoint only. The broker makes outbound HTTPS to CIC and to the Nuxeo API; no inbound web ports are required.",
+        "SecurityGroupIngress": [
+          {
+            "Description": "SSH access only from EC2 connect endpoint",
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "SourceSecurityGroupId": {
+              "Fn::FindInMap": [
+                "AWSRegionSubnet",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "defaultSG"
+              ]
+            }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": [
+                "${name}-sg",
+                {
+                  "name": {
+                    "Ref": "AWS::StackName"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "InstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "InstanceRole"
+          }
+        ]
+      }
+    },
+    "InstanceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Fn::Sub": [
+            "${name}-ec-instance-role",
+            {
+              "name": {
+                "Ref": "AWS::StackName"
+              }
+            }
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/"
+      }
+    },
+    "InstancePolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": {
+          "Fn::Sub": [
+            "${name}-cfs-broker-instance-policy",
+            {
+              "name": {
+                "Ref": "AWS::StackName"
+              }
+            }
+          ]
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ReadPresalesInstanceResources",
+              "Effect": "Allow",
+              "Action": [
+                "s3:ListBucket",
+                "s3:GetBucketLocation",
+                "s3:GetObject"
+              ],
+              "Resource": [
+                "arn:aws:s3:::presales-instance-resources",
+                "arn:aws:s3:::presales-instance-resources/*"
+              ]
+            },
+            {
+              "Sid": "ReadCfsBrokerSecret",
+              "Effect": "Allow",
+              "Action": "secretsmanager:GetSecretValue",
+              "Resource": "arn:aws:secretsmanager:*:*:secret:*cfs*"
+            }
+          ]
+        },
+        "Roles": [
+          {
+            "Ref": "InstanceRole"
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "InstanceID": {
+      "Description": "CFS Broker Instance ID",
+      "Value": {
+        "Ref": "BrokerInstance"
+      }
+    },
+    "SshCommand": {
+      "Description": "The AWS CLI command to ssh the broker instance via EC2 Instance Connect",
+      "Value": {
+        "Fn::Sub": [
+          "aws ec2-instance-connect ssh --instance-id ${instanceId} --os-user ubuntu --connection-type eice --region ${region}",
+          {
+            "region": {
+              "Ref": "AWS::Region"
+            },
+            "instanceId": {
+              "Ref": "BrokerInstance"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
