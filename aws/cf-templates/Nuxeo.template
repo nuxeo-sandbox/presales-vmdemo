@@ -11,7 +11,7 @@
           "Parameters": [
             "GitBranch",
             "Customer",
-            "DnsName",
+            "ResourcePrefix",
             "Contact",
             "ManagerName",
             "OnwerName",
@@ -71,12 +71,13 @@
     }
   },
   "Parameters": {
-    "DnsName": {
-      "Description": "(REQUIRED) Host prefix (e.g. you enter 'mydemo', the host will be 'mydemo.cloud.nuxeo.com')",
+    "ResourcePrefix": {
+      "Description": "Lowercase prefix used for DNS and AWS resources. 43 chars max. (e.g. you enter 'mydemo', the host will be 'mydemo.cloud.nuxeo.com')",
       "Type": "String",
-      "AllowedPattern": "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9]))*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$",
+      "AllowedPattern": "^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9]))*([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])$",
       "MinLength": 1,
-      "ConstraintDescription": "Please specify a valid DNS host prefix"
+      "MaxLength": 43,
+      "ConstraintDescription": "Please specify a valid lowercase prefix of at most 43 characters"
     },
     "InstanceType": {
       "Description": "Type of EC2 instance.  If you plan to install Arender, t3.medium is too small",
@@ -339,7 +340,7 @@
             "${name}-NuxeoSecret",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -441,13 +442,13 @@
           {
             "Key": "Name",
             "Value": {
-              "Ref": "AWS::StackName"
+              "Ref": "ResourcePrefix"
             }
           },
           {
             "Key": "dnsName",
             "Value": {
-              "Ref": "DnsName"
+              "Ref": "ResourcePrefix"
             }
           }
         ],
@@ -458,13 +459,13 @@
         "UserData": {
           "Fn::Base64": {
             "Fn::Sub": [
-              "#!/bin/bash\n\nwget https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/${branch}/aws/ec2-scripts/setup-nuxeo.sh\necho export UPLOAD_ROLE_ARN=${uploadRole} REKOGNITION_ROLE_ARN=${rekognitionRole} SNS_TOPIC_ARN=${snsTopic} STACK_ID=${stack} DNS_NAME=${dnsName} REGION=${region} S3BUCKET=${bucket} NX_BRANCH=${branch} PRESALES_DOCKER_BRANCH=${branchForPresalesDocker} NX_STUDIO=${studio} NX_STUDIO_VER=${studioVer} NUXEO_VERSION=${nuxeover} AUTO_START=${autoStart} INSTALL_RPM=${rpms} MAKE_NEV=${MakeNEV} ARENDER_ADDON=${ArenderAddon} NUXEO_SECRET=${NuxeoSecret} >> /etc/profile.d/load_env.sh\nbash setup-nuxeo.sh\n",
+              "#!/bin/bash\n\nwget https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/${branch}/aws/ec2-scripts/setup-nuxeo.sh\necho export UPLOAD_ROLE_ARN=${uploadRole} REKOGNITION_ROLE_ARN=${rekognitionRole} SNS_TOPIC_ARN=${snsTopic} STACK_ID=${stack} RESOURCE_PREFIX=${resourcePrefix} REGION=${region} S3BUCKET=${bucket} NX_BRANCH=${branch} PRESALES_DOCKER_BRANCH=${branchForPresalesDocker} NX_STUDIO=${studio} NX_STUDIO_VER=${studioVer} NUXEO_VERSION=${nuxeover} AUTO_START=${autoStart} INSTALL_RPM=${rpms} MAKE_NEV=${MakeNEV} ARENDER_ADDON=${ArenderAddon} NUXEO_SECRET=${NuxeoSecret} >> /etc/profile.d/load_env.sh\nbash setup-nuxeo.sh\n",
               {
                 "stack": {
                   "Ref": "AWS::StackName"
                 },
-                "dnsName": {
-                  "Ref": "DnsName"
+                "resourcePrefix": {
+                  "Ref": "ResourcePrefix"
                 },
                 "region": {
                   "Ref": "AWS::Region"
@@ -537,7 +538,7 @@
             "${name}-sg",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -589,7 +590,7 @@
                 "${name}-sg",
                 {
                   "name": {
-                    "Ref": "AWS::StackName"
+                    "Ref": "ResourcePrefix"
                   }
                 }
               ]
@@ -617,7 +618,7 @@
             "${name}-ec-instance-role",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -649,7 +650,7 @@
             "${name}-shared-resource-instance-policy",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -746,7 +747,7 @@
             "${name}-direct-upload-role",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -783,7 +784,7 @@
             "${name}-rekognition-role",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -829,7 +830,7 @@
             "${name}-s3-instance-policy",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -893,7 +894,7 @@
                       },
                       "-demo-bucket/",
                       {
-                        "Ref": "AWS::StackName"
+                        "Ref": "ResourcePrefix"
                       },
                       "/*"
                     ]
@@ -931,7 +932,7 @@
             "${name}-direct-upload-policy",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -953,7 +954,7 @@
                       },
                       "-demo-bucket/",
                       {
-                        "Ref": "AWS::StackName"
+                        "Ref": "ResourcePrefix"
                       },
                       "/upload/*"
                     ]
@@ -979,7 +980,7 @@
             "${name}-s3-instance-policy",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -1064,7 +1065,7 @@
             "${name}-direct-upload-policy",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -1107,7 +1108,7 @@
             "${name}-ai-rekognition-policy",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -1158,7 +1159,7 @@
             "${name}-bucket",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -1217,7 +1218,7 @@
                     "https://${name}.cloud.nuxeo.com",
                     {
                       "name": {
-                        "Ref": "DnsName"
+                        "Ref": "ResourcePrefix"
                       }
                     }
                   ]
@@ -1252,7 +1253,7 @@
             "${name}-rekognition-sns",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -1295,18 +1296,18 @@
         ]
       }
     },
-    "NestedStackNEV": {
+    "NEV": {
       "Type": "AWS::CloudFormation::Stack",
       "Condition": "CreateNestedNEV",
       "Properties": {
         "TemplateURL": "https://presales-vmdemo-bucket.s3.amazonaws.com/nuxeo-sandbox/master/aws/cf-templates/NEV.template",
         "Parameters": {
-          "DnsName": {
+          "ResourcePrefix": {
             "Fn::Sub": [
               "${name}-nev",
               {
                 "name": {
-                  "Ref": "DnsName"
+                  "Ref": "ResourcePrefix"
                 }
               }
             ]
@@ -1337,7 +1338,7 @@
               "https://${name}.cloud.nuxeo.com/nuxeo",
               {
                 "name": {
-                  "Ref": "DnsName"
+                  "Ref": "ResourcePrefix"
                 }
               }
             ]

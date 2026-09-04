@@ -1,12 +1,13 @@
 {
   "Description": "Nuxeo Presales NEV Template",
   "Parameters": {
-    "DnsName": {
-      "Description": "(REQUIRED) Host prefix (e.g. you enter 'mydemo', the host will be 'mydemo.cloud.nuxeo.com')",
+    "ResourcePrefix": {
+      "Description": "Lowercase prefix used for DNS and AWS resources. 47 chars max. (e.g. you enter 'mydemo', the host will be 'mydemo.cloud.nuxeo.com')",
       "Type": "String",
-      "AllowedPattern": "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9]))*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$",
+      "AllowedPattern": "^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9]))*([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])$",
       "MinLength": 1,
-      "ConstraintDescription": "Please specify a valid DNS host prefix"
+      "MaxLength": 47,
+      "ConstraintDescription": "Please specify a valid lowercase prefix of at most 47 characters"
     },
     "InstanceType": {
       "Description": "t3.medium = 2vCPU/4GB, t3.large = 2vCPU/8GB, t3.xlarge = 4vCPU/16GB",
@@ -272,13 +273,13 @@
           {
             "Key": "Name",
             "Value": {
-              "Ref": "AWS::StackName"
+              "Ref": "ResourcePrefix"
             }
           },
           {
             "Key": "dnsName",
             "Value": {
-              "Ref": "DnsName"
+              "Ref": "ResourcePrefix"
             }
           }
         ],
@@ -289,13 +290,13 @@
         "UserData": {
           "Fn::Base64": {
             "Fn::Sub": [
-              "#!/bin/bash\n\nwget https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/${branch}/aws/ec2-scripts/setup-nev.sh\necho export STACK_ID=${stack} DNS_NAME=${dnsName} REGION=${region} NEV_VERSION=${nevVersion} NUXEO_URL=${nuxeoUrl} NUXEO_SECRET=${nuxeoSecret} AUTO_START=${autoStart} >> /etc/profile.d/load_env.sh\nbash setup-nev.sh\n",
+              "#!/bin/bash\n\nwget https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/${branch}/aws/ec2-scripts/setup-nev.sh\necho export STACK_ID=${stack} RESOURCE_PREFIX=${resourcePrefix} REGION=${region} NEV_VERSION=${nevVersion} NUXEO_URL=${nuxeoUrl} NUXEO_SECRET=${nuxeoSecret} AUTO_START=${autoStart} >> /etc/profile.d/load_env.sh\nbash setup-nev.sh\n",
               {
                 "stack": {
                   "Ref": "AWS::StackName"
                 },
-                "dnsName": {
-                  "Ref": "DnsName"
+                "resourcePrefix": {
+                  "Ref": "ResourcePrefix"
                 },
                 "region": {
                   "Ref": "AWS::Region"
@@ -329,7 +330,7 @@
             "${name}-sg",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -381,7 +382,7 @@
                 "${name}-sg",
                 {
                   "name": {
-                    "Ref": "AWS::StackName"
+                    "Ref": "ResourcePrefix"
                   }
                 }
               ]
@@ -409,7 +410,7 @@
             "${name}-ec-instance-role",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -442,7 +443,7 @@
             "${name}-NEV-secret-policy",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]
@@ -476,7 +477,7 @@
             "${name}-shared-resource-instance-policy",
             {
               "name": {
-                "Ref": "AWS::StackName"
+                "Ref": "ResourcePrefix"
               }
             }
           ]

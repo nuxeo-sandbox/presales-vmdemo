@@ -190,7 +190,7 @@ def load_rows(batch: str) -> tuple[list[dict], datetime]:
                     "status": s.get("StackStatus", ""),
                     "nested": bool(s.get("ParentId")),
                     "customer": p.get("Customer", "") or t.get("Customer", ""),
-                    "dns": p.get("DnsName", "") or t.get("dns_entry", ""),
+                    "dns": p.get("ResourcePrefix", "") or p.get("DnsName", "") or t.get("dns_entry", ""),
                     "owner": p.get("OnwerName", "") or p.get("OwnerName", ""),
                     "owner_email": p.get("OnwerEmail", "") or p.get("OwnerEmail", ""),
                     "manager": p.get("ManagerName", ""),

@@ -36,20 +36,20 @@ echo "${INSTALL_LOG_PREFIX} Starting [${STACK_ID}]" > ${INSTALL_LOG}
 echo "vm.max_map_count=262144" >> /etc/sysctl.conf && sysctl -p
 
 # Check DNS Name
-if [ -z "${DNS_NAME}" ]; then
-  DNS_NAME=${STACK_ID}
+if [ -z "${RESOURCE_PREFIX}" ]; then
+  RESOURCE_PREFIX=${STACK_ID}
   echo "Warning: DNS Name is not set, using stack id: ${STACK_ID}" | tee -a ${INSTALL_LOG}
 fi
 
 # Fully qualified domain name
-FQDN="${DNS_NAME}.cloud.nuxeo.com"
+FQDN="${RESOURCE_PREFIX}.cloud.nuxeo.com"
 
 # TEMP: Install uuid
 apt-get -q -y install uuid
 
 # Set the hostname & domain
-echo "${DNS_NAME}" > /etc/hostname
-hostname ${DNS_NAME}
+echo "${RESOURCE_PREFIX}" > /etc/hostname
+hostname ${RESOURCE_PREFIX}
 echo "Domains=cloud.nuxeo.com" >> /etc/systemd/resolved.conf
 
 # Install Nuxeo
@@ -74,16 +74,16 @@ CIC_CLIENT_ID=$(aws secretsmanager get-secret-value --secret-id cic_presales_cre
 CIC_CLIENT_SECRET=$(aws secretsmanager get-secret-value --secret-id cic_presales_credential --region us-west-2 | jq -r '.SecretString|fromjson|.cic_client_secret')
 
 # Support old style of creating a bucket
-S3_BUCKET="${STACK_ID}-bucket"
+S3_BUCKET="${RESOURCE_PREFIX}-bucket"
 S3_PREFIX="binary_store/"
 S3_UPLOAD_PREFIX="upload/"
 S3_UPLOAD_TRANSIENT_PREFIX="upload_transient/"
 
 if [[ "${S3BUCKET}" == "Shared" ]]; then
   S3_BUCKET="${REGION}-demo-bucket"
-  S3_PREFIX="${STACK_ID}/binary_store/"
-  S3_UPLOAD_PREFIX="${STACK_ID}/upload/"
-  S3_UPLOAD_TRANSIENT_PREFIX="${STACK_ID}/upload_transient/"
+  S3_PREFIX="${RESOURCE_PREFIX}/binary_store/"
+  S3_UPLOAD_PREFIX="${RESOURCE_PREFIX}/upload/"
+  S3_UPLOAD_TRANSIENT_PREFIX="${RESOURCE_PREFIX}/upload_transient/"
 fi
 
 # Write system configuration
@@ -186,7 +186,7 @@ then
   NUXEO_SECRET=$(aws --region ${REGION} secretsmanager get-secret-value --secret-id ${NUXEO_SECRET} --query SecretString --output text | jq -r .password)
   cat << EOF > ${CONF_DIR}/arender.conf
 # ARender Configuration
-arender.server.previewer.host=https://${DNS_NAME}-nev.cloud.nuxeo.com
+arender.server.previewer.host=https://${RESOURCE_PREFIX}-nev.cloud.nuxeo.com
 nuxeo.arender.oauth2.client.create=true
 nuxeo.arender.oauth2.client.id=arender
 nuxeo.arender.oauth2.client.secret=${NUXEO_SECRET}

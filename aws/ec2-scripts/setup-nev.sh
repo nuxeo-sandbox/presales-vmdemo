@@ -19,17 +19,17 @@ COMPOSE_DIR="/home/ubuntu/nuxeo-presales-nev"
 NEV_ENV="${COMPOSE_DIR}/.env"
 
 # Check DNS Name
-if [ -z "${DNS_NAME}" ]; then
-  DNS_NAME=${STACK_ID}
+if [ -z "${RESOURCE_PREFIX}" ]; then
+  RESOURCE_PREFIX=${STACK_ID}
   echo "Warning: DNS Name is not set, using stack id: ${STACK_ID}" | tee -a ${INSTALL_LOG}
 fi
 
 # Fully qualified domain name
-FQDN="${DNS_NAME}.cloud.nuxeo.com"
+FQDN="${RESOURCE_PREFIX}.cloud.nuxeo.com"
 
 # Set the hostname & domain
-echo "${DNS_NAME}" > /etc/hostname
-hostname ${DNS_NAME}
+echo "${RESOURCE_PREFIX}" > /etc/hostname
+hostname ${RESOURCE_PREFIX}
 echo "Domains=cloud.nuxeo.com" >> /etc/systemd/resolved.conf
 
 #== Install NEV Tooling ========================================================
@@ -153,7 +153,7 @@ source ${COMPOSE_DIR}/aliases.sh
 # Override some of the above for AWS usage
 alias nev='make -e -f ${COMPOSE_DIR}/Makefile'
 
-figlet $DNS_NAME.cloud.nuxeo.com
+figlet $RESOURCE_PREFIX.cloud.nuxeo.com
 EOF
 
 # Set up vim for ubuntu user
