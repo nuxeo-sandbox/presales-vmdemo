@@ -30,10 +30,23 @@ def aws_text(args: list[str]) -> str:
 
 
 def discover_regions() -> list[str]:
-    """Every region enabled for the account; falls back to REGIONS_ORDER on failure."""
-    txt = aws_text(["ec2", "describe-regions", "--query", "Regions[].RegionName", "--output", "text"])
+    """Every region enabled for the account; falls back to REGIONS_ORDER on failure.
+
+    `describe-regions` needs an endpoint region even though the result is
+    account-global; without one (no default region configured, e.g. SSO) the
+    call fails and we would silently fall back to the short list, missing stacks
+    in every other region.
+    """
+    txt = aws_text(["ec2", "describe-regions", "--region", "us-east-1",
+                    "--query", "Regions[].RegionName", "--output", "text"])
     found = txt.split()
-    return cf.sort_regions(found) if found else list(cf.REGIONS_ORDER)
+    if not found:
+        print("  WARNING: could not auto-discover regions; falling back to the "
+              f"built-in list of {len(cf.REGIONS_ORDER)} regions. Stacks in other "
+              "regions will be MISSED. Pass --regions or set CF_REGIONS to override.",
+              file=sys.stderr)
+        return list(cf.REGIONS_ORDER)
+    return cf.sort_regions(found)
 
 
 def main(argv: list[str] | None = None) -> int:
