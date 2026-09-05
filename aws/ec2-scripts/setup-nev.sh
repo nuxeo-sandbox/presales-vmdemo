@@ -130,6 +130,10 @@ a2ensite nev
 
 apache2ctl -k graceful
 
+# Restart apache
+echo "Restarting Apache"
+systemctl restart apache2
+
 # Enable SSL certs
 echo "${LOG_PREFIX} Enable Certbot Certificate" | tee -a ${INSTALL_LOG}
 certbot -q --apache --redirect --hsts --uir --agree-tos -m wwpresalesdemos@hyland.com -d ${FQDN} | tee -a ${INSTALL_LOG}
