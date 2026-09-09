@@ -5,7 +5,7 @@ IMPORTANT: This is completely vibe-coded using Claude Opus 4.8.
 Two main use cases:
 
 1. Delete a single stack
-2. Process a batch of stacks
+2. Process a batch of stacks (this does NOT mean batch deletion of multiple stacks at once!)
 
 A few things make this fiddly:
 
@@ -16,15 +16,15 @@ A few things make this fiddly:
   alone.
 * Stacks are spread across many regions.
 
-## Requirements
+# Requirements
 
 * AWS CLI v2, authenticated to the presales account (hint: `aws sso login`)
 * Python 3
 * Run every command from the `aws/cf-cleanup/` directory.
 
-### Batch Mode Only
+## Batch Mode Only
 
-Batch mode requires `openpyxl`. Best practice is to install it in a virtual environment as described below. This is a one-time setup.
+Batch mode requires `openpyxl`. Best practice is to install it in a virtual environment as shown below. This is a one-time setup.
 
 ```
 cd aws/cf-cleanup
@@ -32,9 +32,9 @@ python3 -m venv .venv
 .venv/bin/python -m pip install openpyxl
 ```
 
-## Usage
+# Usage
 
-### Delete a Single Stack
+## Delete a Single Stack
 
 ```
 ./cfcleanup.sh <stack-id>
@@ -46,7 +46,7 @@ Optionally pass the region to skip the lookup:
 ./cfcleanup.sh <stack-id> <region>
 ```
 
-### Process a Batch
+## Process a Batch
 
 ```
 ./cfcleanup.sh setup
@@ -58,11 +58,13 @@ you've identified stacks to delete, delete them as described above.
 
 No you cannot delete more than one stack at a time, this is intentional.
 
-### Agent-Supported
+## Agent-Supported
 
 You can use the tooling via an agent. The deletion is handled a little
 differently (as described in AGENTS.md). The token burn is probably not
 worth it at this point, the above process is simple enough.
+
+# Other Details
 
 ## Batch contents
 
