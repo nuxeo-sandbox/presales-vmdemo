@@ -88,8 +88,8 @@ Before deleting, `delete` empties the S3 storage the stack uses:
 
 Platform, automation, and AWS governance stacks (StackSets, CDKToolkit, Macie,
 route53/scheduler automation) match `INFRA_PATTERNS` in `cfcleanup/common.py`
-and appear only on the workbook's "Excluded infra" sheet. Nested NEV stacks
-(those with a `NestedStackNEV-` prefix) are also omitted.
+and appear only on the workbook's "Excluded infra" sheet. Nested stacks (any
+stack with a parent) are also omitted - they're deleted with their parent.
 
 # About Hyland Nuxeo
 
