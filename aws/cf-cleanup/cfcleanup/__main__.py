@@ -31,11 +31,6 @@ COMMANDS = {
     "run": "run",
 }
 
-# Commands validated here, up front, before dispatch. run/delete are excluded:
-# they print their banner first (instant) and then self-check the session, so
-# the ~AWS round-trip doesn't delay their header. report/workbook need no session.
-AWS_COMMANDS = {"setup", "gather", "status"}
-
 
 def usage() -> str:
     lines = [f"usage: {common.PROG} <command> [args]", "", "commands:"]
@@ -56,9 +51,6 @@ def main(argv: list[str] | None = None) -> int:
         print(f"unknown command: {cmd}\n", file=sys.stderr)
         print(usage(), file=sys.stderr)
         return 2
-
-    if cmd in AWS_COMMANDS and not common.ensure_session():
-        return 1
 
     fn = importlib.import_module(f".{module_name}", __package__).main
     ret = fn(rest)

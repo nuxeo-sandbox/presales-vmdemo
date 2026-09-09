@@ -18,7 +18,6 @@ import glob
 import json
 import os
 import re
-import subprocess
 import sys
 from datetime import datetime, timezone
 
@@ -32,20 +31,41 @@ BATCHES_DIR = os.path.join(ROOT, "batches")
 PROG = os.environ.get("CFCLEANUP_PROG", "python3 -m cfcleanup")
 
 
-def ensure_session() -> bool:
-    """True if the AWS session is valid; print an abort message and return False otherwise."""
-    out = subprocess.run(
-        ["aws", "sts", "get-caller-identity", "--query", "Account", "--output", "text"],
-        capture_output=True,
-        text=True,
-    )
-    if out.returncode == 0:
-        return True
-    print("ABORT: not logged in to AWS - run 'aws sso login'.")
-    err = (out.stderr or "").strip()
-    if err:
-        print(f"  aws error: {err}")
-    return False
+# Substrings the AWS CLI emits when the session/credentials are missing or
+# expired. Checked against a failed command's stderr so a stale session is
+# reported with an `aws sso login` hint instead of a raw error.
+_SESSION_ERROR_MARKERS = (
+    "aws sso login",
+    "unable to locate credentials",
+    "error loading sso token",
+    "the sso session",
+    "expired",
+    "invalidclienttokenid",
+    "the security token included in the request",
+)
+
+_session_hinted = False
+
+
+def is_session_error(stderr: str) -> bool:
+    """True if an AWS CLI stderr indicates a missing or expired session."""
+    low = (stderr or "").lower()
+    return any(m in low for m in _SESSION_ERROR_MARKERS)
+
+
+def note_session_error(stderr: str) -> bool:
+    """If a failed AWS call looks like a session problem, print the
+    `aws sso login` hint (once per run) and return True; otherwise return False."""
+    global _session_hinted
+    if not is_session_error(stderr):
+        return False
+    if not _session_hinted:
+        _session_hinted = True
+        print("ABORT: not logged in to AWS - run 'aws sso login'.")
+        err = (stderr or "").strip()
+        if err:
+            print(f"  aws error: {err}")
+    return True
 
 # Preferred display order. gather auto-discovers the regions to scan, so any
 # region not listed here still appears in reports/workbook, ordered after these.

@@ -26,7 +26,10 @@ from . import common as cf
 
 def aws_text(args: list[str]) -> str:
     out = subprocess.run(["aws", *args], capture_output=True, text=True)
-    return out.stdout.strip() if out.returncode == 0 else ""
+    if out.returncode != 0:
+        cf.note_session_error(out.stderr)
+        return ""
+    return out.stdout.strip()
 
 
 def discover_regions() -> list[str]:
@@ -74,6 +77,7 @@ def main(argv: list[str] | None = None) -> int:
             text=True,
         )
         if out.returncode != 0:
+            cf.note_session_error(out.stderr)
             print(f"  WARNING: {region}: {out.stderr.strip()}", file=sys.stderr)
             payload = '{"Stacks": []}'
         else:

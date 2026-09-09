@@ -30,11 +30,8 @@ def main(argv: list[str] | None = None) -> int:
 
     batch = cf.resolve_batch(args.batch, optional=True)
 
-    # Banner first (local data only) so it shows instantly, then the session
-    # check, then AWS work (region resolution may scan regions live).
+    # Banner first (local data only) so it shows instantly, before any AWS work.
     delete.print_banner(args.stack)
-    if not cf.ensure_session():
-        return 1
     region = delete.resolve_region(batch, args.stack, args.region)
     if region is None:
         return 1

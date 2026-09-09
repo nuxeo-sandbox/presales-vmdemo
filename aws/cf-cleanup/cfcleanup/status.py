@@ -31,6 +31,7 @@ def stack_status(stack: str, region: str) -> str:
     text = (out.stdout + out.stderr).strip()
     if "does not exist" in text:
         return "DELETE_COMPLETE" if _deleted_in_history(stack, region) else "NOT_FOUND"
+    cf.note_session_error(out.stderr)
     return f"ERROR:{text}"
 
 

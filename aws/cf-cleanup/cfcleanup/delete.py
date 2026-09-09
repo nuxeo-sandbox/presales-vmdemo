@@ -38,7 +38,10 @@ from .s3 import bucket_exists, collect_versions, delete_all
 
 
 def aws_run(args: list[str]) -> subprocess.CompletedProcess:
-    return subprocess.run(["aws", *args], capture_output=True, text=True)
+    out = subprocess.run(["aws", *args], capture_output=True, text=True)
+    if out.returncode != 0:
+        cf.note_session_error(out.stderr)
+    return out
 
 
 def stack_buckets(stack: str, region: str) -> list[str] | None:
@@ -235,8 +238,6 @@ def main(argv: list[str] | None = None) -> int:
 
     batch = cf.resolve_batch(args.batch, optional=True)
     print_banner(args.stack)
-    if not cf.ensure_session():
-        return 1
     region = resolve_region(batch, args.stack, args.region)
     if region is None:
         return 1

@@ -8,6 +8,8 @@ from __future__ import annotations
 import json
 import subprocess
 
+from . import common as cf
+
 
 def aws_json(args: list[str]) -> dict:
     """Run an aws CLI command expected to return JSON; return {} on empty."""
@@ -17,6 +19,7 @@ def aws_json(args: list[str]) -> dict:
         text=True,
     )
     if out.returncode != 0:
+        cf.note_session_error(out.stderr)
         raise RuntimeError(out.stderr.strip() or f"aws {' '.join(args)} failed")
     txt = out.stdout.strip()
     return json.loads(txt) if txt else {}
@@ -37,6 +40,7 @@ def bucket_exists(bucket: str) -> bool:
     low = (out.stderr or "").lower()
     if "404" in low or "not found" in low or "nosuchbucket" in low:
         return False
+    cf.note_session_error(out.stderr)
     raise RuntimeError(
         (out.stderr or "").strip() or f"head-bucket {bucket} failed (rc={out.returncode})"
     )
