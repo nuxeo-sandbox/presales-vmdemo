@@ -2,9 +2,10 @@
 
 IMPORTANT: This is completely vibe-coded using Claude Opus 4.8.
 
-Inventory the presales CloudFormation demo stacks, collect keep/delete decisions
-in an Excel workbook, and delete stacks (emptying their S3 storage first) by the
-stack ids a human hands off from that review, recording each deletion.
+Two main use cases:
+
+1. Delete a single stack
+2. Process a batch of stacks
 
 A few things make this fiddly:
 
@@ -19,42 +20,46 @@ A few things make this fiddly:
 
 * AWS CLI v2, authenticated to the presales account (hint: `aws sso login`)
 * Python 3 with `openpyxl`.
-* Run every command from the `aws/cf-cleanup/` directory so the `cfcleanup`
-  package resolves.
+* Run every command from the `aws/cf-cleanup/` directory.
 
 ## Usage
 
-### Agent-Supported
-
-You can use the tooling via an agent. The deletion is handled a little differently (as described in AGENTS.md). But the token burn is probably not worth it at this point, the below process is simple enough.
-
-### Create a Batch
-
-```
-./cfcleanup.sh setup
-```
-
-Inspect `batches/<yyyy-mm-dd>-cf-cleanup-batch/<date>-cf-cleanup.xlsx`. It
-contains columns to track the decision (keep/delete), whether the stack was
-deleted, and notes.
-
-### Delete a Stack
+### Delete a Single Stack
 
 ```
 ./cfcleanup.sh <stack-id>
 ```
 
-That one command interrogates the stack, reports what will be emptied and
-deleted, prompts `Ready to delete <stack>? [y/N]`, and - on `y` - empties S3,
-deletes the stack, and blocks until `DELETE_COMPLETE`. The region is resolved
-automatically from the batch.
+Optionally pass the region to skip the lookup:
+
+```
+./cfcleanup.sh <stack-id> <region>
+```
+
+### Process a Batch
+
+```
+./cfcleanup.sh setup
+```
+
+This produces `batches/<yyyy-mm-dd>-cf-cleanup-batch/<date>-cf-cleanup.xlsx`.
+Use this workbook to review each stack and mark it for keep or delete. Once
+you've identified stacks to delete, delete them as described above.
+
+No you cannot delete more than one stack at a time, this is intentional.
+
+### Agent-Supported
+
+You can use the tooling via an agent. The deletion is handled a little
+differently (as described in AGENTS.md). The token burn is probably not
+worth it at this point, the above process is simple enough.
 
 ## Batch contents
 
 A batch is one cleanup cycle. This is not an ongoing rolling list. Run it once
 and process the whole batch; if you don't finish, just start a fresh batch when
 you come back in six months. Its output lives under a dated root folder
-`batches/<yyyy-mm-dd>-cf-cleanup-batch/`, which is gitignored:
+`batches/<yyyy-mm-dd>-cf-cleanup-batch/` (gitignored):
 
 ```
 stacks/<region>.json   raw describe-stacks output
