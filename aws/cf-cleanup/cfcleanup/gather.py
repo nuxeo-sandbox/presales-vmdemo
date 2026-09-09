@@ -50,7 +50,7 @@ def discover_regions() -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="python3 -m cfcleanup gather")
+    ap = argparse.ArgumentParser(prog=f"{cf.PROG} gather")
     ap.add_argument("--name", help="batch name (default: <UTC-date>-cf-cleanup-batch)")
     ap.add_argument("--regions", help="space/comma separated region list")
     args = ap.parse_args(argv)

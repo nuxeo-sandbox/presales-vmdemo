@@ -26,6 +26,11 @@ PKG_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(PKG_DIR)
 BATCHES_DIR = os.path.join(ROOT, "batches")
 
+# Program name shown in usage/help text. The cfcleanup.sh wrapper exports
+# CFCLEANUP_PROG so its help reads "./cfcleanup.sh ..." instead of the raw
+# "python3 -m cfcleanup ..." module invocation.
+PROG = os.environ.get("CFCLEANUP_PROG", "python3 -m cfcleanup")
+
 
 def ensure_session() -> bool:
     """True if the AWS session is valid; print an abort message and return False otherwise."""

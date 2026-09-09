@@ -38,9 +38,9 @@ AWS_COMMANDS = {"setup", "gather", "status"}
 
 
 def usage() -> str:
-    lines = ["usage: python3 -m cfcleanup <command> [args]", "", "commands:"]
+    lines = [f"usage: {common.PROG} <command> [args]", "", "commands:"]
     lines += [f"  {name}" for name in COMMANDS]
-    lines += ["", "Run 'python3 -m cfcleanup <command> --help' for command options."]
+    lines += ["", f"Run '{common.PROG} <command> --help' for command options."]
     return "\n".join(lines)
 
 

@@ -7,11 +7,12 @@ from __future__ import annotations
 
 import argparse
 
+from . import common as cf
 from . import gather, report, workbook
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="python3 -m cfcleanup setup")
+    ap = argparse.ArgumentParser(prog=f"{cf.PROG} setup")
     ap.add_argument("--name", help="batch name (default: <UTC-date>-cf-cleanup-batch)")
     ap.add_argument("--regions", help="space/comma separated region list")
     args = ap.parse_args(argv)

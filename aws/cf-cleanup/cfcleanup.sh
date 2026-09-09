@@ -13,6 +13,9 @@ set -euo pipefail
 # CloudFormation/S3 calls must not open the pager (it hangs a non-tty).
 export AWS_PAGER=""
 
+# Make the tool's usage/help refer to this wrapper rather than the raw module.
+export CFCLEANUP_PROG="./cfcleanup.sh"
+
 cd "$(dirname "$0")"
 
 # Prefer the batch-mode venv (see README) so callers never invoke python directly.

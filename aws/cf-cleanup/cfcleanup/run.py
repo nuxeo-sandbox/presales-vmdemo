@@ -22,7 +22,7 @@ POLL_SECONDS = 10
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="python3 -m cfcleanup run")
+    ap = argparse.ArgumentParser(prog=f"{cf.PROG} run")
     ap.add_argument("stack")
     ap.add_argument("region", nargs="?")
     ap.add_argument("--batch")

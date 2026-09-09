@@ -66,7 +66,7 @@ def append_complete(log: str, stack: str, region: str) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="python3 -m cfcleanup status")
+    ap = argparse.ArgumentParser(prog=f"{cf.PROG} status")
     ap.add_argument("stack")
     ap.add_argument("region")
     ap.add_argument("--batch")

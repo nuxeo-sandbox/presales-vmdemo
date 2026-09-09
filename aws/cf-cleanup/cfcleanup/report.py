@@ -24,7 +24,7 @@ def fmt_age(a: float | None) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="python3 -m cfcleanup report")
+    ap = argparse.ArgumentParser(prog=f"{cf.PROG} report")
     ap.add_argument("--batch", help="batch name or dir (default: most recent)")
     args = ap.parse_args(argv)
 

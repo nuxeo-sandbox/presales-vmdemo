@@ -57,7 +57,7 @@ def style_header(ws, ncols: int) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="python3 -m cfcleanup workbook")
+    ap = argparse.ArgumentParser(prog=f"{cf.PROG} workbook")
     ap.add_argument("--batch", help="batch name or dir (default: most recent)")
     args = ap.parse_args(argv)
 

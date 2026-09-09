@@ -226,7 +226,7 @@ def resolve_region(batch: str | None, stack: str, given: str | None) -> str | No
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="python3 -m cfcleanup delete")
+    ap = argparse.ArgumentParser(prog=f"{cf.PROG} delete")
     ap.add_argument("stack")
     ap.add_argument("region", nargs="?")
     ap.add_argument("--dry-run", action="store_true")
