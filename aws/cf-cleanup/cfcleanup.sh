@@ -15,10 +15,14 @@ export AWS_PAGER=""
 
 cd "$(dirname "$0")"
 
+# Prefer the batch-mode venv (see README) so callers never invoke python directly.
+PY="python3"
+[[ -x .venv/bin/python3 ]] && PY=".venv/bin/python3"
+
 case "${1:-}" in
   setup|gather|report|workbook|delete|status|run|-h|--help|"")
-    exec python3 -m cfcleanup "$@" ;;
+    exec "$PY" -m cfcleanup "$@" ;;
   *)
     # Anything else is treated as a stack id for the one-shot `run` flow.
-    exec python3 -m cfcleanup run "$@" ;;
+    exec "$PY" -m cfcleanup run "$@" ;;
 esac

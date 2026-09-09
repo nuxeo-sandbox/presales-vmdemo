@@ -19,8 +19,18 @@ A few things make this fiddly:
 ## Requirements
 
 * AWS CLI v2, authenticated to the presales account (hint: `aws sso login`)
-* Python 3 with `openpyxl`.
+* Python 3
 * Run every command from the `aws/cf-cleanup/` directory.
+
+### Batch Mode Only
+
+Batch mode requires `openpyxl`. Best practice is to install it in a virtual environment as described below. This is a one-time setup.
+
+```
+cd aws/cf-cleanup
+python3 -m venv .venv
+.venv/bin/python -m pip install openpyxl
+```
 
 ## Usage
 

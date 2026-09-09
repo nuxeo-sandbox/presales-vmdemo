@@ -53,7 +53,9 @@ deletion log. The same batch dir stays current across sessions.
 ## Preconditions
 
 - AWS CLI v2 authenticated to the presales account.
-- Python 3 with `openpyxl`.
+- Python 3. Single-stack `run`/`delete` need nothing else; batch commands
+  (`setup`/`workbook`) also need `openpyxl` (imported lazily, only when those
+  commands run).
 - Run every command from the `aws/cf-cleanup/` directory so the `cfcleanup`
   package resolves.
 - **Disable the AWS CLI pager first.** In a fresh shell, run `export AWS_PAGER=""`

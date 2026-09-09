@@ -14,18 +14,21 @@ Commands:
 """
 from __future__ import annotations
 
+import importlib
 import sys
 
-from . import common, delete, gather, report, run, setup, status, workbook
+from . import common
 
+# Command -> module attribute. Modules are imported lazily so the single-stack
+# path (`run`) never pulls in openpyxl, which only the workbook commands need.
 COMMANDS = {
-    "setup": setup.main,
-    "gather": gather.main,
-    "report": report.main,
-    "workbook": workbook.main,
-    "delete": delete.main,
-    "status": status.main,
-    "run": run.main,
+    "setup": "setup",
+    "gather": "gather",
+    "report": "report",
+    "workbook": "workbook",
+    "delete": "delete",
+    "status": "status",
+    "run": "run",
 }
 
 # Commands that hit AWS but self-manage their session check (so they can print
@@ -47,8 +50,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if argv else 2
 
     cmd, rest = argv[0], argv[1:]
-    fn = COMMANDS.get(cmd)
-    if fn is None:
+    module_name = COMMANDS.get(cmd)
+    if module_name is None:
         print(f"unknown command: {cmd}\n", file=sys.stderr)
         print(usage(), file=sys.stderr)
         return 2
@@ -56,6 +59,7 @@ def main(argv: list[str] | None = None) -> int:
     if cmd in AWS_COMMANDS and not common.ensure_session():
         return 1
 
+    fn = importlib.import_module(f".{module_name}", __package__).main
     ret = fn(rest)
     return ret
 
