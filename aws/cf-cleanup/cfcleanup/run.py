@@ -28,7 +28,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--batch")
     args = ap.parse_args(argv)
 
-    batch = cf.resolve_batch(args.batch)
+    batch = cf.resolve_batch(args.batch, optional=True)
     region = delete.resolve_region(batch, args.stack, args.region)
     if region is None:
         return 1
@@ -59,12 +59,13 @@ def main(argv: list[str] | None = None) -> int:
         return rc
 
     # 4. Monitor until the stack is gone.
-    log = os.path.join(batch, "deletion-log.csv")
+    log = os.path.join(batch, "deletion-log.csv") if batch else None
     while True:
         st = status.stack_status(args.stack, region)
         print(f"  {args.stack} {st}", flush=True)
         if st == "DELETE_COMPLETE":
-            status.append_complete(log, args.stack, region)
+            if log:
+                status.append_complete(log, args.stack, region)
             print(f"...Stack {args.stack} Deleted {date.today().isoformat()}")
             return 0
         if st == "NOT_FOUND" or st.endswith("FAILED") or st.startswith("ERROR"):

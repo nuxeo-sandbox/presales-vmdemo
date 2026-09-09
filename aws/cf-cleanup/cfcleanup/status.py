@@ -1,5 +1,5 @@
-"""Report a stack's CloudFormation status and record its completion in the
-batch's deletion-log.csv.
+"""Report a stack's CloudFormation status and, when run against a batch, record
+its completion in that batch's deletion-log.csv.
 
 Exit code 3 = still in progress, 0 = gone or failed.
 
@@ -72,14 +72,14 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--batch")
     args = ap.parse_args(argv)
 
-    batch = cf.resolve_batch(args.batch)
-    log = os.path.join(batch, "deletion-log.csv")
+    batch = cf.resolve_batch(args.batch, optional=True)
+    log = os.path.join(batch, "deletion-log.csv") if batch else None
 
     st = stack_status(args.stack, args.region)
     if st == "NOT_FOUND":
         print(f"{args.stack:<32} {args.region:<15} not found")
         return 0
-    if st == "DELETE_COMPLETE":
+    if st == "DELETE_COMPLETE" and log:
         append_complete(log, args.stack, args.region)
     print(f"{args.stack:<32} {args.region:<15} {st}")
     if st == "DELETE_COMPLETE" or st.endswith("FAILED"):

@@ -115,8 +115,14 @@ def classify(customer: str, age: float | None) -> str:
 
 
 # ---- batch resolution ------------------------------------------------------
-def resolve_batch(arg: str | None = None) -> str:
-    """Return an existing batch dir. With no arg, the most recent one."""
+def resolve_batch(arg: str | None = None, *, optional: bool = False) -> str | None:
+    """Return an existing batch dir. With no arg, the most recent one.
+
+    With optional=True and no arg, return None when no batches exist instead of
+    exiting. Callers then run standalone: region is resolved by a live scan and
+    no deletion-log entry is written. A named --batch that doesn't exist is still
+    a hard error, optional or not.
+    """
     if arg:
         p = arg if (os.path.isabs(arg) or os.path.sep in arg) else os.path.join(BATCHES_DIR, arg)
         if not os.path.isdir(p):
@@ -124,6 +130,8 @@ def resolve_batch(arg: str | None = None) -> str:
         return os.path.abspath(p)
     subs = [d for d in glob.glob(os.path.join(BATCHES_DIR, "*")) if os.path.isdir(d)]
     if not subs:
+        if optional:
+            return None
         sys.exit("ERROR: no batches found under batches/. Run 'python3 -m cfcleanup gather' first.")
     return os.path.abspath(sorted(subs)[-1])
 
@@ -219,8 +227,14 @@ def split_rows(rows: list[dict]) -> tuple[list[dict], list[dict]]:
     return demo, infra
 
 
-def find_stack_regions(batch: str, stack: str) -> list[str]:
-    """Regions where a stack of this exact name appears in the batch's gather data."""
+def find_stack_regions(batch: str | None, stack: str) -> list[str]:
+    """Regions where a stack of this exact name appears in the batch's gather data.
+
+    Returns [] when there is no batch (standalone mode), so callers fall back to
+    a live scan.
+    """
+    if not batch:
+        return []
     rows, _ = load_rows(batch)
     regions = {r["region"] for r in rows if r["name"] == stack}
     return sort_regions(regions)

@@ -2,7 +2,8 @@
 
 The caller supplies the stack id and, optionally, its region.
 
-Paper-trail tool: every run appends a line to the batch's deletion-log.csv.
+Paper-trail tool: when run against a batch, every run appends a line to that
+batch's deletion-log.csv. Run standalone (no batch), it skips the log.
 
 NON-BLOCKING: empties the bucket (fast), then initiates the stack delete and
 returns immediately. It does NOT wait for DELETE_COMPLETE. Poll with the
@@ -15,7 +16,9 @@ shared bucket "<region>-demo-bucket" is emptied too.
 Requires: awscli v2, authenticated to the target account.
 
 The region is optional: if omitted it is resolved from the batch's gather data
-(falling back to a live scan of the account's enabled regions).
+when a batch is present, otherwise from a live scan of the account's enabled
+regions. The batch itself is optional too - with no batches on disk the tool
+runs standalone.
 
 Run as:
     python3 -m cfcleanup delete <stack> [region] [--dry-run] [--batch NAME|DIR]
@@ -65,18 +68,18 @@ def bucket_mode(stack: str, region: str) -> str:
     return out.stdout.strip() or "None"
 
 
-def _resolve_region(batch: str, stack: str) -> tuple[str | None, str]:
+def _resolve_region(batch: str | None, stack: str) -> tuple[str | None, str]:
     """Determine a stack's region when the caller omits it.
 
     Prefer the batch's gather data (no API calls); fall back to scanning the
-    account's enabled regions live. Returns (region, note) or (None, reason).
+    account's enabled regions live. With no batch, go straight to the live scan.
+    Returns (region, note) or (None, reason).
     """
     regions = cf.find_stack_regions(batch, stack)
     if len(regions) == 1:
         return regions[0], "from batch data"
     if len(regions) > 1:
         return None, f"ambiguous - '{stack}' appears in {regions}; pass the region explicitly"
-    print(f"'{stack}' not in batch data - scanning enabled regions...", flush=True)
     for region in gather.discover_regions():
         got = aws_run(
             ["cloudformation", "describe-stacks", "--stack-name", stack, "--region", region,
@@ -87,12 +90,12 @@ def _resolve_region(batch: str, stack: str) -> tuple[str | None, str]:
     return None, f"'{stack}' not found in the batch or any enabled region - check the name"
 
 
-def print_header(stack: str, batch: str, region: str) -> None:
+def print_header(stack: str, batch: str | None, region: str) -> None:
     """Print the report header. Uses only local data so it shows instantly,
     before any AWS round-trip."""
     bar = "=" * 80
     print(f"{bar}\nDelete {stack}\n{bar}")
-    print(f"Batch: {os.path.basename(batch)}")
+    print(f"Batch: {os.path.basename(batch) if batch else 'none (standalone)'}")
     print(f"Region: {region}", flush=True)
 
 
@@ -129,9 +132,9 @@ def inspect(stack: str, region: str, batch: str):
     return mode, targets, inspected
 
 
-def execute(stack: str, region: str, batch: str, mode: str, targets, inspected) -> int:
+def execute(stack: str, region: str, batch: str | None, mode: str, targets, inspected) -> int:
     """Empty the inspected S3 targets and initiate the stack deletion."""
-    log = os.path.join(batch, "deletion-log.csv")
+    log = os.path.join(batch, "deletion-log.csv") if batch else None
 
     print()
     print("=== Starting Deletion ===", flush=True)
@@ -148,6 +151,8 @@ def execute(stack: str, region: str, batch: str, mode: str, targets, inspected) 
     if r.returncode != 0:
         return r.returncode
 
+    if log is None:
+        return 0
     who = aws_run(["sts", "get-caller-identity", "--query", "Arn", "--output", "text"])
     by = who.stdout.strip().rsplit("/", 1)[-1] if who.returncode == 0 else ""
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -161,7 +166,7 @@ def execute(stack: str, region: str, batch: str, mode: str, targets, inspected) 
     return 0
 
 
-def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
+def perform(stack: str, region: str, batch: str | None, dry_run: bool) -> int:
     """Interrogate the stack, empty its S3 storage, and (unless dry_run) delete it."""
     result = inspect(stack, region, batch)
     if result is None:
@@ -177,7 +182,7 @@ def perform(stack: str, region: str, batch: str, dry_run: bool) -> int:
     return execute(stack, region, batch, mode, targets, inspected)
 
 
-def resolve_region(batch: str, stack: str, given: str | None) -> str | None:
+def resolve_region(batch: str | None, stack: str, given: str | None) -> str | None:
     """Return the region to act on: the one given, else resolved from the batch."""
     if given:
         return given
@@ -196,7 +201,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--batch")
     args = ap.parse_args(argv)
 
-    batch = cf.resolve_batch(args.batch)
+    batch = cf.resolve_batch(args.batch, optional=True)
     region = resolve_region(batch, args.stack, args.region)
     if region is None:
         return 1
