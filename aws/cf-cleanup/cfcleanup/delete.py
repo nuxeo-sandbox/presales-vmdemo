@@ -107,7 +107,8 @@ def print_banner(stack: str) -> None:
 
 def print_meta(batch: str | None, region: str) -> None:
     """Print the Batch/Region lines (after the region has been resolved)."""
-    print(f"Batch: {os.path.basename(batch) if batch else 'none (standalone)'}")
+    if batch:
+        print(f"Batch: {os.path.basename(batch)}")
     print(f"Region: {region}", flush=True)
 
 
@@ -138,11 +139,29 @@ def inspect(stack: str, region: str, batch: str):
 
     inspected = []
     for b, p in targets:
-        print(f"Bucket: s3://{b}/{p}", flush=True)
+        print(f"Bucket: {b}", flush=True)
+        if p:
+            print(f"Prefix: {p}", flush=True)
         items = collect_versions(b, p) if bucket_exists(b) else None
-        print("Objects: bucket not found" if items is None else f"Objects: {len(items)} to delete", flush=True)
+        print("Objects: bucket not found" if items is None else f"Objects: {len(items)}", flush=True)
         inspected.append((b, p, items))
     return mode, targets, inspected
+
+
+def print_plan(stack: str, inspected) -> None:
+    """Print the exact deletions to come. Every value is the same bucket/prefix/
+    stack variable handed to the aws commands - never re-assembled for display."""
+    print()
+    print("Here's what will happen next:")
+    print()
+    for b, p, items in inspected:
+        if items:
+            print(
+                f"* Delete objects from [{b}] using prefix [{p}]" if p
+                else f"* Delete objects from [{b}]",
+                flush=True,
+            )
+    print(f"* Delete stack [{stack}]", flush=True)
 
 
 def execute(stack: str, region: str, batch: str | None, mode: str, targets, inspected) -> int:

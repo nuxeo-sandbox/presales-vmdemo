@@ -44,18 +44,19 @@ def main(argv: list[str] | None = None) -> int:
     result = delete.inspect(args.stack, region, batch)
     if result is None:
         return 1
+    mode, targets, inspected = result
 
-    # 2. Prompt for execution (always interactive).
+    # 2. Show the exact deletions, then prompt (always interactive).
+    delete.print_plan(args.stack, inspected)
     try:
-        answer = input(f"\nReady to delete {args.stack}? [y/N] ").strip().lower()
+        answer = input("\nReady? (y|n) ").strip().lower()
     except EOFError:
         answer = ""
-    if answer not in ("y", "yes"):
+    if answer != "y":
         print("Aborted - nothing deleted.")
         return 0
 
     # 3. Execute.
-    mode, targets, inspected = result
     rc = delete.execute(args.stack, region, batch, mode, targets, inspected)
     if rc != 0:
         return rc
