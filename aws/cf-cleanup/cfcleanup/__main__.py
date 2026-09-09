@@ -31,12 +31,10 @@ COMMANDS = {
     "run": "run",
 }
 
-# Every command that touches AWS. The session is validated once here, up front,
-# before dispatching, so an expired or absent login fails fast with a single
-# clear message instead of surfacing later as a confusing per-command error
-# (e.g. a live region scan reporting a stack "not found"). Only report/workbook
-# work purely off on-disk batch data and need no session.
-AWS_COMMANDS = {"setup", "gather", "status", "delete", "run"}
+# Commands validated here, up front, before dispatch. run/delete are excluded:
+# they print their banner first (instant) and then self-check the session, so
+# the ~AWS round-trip doesn't delay their header. report/workbook need no session.
+AWS_COMMANDS = {"setup", "gather", "status"}
 
 
 def usage() -> str:

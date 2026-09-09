@@ -90,11 +90,15 @@ def _resolve_region(batch: str | None, stack: str) -> tuple[str | None, str]:
     return None, f"'{stack}' not found in the batch or any enabled region - check the name"
 
 
-def print_header(stack: str, batch: str | None, region: str) -> None:
-    """Print the report header. Uses only local data so it shows instantly,
-    before any AWS round-trip."""
+def print_banner(stack: str) -> None:
+    """Print the `Delete <stack>` banner. Local data only, so it shows first -
+    before region resolution or any AWS round-trip."""
     bar = "=" * 80
-    print(f"{bar}\nDelete {stack}\n{bar}")
+    print(f"{bar}\nDelete {stack}\n{bar}", flush=True)
+
+
+def print_meta(batch: str | None, region: str) -> None:
+    """Print the Batch/Region lines (after the region has been resolved)."""
     print(f"Batch: {os.path.basename(batch) if batch else 'none (standalone)'}")
     print(f"Region: {region}", flush=True)
 
@@ -103,7 +107,8 @@ def inspect(stack: str, region: str, batch: str):
     """Read the stack's S3 targets, print the S3 lines, and return
     (mode, targets, inspected). Returns None if the stack can't be read.
 
-    The header (print_header) is expected to have been printed already; the
+    The header (print_banner/print_meta) is expected to have been printed
+    already; the
     S3/Bucket/Objects lines here stream out as each value resolves.
     """
     buckets = stack_buckets(stack, region)
@@ -202,10 +207,13 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     batch = cf.resolve_batch(args.batch, optional=True)
+    print_banner(args.stack)
+    if not cf.ensure_session():
+        return 1
     region = resolve_region(batch, args.stack, args.region)
     if region is None:
         return 1
-    print_header(args.stack, batch, region)
+    print_meta(batch, region)
     rc = perform(args.stack, region, batch, args.dry_run)
     if rc == 0 and not args.dry_run:
         print(f"Monitor: python3 -m cfcleanup status {args.stack} {region}")

@@ -29,13 +29,16 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     batch = cf.resolve_batch(args.batch, optional=True)
+
+    # Banner first (local data only) so it shows instantly, then the session
+    # check, then AWS work (region resolution may scan regions live).
+    delete.print_banner(args.stack)
+    if not cf.ensure_session():
+        return 1
     region = delete.resolve_region(batch, args.stack, args.region)
     if region is None:
         return 1
-
-    # Header first (local data only), then AWS work. The session was already
-    # validated up front by the dispatcher.
-    delete.print_header(args.stack, batch, region)
+    delete.print_meta(batch, region)
 
     # 1. Interrogate and report (inspection only - changes nothing).
     result = delete.inspect(args.stack, region, batch)
