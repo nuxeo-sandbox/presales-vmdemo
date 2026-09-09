@@ -29,6 +29,7 @@ import argparse
 import csv
 import os
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
 from . import common as cf
@@ -80,13 +81,20 @@ def _resolve_region(batch: str | None, stack: str) -> tuple[str | None, str]:
         return regions[0], "from batch data"
     if len(regions) > 1:
         return None, f"ambiguous - '{stack}' appears in {regions}; pass the region explicitly"
-    for region in gather.discover_regions():
+
+    def found_in(region: str) -> bool:
         got = aws_run(
             ["cloudformation", "describe-stacks", "--stack-name", stack, "--region", region,
              "--query", "Stacks[0].StackName", "--output", "text"]
         )
-        if got.returncode == 0 and got.stdout.strip() == stack:
-            return region, f"found live in {region}"
+        return got.returncode == 0 and got.stdout.strip() == stack
+
+    # Read-only per-region lookups, run concurrently to keep the live scan quick.
+    live = gather.discover_regions()
+    with ThreadPoolExecutor(max_workers=len(live) or 1) as pool:
+        for region, hit in zip(live, pool.map(found_in, live)):
+            if hit:
+                return region, f"found live in {region}"
     return None, f"'{stack}' not found in the batch or any enabled region - check the name"
 
 
