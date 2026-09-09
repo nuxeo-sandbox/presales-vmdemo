@@ -206,8 +206,6 @@ def main(argv: list[str] | None = None) -> int:
     if region is None:
         return 1
     print_header(args.stack, batch, region)
-    if not cf.ensure_session():
-        return 1
     rc = perform(args.stack, region, batch, args.dry_run)
     if rc == 0 and not args.dry_run:
         print(f"Monitor: python3 -m cfcleanup status {args.stack} {region}")

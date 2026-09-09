@@ -36,8 +36,7 @@ def ensure_session() -> bool:
     )
     if out.returncode == 0:
         return True
-    print("ABORT: AWS credentials are not valid (often an expired SSO session). "
-          "Re-authenticate with 'aws sso login' and retry.")
+    print("ABORT: not logged in to AWS - run 'aws sso login'.")
     err = (out.stderr or "").strip()
     if err:
         print(f"  aws error: {err}")

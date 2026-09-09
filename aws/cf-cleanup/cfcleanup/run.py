@@ -33,10 +33,9 @@ def main(argv: list[str] | None = None) -> int:
     if region is None:
         return 1
 
-    # Header first (local data only), then the session check, then AWS work.
+    # Header first (local data only), then AWS work. The session was already
+    # validated up front by the dispatcher.
     delete.print_header(args.stack, batch, region)
-    if not cf.ensure_session():
-        return 1
 
     # 1. Interrogate and report (inspection only - changes nothing).
     result = delete.inspect(args.stack, region, batch)

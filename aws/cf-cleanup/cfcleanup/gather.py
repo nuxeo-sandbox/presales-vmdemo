@@ -41,7 +41,7 @@ def discover_regions() -> list[str]:
                     "--query", "Regions[].RegionName", "--output", "text"])
     found = txt.split()
     if not found:
-        print("  WARNING: could not auto-discover regions; falling back to the "
+        print("WARNING: could not auto-discover regions; falling back to the "
               f"built-in list of {len(cf.REGIONS_ORDER)} regions. Stacks in other "
               "regions will be MISSED. Pass --regions or set CF_REGIONS to override.",
               file=sys.stderr)
