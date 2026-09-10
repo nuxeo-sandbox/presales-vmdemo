@@ -30,7 +30,7 @@
 # -- Verifies old/new FQDN
 #     -- just adds ".cloud.nuxeo.com" on to the old/new DNS name value
 # -- Find/replace for old DNS name/new DNS name on /etc/profile.d/load_env.sh
-# -- Exports new RESOURCE_PREFIX value to update exisiting RESOURCE_PREFIX env var
+# -- Exports new RESOURCE_PREFIX value to update existing RESOURCE_PREFIX env var
 # -- Deletes old certificate
 # -- Edits in-place apache2 conf file
 #     -- Find/replace old FQDN/new FQDN
