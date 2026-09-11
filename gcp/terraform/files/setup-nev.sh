@@ -43,8 +43,7 @@ FQDN="${DNS_NAME}.gcp.cloud.nuxeo.com"
 echo "${INSTALL_LOG_PREFIX} Starting [${STACK_ID}]" > ${INSTALL_LOG}
 
 # Set the hostname & domain
-echo "${DNS_NAME}" > /etc/hostname
-hostname ${DNS_NAME}
+hostnamectl set-hostname "${DNS_NAME}"
 echo "Domains=gcp.cloud.nuxeo.com" >> /etc/systemd/resolved.conf
 
 #== Install NEV Tooling ========================================================

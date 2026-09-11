@@ -69,8 +69,7 @@ FQDN="${DNS_NAME}.gcp.cloud.nuxeo.com"
 apt-get -q -y install uuid
 
 # Set the hostname & domain
-echo "${DNS_NAME}" > /etc/hostname
-hostname ${DNS_NAME}
+hostnamectl set-hostname "${DNS_NAME}"
 echo "Domains=gcp.cloud.nuxeo.com" >> /etc/systemd/resolved.conf
 
 # Install Nuxeo
