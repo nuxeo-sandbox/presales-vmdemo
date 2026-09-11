@@ -74,17 +74,38 @@ MAIL_PASS=$(aws secretsmanager get-secret-value --secret-id workmail_default_pas
 CIC_CLIENT_ID=$(aws secretsmanager get-secret-value --secret-id cic_presales_credential --region us-west-2 | jq -r '.SecretString|fromjson|.cic_client_id')
 CIC_CLIENT_SECRET=$(aws secretsmanager get-secret-value --secret-id cic_presales_credential --region us-west-2 | jq -r '.SecretString|fromjson|.cic_client_secret')
 
-# Support old style of creating a bucket
-S3_BUCKET="${RESOURCE_PREFIX}-bucket"
-S3_PREFIX="binary_store/"
-S3_UPLOAD_PREFIX="upload/"
-S3_UPLOAD_TRANSIENT_PREFIX="upload_transient/"
-
-if [[ "${S3BUCKET}" == "Shared" ]]; then
+# Handle S3 as needed
+if [[ "${S3BUCKET}" == "Create" ]]; then
+  S3_BUCKET="${RESOURCE_PREFIX}-bucket"
+  S3_PREFIX="binary_store/"
+  S3_UPLOAD_PREFIX="upload/"
+  S3_UPLOAD_TRANSIENT_PREFIX="upload_transient/"
+elif [[ "${S3BUCKET}" == "Shared" ]]; then
   S3_BUCKET="${REGION}-demo-bucket"
   S3_PREFIX="${RESOURCE_PREFIX}/binary_store/"
   S3_UPLOAD_PREFIX="${RESOURCE_PREFIX}/upload/"
   S3_UPLOAD_TRANSIENT_PREFIX="${RESOURCE_PREFIX}/upload_transient/"
+fi
+
+# Only emit S3 storage configuration when a bucket is in use
+S3_CONFIG=""
+if [[ -n "${S3_BUCKET}" ]]; then
+  S3_CONFIG=$(cat << EOF
+# S3 Configuration
+nuxeo.s3storage.useDirectUpload=true
+nuxeo.s3storage.s3DirectUpload.bucket_prefix=${S3_UPLOAD_TRANSIENT_PREFIX}
+
+nuxeo.s3storage.directdownload.expire=3600
+nuxeo.s3storage.directdownload=true
+
+nuxeo.s3storage.bucket=${S3_BUCKET}
+nuxeo.s3storage.bucket_prefix=${S3_PREFIX}
+nuxeo.s3storage.region=${REGION}
+nuxeo.s3storage.transient.roleArn=${UPLOAD_ROLE_ARN}
+nuxeo.s3storage.transient.bucket=${S3_BUCKET}
+nuxeo.s3storage.transient.bucket_prefix=${S3_UPLOAD_PREFIX}
+EOF
+)
 fi
 
 # Write system configuration
@@ -120,19 +141,7 @@ mail.transport.protocol=smtps
 mail.transport.ssl.protocol=TLSv1.2
 nuxeo.notification.eMailSubjectPrefix=[Nuxeo]
 
-# S3 Configuration
-nuxeo.s3storage.useDirectUpload=true
-nuxeo.s3storage.s3DirectUpload.bucket_prefix=${S3_UPLOAD_TRANSIENT_PREFIX}
-
-nuxeo.s3storage.directdownload.expire=3600
-nuxeo.s3storage.directdownload=true
-
-nuxeo.s3storage.bucket=${S3_BUCKET}
-nuxeo.s3storage.bucket_prefix=${S3_PREFIX}
-nuxeo.s3storage.region=${REGION}
-nuxeo.s3storage.transient.roleArn=${UPLOAD_ROLE_ARN}
-nuxeo.s3storage.transient.bucket=${S3_BUCKET}
-nuxeo.s3storage.transient.bucket_prefix=${S3_UPLOAD_PREFIX}
+${S3_CONFIG}
 
 # WOPI Configuration
 nuxeo.wopi.discoveryURL=https://onenote.officeapps.live.com/hosting/discovery
@@ -245,7 +254,7 @@ AUTO_PACKAGES="${AUTO_PACKAGES} nuxeo-search-client-opensearch1"
 # Auto install OpenSearch 1.x audit client
 AUTO_PACKAGES="${AUTO_PACKAGES} nuxeo-audit-opensearch1"
 # Make sure to install S3 plugin if needed
-if [[ "${S3BUCKET}" == "true" || "${S3BUCKET}" == "Create" || "${S3BUCKET}" == "Shared" ]]; then
+if [[ "${S3BUCKET}" == "Create" || "${S3BUCKET}" == "Shared" ]]; then
   AUTO_PACKAGES="${AUTO_PACKAGES} amazon-s3-online-storage"
 fi
 
