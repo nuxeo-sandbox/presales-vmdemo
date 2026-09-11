@@ -36,21 +36,21 @@ echo "Nuxeo Presales Installation Script (NPIS): Starting [${STACK_ID}]" > ${INS
 # https://www.mongodb.com/docs/manual/administration/production-checklist-operations/#linux
 echo "vm.max_map_count=262144" >> /etc/sysctl.conf && sysctl -p
 
-# Check DNS Name
-if [ -z "${RESOURCE_PREFIX}" ]; then
-  RESOURCE_PREFIX=${STACK_ID}
-  echo "Warning: DNS Name is not set, using stack id: ${STACK_ID}" | tee -a ${INSTALL_LOG}
+# Check DNS name
+if [ -z "${DNS_NAME}" ]; then
+  echo "ERROR: DNS name is not set, aborting installation" | tee -a ${INSTALL_LOG}
+  exit 1
 fi
 
 # Fully qualified domain name
-FQDN="${RESOURCE_PREFIX}.cloud.nuxeo.com"
+FQDN="${DNS_NAME}.cloud.nuxeo.com"
 
 # TEMP: Install uuid
 apt-get -q -y install uuid
 
 # Set the hostname & domain
-echo "${RESOURCE_PREFIX}" > /etc/hostname
-hostname ${RESOURCE_PREFIX}
+echo "${DNS_NAME}" > /etc/hostname
+hostname ${DNS_NAME}
 echo "Domains=cloud.nuxeo.com" >> /etc/systemd/resolved.conf
 
 # Install Nuxeo
@@ -196,7 +196,7 @@ then
   NUXEO_SECRET=$(aws --region ${REGION} secretsmanager get-secret-value --secret-id ${NUXEO_SECRET} --query SecretString --output text | jq -r .password)
   cat << EOF > ${CONF_DIR}/arender.conf
 # ARender Configuration
-arender.server.previewer.host=https://${RESOURCE_PREFIX}-nev.cloud.nuxeo.com
+arender.server.previewer.host=https://${DNS_NAME}-nev.cloud.nuxeo.com
 nuxeo.arender.oauth2.client.create=true
 nuxeo.arender.oauth2.client.id=arender
 nuxeo.arender.oauth2.client.secret=${NUXEO_SECRET}

@@ -12,6 +12,7 @@
             "GitBranch",
             "Customer",
             "ResourcePrefix",
+            "DnsName",
             "Contact",
             "ManagerName",
             "OnwerName",
@@ -78,6 +79,14 @@
       "MinLength": 1,
       "MaxLength": 43,
       "ConstraintDescription": "Please specify a valid lowercase prefix of at most 43 characters"
+    },
+    "DnsName": {
+      "Description": "(Optional) Replaces ResourcePrefix for DNS name. 59 chars max.",
+      "Type": "String",
+      "Default": "",
+      "AllowedPattern": "^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9]))*([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])$|^$",
+      "MaxLength": 59,
+      "ConstraintDescription": "Please specify a valid lowercase DNS subdomain of at most 59 characters, or leave blank"
     },
     "InstanceType": {
       "Description": "Type of EC2 instance.  If you plan to install Arender, t3.medium is too small",
@@ -234,6 +243,18 @@
     }
   },
   "Conditions": {
+    "HasDnsName": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "DnsName"
+            },
+            ""
+          ]
+        }
+      ]
+    },
     "CreateS3Bucket": {
       "Fn::Equals": [
         {
@@ -448,7 +469,15 @@
           {
             "Key": "dnsName",
             "Value": {
-              "Ref": "ResourcePrefix"
+              "Fn::If": [
+                "HasDnsName",
+                {
+                  "Ref": "DnsName"
+                },
+                {
+                  "Ref": "ResourcePrefix"
+                }
+              ]
             }
           }
         ],
@@ -459,13 +488,24 @@
         "UserData": {
           "Fn::Base64": {
             "Fn::Sub": [
-              "#!/bin/bash\n\nwget https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/${branch}/aws/ec2-scripts/setup-nuxeo.sh\necho export UPLOAD_ROLE_ARN=${uploadRole} REKOGNITION_ROLE_ARN=${rekognitionRole} SNS_TOPIC_ARN=${snsTopic} STACK_ID=${stack} RESOURCE_PREFIX=${resourcePrefix} REGION=${region} S3BUCKET=${bucket} NX_BRANCH=${branch} PRESALES_DOCKER_BRANCH=${branchForPresalesDocker} NX_STUDIO=${studio} NX_STUDIO_VER=${studioVer} NUXEO_VERSION=${nuxeover} AUTO_START=${autoStart} INSTALL_RPM=${rpms} MAKE_NEV=${MakeNEV} ARENDER_ADDON=${ArenderAddon} NUXEO_SECRET=${NuxeoSecret} >> /etc/profile.d/load_env.sh\nbash setup-nuxeo.sh\n",
+              "#!/bin/bash\n\nwget https://raw.githubusercontent.com/nuxeo-sandbox/presales-vmdemo/${branch}/aws/ec2-scripts/setup-nuxeo.sh\necho export UPLOAD_ROLE_ARN=${uploadRole} REKOGNITION_ROLE_ARN=${rekognitionRole} SNS_TOPIC_ARN=${snsTopic} STACK_ID=${stack} RESOURCE_PREFIX=${resourcePrefix} DNS_NAME=${dnsName} REGION=${region} S3BUCKET=${bucket} NX_BRANCH=${branch} PRESALES_DOCKER_BRANCH=${branchForPresalesDocker} NX_STUDIO=${studio} NX_STUDIO_VER=${studioVer} NUXEO_VERSION=${nuxeover} AUTO_START=${autoStart} INSTALL_RPM=${rpms} MAKE_NEV=${MakeNEV} ARENDER_ADDON=${ArenderAddon} NUXEO_SECRET=${NuxeoSecret} >> /etc/profile.d/load_env.sh\nbash setup-nuxeo.sh\n",
               {
                 "stack": {
                   "Ref": "AWS::StackName"
                 },
                 "resourcePrefix": {
                   "Ref": "ResourcePrefix"
+                },
+                "dnsName": {
+                  "Fn::If": [
+                    "HasDnsName",
+                    {
+                      "Ref": "DnsName"
+                    },
+                    {
+                      "Ref": "ResourcePrefix"
+                    }
+                  ]
                 },
                 "region": {
                   "Ref": "AWS::Region"
@@ -1218,7 +1258,15 @@
                     "https://${name}.cloud.nuxeo.com",
                     {
                       "name": {
-                        "Ref": "ResourcePrefix"
+                        "Fn::If": [
+                          "HasDnsName",
+                          {
+                            "Ref": "DnsName"
+                          },
+                          {
+                            "Ref": "ResourcePrefix"
+                          }
+                        ]
                       }
                     }
                   ]
@@ -1312,6 +1360,24 @@
               }
             ]
           },
+          "DnsName": {
+            "Fn::Sub": [
+              "${name}-nev",
+              {
+                "name": {
+                  "Fn::If": [
+                    "HasDnsName",
+                    {
+                      "Ref": "DnsName"
+                    },
+                    {
+                      "Ref": "ResourcePrefix"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
           "InstanceType": {
             "Ref": "NEVInstanceType"
           },
@@ -1338,7 +1404,15 @@
               "https://${name}.cloud.nuxeo.com/nuxeo",
               {
                 "name": {
-                  "Ref": "ResourcePrefix"
+                  "Fn::If": [
+                    "HasDnsName",
+                    {
+                      "Ref": "DnsName"
+                    },
+                    {
+                      "Ref": "ResourcePrefix"
+                    }
+                  ]
                 }
               }
             ]

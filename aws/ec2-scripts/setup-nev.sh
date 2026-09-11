@@ -17,18 +17,18 @@ NEV_ENV="${COMPOSE_DIR}/.env"
 # Start of installation script
 echo "Nuxeo Presales Installation Script (NPIS): Starting [${STACK_ID}]" > ${INSTALL_LOG}
 
-# Check DNS Name
-if [ -z "${RESOURCE_PREFIX}" ]; then
-  RESOURCE_PREFIX=${STACK_ID}
-  echo "Warning: DNS Name is not set, using stack id: ${STACK_ID}" | tee -a ${INSTALL_LOG}
+# Check DNS name
+if [ -z "${DNS_NAME}" ]; then
+  echo "ERROR: DNS name is not set, aborting installation" | tee -a ${INSTALL_LOG}
+  exit 1
 fi
 
 # Fully qualified domain name
-FQDN="${RESOURCE_PREFIX}.cloud.nuxeo.com"
+FQDN="${DNS_NAME}.cloud.nuxeo.com"
 
 # Set the hostname & domain
-echo "${RESOURCE_PREFIX}" > /etc/hostname
-hostname ${RESOURCE_PREFIX}
+echo "${DNS_NAME}" > /etc/hostname
+hostname ${DNS_NAME}
 echo "Domains=cloud.nuxeo.com" >> /etc/systemd/resolved.conf
 
 #== Install NEV Tooling ========================================================

@@ -30,7 +30,7 @@
 # -- Verifies old/new FQDN
 #     -- just adds ".cloud.nuxeo.com" on to the old/new DNS name value
 # -- Find/replace for old DNS name/new DNS name on /etc/profile.d/load_env.sh
-# -- Exports new RESOURCE_PREFIX value to update existing RESOURCE_PREFIX env var
+# -- Copies new DNS name to existing DNS_NAME env var
 # -- Deletes old certificate
 # -- Edits in-place apache2 conf file
 #     -- Find/replace old FQDN/new FQDN
@@ -118,10 +118,11 @@ select yn in "Yes" "No"; do
     esac
 done
 
-# Update /etc/profile.d/load_env.sh with new RESOURCE_PREFIX value
-# Export new RESOURCE_PREFIX value
-sed -i "s/\bRESOURCE_PREFIX\S*/RESOURCE_PREFIX=${NEW_DNS_NAME}/" /etc/profile.d/load_env.sh
-export RESOURCE_PREFIX="${NEW_DNS_NAME}"
+# So future logins use the new DNS name
+sed -i "s/\bDNS_NAME\S*/DNS_NAME=${NEW_DNS_NAME}/" /etc/profile.d/load_env.sh
+
+# So the rest of this run uses the new DNS name
+export DNS_NAME="${NEW_DNS_NAME}"
 
 # Delete old certificate
 echo "Deleting old cert..."
