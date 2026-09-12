@@ -1253,24 +1253,7 @@
                 "POST"
               ],
               "AllowedOrigins": [
-                {
-                  "Fn::Sub": [
-                    "https://${name}.cloud.nuxeo.com",
-                    {
-                      "name": {
-                        "Fn::If": [
-                          "HasDnsName",
-                          {
-                            "Ref": "DnsName"
-                          },
-                          {
-                            "Ref": "ResourcePrefix"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
+                "https://*.cloud.nuxeo.com"
               ],
               "ExposedHeaders": [
                 "ETag",
