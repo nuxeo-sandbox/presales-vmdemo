@@ -260,6 +260,10 @@ rm -f /root/creds.json
 chown -R nuxeo:ubuntu ${TMP_DIR}
 chown -R ubuntu:ubuntu ${COMPOSE_DIR} ${HOME}/.docker
 
+# Make the `init` folder writable by the container user so it can copy the
+# server's default log4j2.xml out to the host.
+chmod 777 ${COMPOSE_DIR}/init
+
 # Use the source image to register the project
 docker pull --quiet ${NUXEO_IMAGE} 2>&1 | tee -a ${INSTALL_LOG}
 
