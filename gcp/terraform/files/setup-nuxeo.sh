@@ -19,6 +19,13 @@ NUXEO_SECRET=$(curl http://metadata.google.internal/computeMetadata/v1/instance/
 MAKE_NEV=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/with-nev -H "Metadata-Flavor: Google")
 PRESALES_DOCKER_BRANCH=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/npd-branch -H "Metadata-Flavor: Google")
 
+# Google Cloud SQL for PostgreSQL connection settings
+DB_HOST=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/db-host -H "Metadata-Flavor: Google")
+DB_PORT=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/db-port -H "Metadata-Flavor: Google")
+DB_NAME=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/db-name -H "Metadata-Flavor: Google")
+DB_USER=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/db-user -H "Metadata-Flavor: Google")
+DB_PASSWORD=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/db-password -H "Metadata-Flavor: Google")
+
 # Get credentials for Studio & Repository & mail
 gcloud secrets versions access latest --secret nuxeo-presales-connect --project nuxeo-presales-apis > /root/creds.json
 
@@ -42,7 +49,11 @@ TMP_DIR="/tmp/nuxeo"
 
 # Variables for `.env`
 STUDIO_USERNAME="nuxeo_presales"
-TEMPLATES="default,mongodb"
+# The repository runs on Google Cloud SQL for PostgreSQL, not on the local MongoDB.
+# The `postgresql` template pulls in `common-sql` (datasource, VCS repository,
+# SQL key/value store and SQL directories) and ships the JDBC driver.
+TEMPLATES="postgresql"
+# The `mongo` service of the compose stack is still started but is left unused.
 MONGO_VERSION="8.0"
 OPENSEARCH_VERSION="1.3.20"
 OPENSEARCH_IMAGE="opensearchproject/opensearch:"${OPENSEARCH_VERSION}
@@ -65,8 +76,10 @@ fi
 # Fully qualified domain name
 FQDN="${DNS_NAME}.gcp.cloud.nuxeo.com"
 
-# TEMP: Install uuid
-apt-get -q -y install uuid
+# Install extra packages: `uuid` for the WOPI JWT secret, `postgresql-client` to
+# check and prepare the Cloud SQL database (and to debug it from the VM later on).
+apt-get -q -y update || true
+apt-get -q -y install uuid postgresql-client
 
 # Set the hostname & domain
 hostnamectl set-hostname "${DNS_NAME}"
@@ -103,6 +116,26 @@ nuxeo.url=https://${FQDN}/nuxeo
 
 # Templates
 nuxeo.append.templates.system=${TEMPLATES}
+
+# Database Configuration (Google Cloud SQL for PostgreSQL)
+# The host is the public IP of the Cloud SQL instance; the VM reaches it with
+# its static external IP, which is the only authorized network on the instance.
+nuxeo.db.host=${DB_HOST}
+nuxeo.db.port=${DB_PORT}
+nuxeo.db.name=${DB_NAME}
+nuxeo.db.user=${DB_USER}
+nuxeo.db.password=${DB_PASSWORD}
+# Cloud SQL is set to ENCRYPTED_ONLY, so TLS is mandatory. The URL is written
+# fully resolved because the traffic leaves the VPC.
+nuxeo.db.jdbc.url=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=require
+# Keep the pools well below the max_connections=200 database flag.
+nuxeo.db.validationQuery=SELECT 1
+nuxeo.db.min-pool-size=2
+nuxeo.db.max-pool-size=20
+nuxeo.db.idle-timeout-minutes=10
+nuxeo.vcs.min-pool-size=0
+nuxeo.vcs.max-pool-size=20
+nuxeo.vcs.idle-timeout-minutes=5
 
 # CORS Configuration (used with AI, Salesforce, others)
 #nuxeo.cors.urls=
@@ -169,6 +202,47 @@ else
 EOF
 fi
 
+# ==================== Cloud SQL readiness check ====================
+# Nuxeo refuses to start if it cannot reach the database (see DBCheck), so we
+# probe it here first: a failure shows up immediately in the install log instead
+# of being buried in the Nuxeo server log.
+#
+# We also make the schema ownership explicit. Since PostgreSQL 15 the `public`
+# schema is no longer writable by everyone. The Cloud SQL role is a member of
+# `cloudsqlsuperuser`, which owns the database, so it should already be allowed
+# to create the Nuxeo tables: these statements are a safety net and must never
+# fail the installation.
+echo "${INSTALL_LOG_PREFIX} Check Cloud SQL database [${DB_HOST}:${DB_PORT}/${DB_NAME}]" | tee -a ${INSTALL_LOG}
+
+if ! command -v psql > /dev/null 2>&1; then
+  # Not fatal: Nuxeo has its own startup check, we just lose this early diagnostic.
+  echo "  psql is not installed, skipping the database check." | tee -a ${INSTALL_LOG}
+else
+  export PGPASSWORD="${DB_PASSWORD}"
+  PSQL_CONN="host=${DB_HOST} port=${DB_PORT} dbname=${DB_NAME} user=${DB_USER} sslmode=require connect_timeout=10"
+
+  # Cloud SQL can still be finishing its startup when the VM boots, so retry a bit.
+  DB_READY="false"
+  for attempt in $(seq 1 30); do
+    if psql "${PSQL_CONN}" -tAc "SELECT version();" >> ${INSTALL_LOG} 2>&1; then
+      DB_READY="true"
+      break
+    fi
+    echo "  Database not reachable yet (attempt ${attempt}/30), retrying in 10s..." | tee -a ${INSTALL_LOG}
+    sleep 10
+  done
+
+  if [[ "${DB_READY}" == "true" ]]; then
+    echo "${INSTALL_LOG_PREFIX} Check Cloud SQL database => OK" | tee -a ${INSTALL_LOG}
+    psql "${PSQL_CONN}" -c "GRANT ALL ON SCHEMA public TO \"${DB_USER}\";" 2>&1 | tee -a ${INSTALL_LOG} || true
+    psql "${PSQL_CONN}" -c "ALTER DATABASE \"${DB_NAME}\" OWNER TO \"${DB_USER}\";" 2>&1 | tee -a ${INSTALL_LOG} || true
+  else
+    echo "${INSTALL_LOG_PREFIX} WARNING: Cloud SQL database is NOT reachable. Nuxeo will fail to start." | tee -a ${INSTALL_LOG}
+    echo "  Check that ${DB_HOST} allows connections from this VM's external IP." | tee -a ${INSTALL_LOG}
+  fi
+
+  unset PGPASSWORD
+fi
 
 # Register the nuxeo instance
 echo "$(date) Configure Studio Project [${NX_STUDIO}]" | tee -a ${INSTALL_LOG}

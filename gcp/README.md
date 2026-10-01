@@ -1,6 +1,14 @@
 # Description
 GCP resources used by the Nuxeo Presales Team. These are provided for inspiration and we encourage developers to use them as code samples and learning resources.
 
+> **Branch `gcp-with-cloud-sql`**: this branch deploys Nuxeo with
+> [Google Cloud SQL for PostgreSQL](https://cloud.google.com/sql/postgresql) as the
+> repository database instead of MongoDB. It is a feasibility test and is not meant
+> to be merged into `master`. See the [terraform README](terraform/README.md#database-google-cloud-sql-for-postgresql).
+>
+> Mind the cost: a running Cloud SQL instance is billed 24/7, even while the Nuxeo
+> VM is stopped. Destroy the stack as soon as you are done.
+
 # Content
 
 ## Demo Stack Tooling
@@ -9,7 +17,7 @@ This tooling uses the compute image built with the packer template at [vm-image-
 
 ## Cloud Functions
 Functions used to automate various tasks including:
-* Automatic shutdown of instances
+* Automatic shutdown of instances (Compute Engine and Cloud SQL)
 * Automatic start of instances
 * Automatic update of DNS records when instances are started or stopped
 

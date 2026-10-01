@@ -66,10 +66,19 @@ resource "google_project_iam_member" "compute_viewer_iam" {
   member  = "serviceAccount:${google_service_account.service_account.email}"
 }
 
+# Required to list Cloud SQL instances and to set their activation policy to
+# NEVER (which is how a Cloud SQL instance is stopped). Only instances carrying
+# the `nuxeo-keep-alive` label are touched.
+resource "google_project_iam_member" "cloudsql_editor_iam" {
+  project = data.google_project.project.project_id
+  role    = "roles/cloudsql.editor"
+  member  = "serviceAccount:${google_service_account.service_account.email}"
+}
+
 resource "google_cloudfunctions2_function" "default" {
   name        = var.function_name
   location    = "us-central1"
-  description = "A function to periodically shutdown compute instances"
+  description = "A function to periodically shutdown compute instances and Cloud SQL instances"
   build_config {
     runtime     = "nodejs20"
     entry_point = "handlerHttp" # Set the entry point
@@ -81,9 +90,11 @@ resource "google_cloudfunctions2_function" "default" {
     }
   }
   service_config {
-    max_instance_count    = 1
-    available_memory      = "512M"
-    timeout_seconds       = 60
+    max_instance_count = 1
+    available_memory   = "512M"
+    # Listing Compute Engine instances across all zones plus the Cloud SQL
+    # instances of the project needs more than the initial 60s.
+    timeout_seconds       = 120
     service_account_email = google_service_account.service_account.email
   }
 }

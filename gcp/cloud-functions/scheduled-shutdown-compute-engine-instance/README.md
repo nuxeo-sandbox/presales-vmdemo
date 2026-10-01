@@ -2,7 +2,7 @@
 
 A GCP cloud function to automatically shutdown instances using a [GCP Cloud Scheduler](https://console.cloud.google.com/cloudscheduler)
 
-The function stops all running instances in the zone passed in the request (see the "Test Locally" example below). It will keep alive only the instances having a `nuxeo-keep-alive` label which:
+The function stops all running Compute Engine instances and Cloud SQL instances in the project. It will keep alive only the instances having a `nuxeo-keep-alive` label which:
 
 * Is set to `true`
 * Or its value converted to a date is >= now (aka when the function runs). See below "Formating the nuxeo-keep-alive label"
@@ -33,6 +33,31 @@ If an instance does not have the `nuxeo-keep-alive` label, of the label is not a
 * An error is logged
 * The instance is not stopped
 * _(TODO: Send a notification)_
+
+
+## Cloud SQL instances
+
+The function also stops **Cloud SQL instances**, using the exact same
+`nuxeo-keep-alive` label and the exact same rules. This matters for the Nuxeo
+stacks that use Cloud SQL for PostgreSQL instead of the MongoDB container: a
+running Cloud SQL instance is billed 24/7, even when its Nuxeo VM is stopped.
+
+A few specifics:
+
+* Cloud SQL is regional, so the time zone is computed from the instance region.
+* "Stopping" a Cloud SQL instance means setting its activation policy to `NEVER`.
+* A Cloud SQL instance **without** the `nuxeo-keep-alive` label is never touched
+  (no error logged), so instances created outside of this tooling are safe.
+* The whole Cloud SQL part is wrapped in a `try/catch` and runs *after* the
+  Compute Engine part: if it fails, Compute Engine instances are still stopped.
+* Nothing restarts a Cloud SQL instance automatically. After starting a Nuxeo VM
+  back up, start its database first with `gcp/terraform/cloud-sql.sh start`,
+  otherwise Nuxeo will not boot.
+
+The service account of the function needs `roles/cloudsql.editor`, which the
+Terraform configuration grants. **If you deployed this function before Cloud SQL
+support was added, you must re-apply it** (`terraform apply`), otherwise Cloud
+SQL instances will silently keep running.
 
 
 # Installation

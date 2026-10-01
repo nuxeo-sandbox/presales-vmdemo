@@ -2,6 +2,11 @@
     List all running instances of the project (in every region) and check if they need to be stopped.
     This is called from a scheduler.
 
+    Both Compute Engine instances and Cloud SQL instances are handled. Cloud SQL
+    instances are only relevant for the Nuxeo stacks that use Cloud SQL for
+    PostgreSQL instead of the MongoDB container; a Cloud SQL instance keeps
+    billing 24/7 as long as it runs, even when its Nuxeo VM is stopped.
+
     A label is set to every instance, nuxeo-keep-alive.
     WARNING: See below the format requirement, it is not possible to use an ISO date/Time.
     Basically the value MUST BE either:
@@ -30,6 +35,10 @@ const compute = require('@google-cloud/compute');
 const moment = require('moment-timezone');
 
 const JOB_NAME = "daily-gce-instance-shutdown";
+
+// Cloud SQL is not covered by @google-cloud/compute. Rather than adding a new
+// npm dependency, we call the Cloud SQL Admin REST API directly.
+const SQL_ADMIN_BASE = "https://sqladmin.googleapis.com/v1";
 
 // For labels, <GCP does not allows "Only hyphens (-), underscores (_), lowercase characters, and numbers are allowed [...]>
 // => nuxeoKeepAlive can't be used
@@ -74,7 +83,27 @@ functions.http('handlerHttp', async (req, res) => {
     console.log("No instance to stop");
   }
 
-  const msg = `${JOB_NAME}: Done. Instance(s) stopped: ${countOfStopped}\n`;
+  /* ==================== Cloud SQL ====================
+     Handled after Compute Engine and fully wrapped in a try/catch: a failure
+     here (missing IAM permission, API disabled, ...) must never prevent the
+     Compute Engine instances from being stopped. */
+  let sqlMessage = "";
+  try {
+    const sqlInstancesToStop = await listSqlInstancesToStop(projectId);
+    let countOfSqlStopped = 0;
+    if (sqlInstancesToStop.length > 0) {
+      console.log(`Cloud SQL instance(s) to stop: ${sqlInstancesToStop.length}`);
+      countOfSqlStopped = await stopSqlInstances(sqlInstancesToStop, projectId);
+    } else {
+      console.log("No Cloud SQL instance to stop");
+    }
+    sqlMessage = ` Cloud SQL instance(s) stopped: ${countOfSqlStopped}.`;
+  } catch (error) {
+    console.error("Error while handling Cloud SQL instances. Compute Engine instances were NOT impacted:", error);
+    sqlMessage = " Cloud SQL handling FAILED, see the logs.";
+  }
+
+  const msg = `${JOB_NAME}: Done. Instance(s) stopped: ${countOfStopped}.${sqlMessage}\n`;
   console.log(msg);
   return res.send(msg);
 
@@ -236,6 +265,154 @@ async function listAllZones(projectId) {
   }
 
   return zoneNames;
+}
+
+// ==================================================
+// Cloud SQL
+// ==================================================
+
+/*
+   Shared decision helper: given a nuxeo-keep-alive label value and a time zone,
+   tell whether the resource must be stopped right now.
+   Returns { stop: boolean, reason: string }.
+*/
+function shouldStopNow(label, timeZone) {
+  if (!label || label === "undefined") {
+    return { stop: false, reason: `no ${KEEP_ALIVE_LABEL} label => kept alive` };
+  }
+  if (label === "true") {
+    return { stop: false, reason: `${KEEP_ALIVE_LABEL}=true => never stopped` };
+  }
+
+  const now = new Date();
+
+  // If the label is only a time, let's add the current date for comparison
+  let labelUpdated;
+  if (REGEX_TIME.test(label)) {
+    labelUpdated = prefixTimeWithDate(label, now);
+  } else if (REGEX_DATE_AND_TIME.test(label)) {
+    labelUpdated = backToISO(label);
+  } else {
+    return { stop: false, reason: `${KEEP_ALIVE_LABEL}='${label}' is not a date-time => ignored` };
+  }
+
+  const labelDate = buildDateWithTimeZone(labelUpdated, timeZone);
+  const labelUTCDate = getUTCYearMonthDayAsStr(labelDate);
+  const labelUTCTime = getUTCHoursMinutesAsStr(labelDate);
+  const nowUTCDate = getUTCYearMonthDayAsStr(now);
+  const nowUTCTime = getUTCHoursMinutesAsStr(now);
+
+  const reason = `${KEEP_ALIVE_LABEL}=${label} -> ${labelUpdated} | now UTC ${nowUTCDate} ${nowUTCTime} | label UTC ${labelUTCDate} ${labelUTCTime}`;
+
+  if (nowUTCDate > labelUTCDate) {
+    return { stop: true, reason };
+  }
+  if (nowUTCDate === labelUTCDate && nowUTCTime > labelUTCTime) {
+    return { stop: true, reason };
+  }
+  return { stop: false, reason };
+}
+
+// The function's own service account token, read from the metadata server.
+// Cloud Functions gen2 run on Cloud Run, which always exposes it.
+async function getAccessToken() {
+  const response = await fetch(
+    'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token',
+    { headers: { 'Metadata-Flavor': 'Google' } }
+  );
+  if (!response.ok) {
+    throw new Error(`Cannot get an access token from the metadata server: ${response.status}`);
+  }
+  const body = await response.json();
+  return body.access_token;
+}
+
+// Return an array of Cloud SQL instance names to stop.
+// Instances without the nuxeo-keep-alive label are never touched, so Cloud SQL
+// instances created outside of this tooling are safe.
+async function listSqlInstancesToStop(projectId) {
+  const token = await getAccessToken();
+
+  const response = await fetch(`${SQL_ADMIN_BASE}/projects/${projectId}/instances`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    throw new Error(`Cannot list Cloud SQL instances: ${response.status} ${await response.text()}`);
+  }
+
+  const body = await response.json();
+  const instances = body.items || [];
+  const instancesToStop = [];
+
+  for (const instance of instances) {
+    // Anything that is not RUNNABLE is already stopped, or still being created.
+    if (instance.state !== "RUNNABLE") {
+      continue;
+    }
+    // A NEVER activation policy means the instance is already stopped.
+    if (instance.settings && instance.settings.activationPolicy === "NEVER") {
+      continue;
+    }
+
+    const labels = (instance.settings && instance.settings.userLabels) || {};
+    const label = labels[KEEP_ALIVE_LABEL];
+    if (!label) {
+      console.log(`Cloud SQL ${instance.name} has no ${KEEP_ALIVE_LABEL} label => we don't touch it.`);
+      continue;
+    }
+
+    // Cloud SQL instances are regional, getTimeZoneForZoneOrRegion handles both.
+    const timeZone = getTimeZoneForZoneOrRegion(instance.region);
+    if (!timeZone) {
+      // This script must be updated (add the entry to REGION_TO_TIME_ZONE)
+      console.error(`ERROR: Cannot calculate timeZone for region ${instance.region}. Script must be updated`);
+      continue;
+    }
+
+    const decision = shouldStopNow(label, timeZone);
+    const action = decision.stop ? "Added to the list of instances to stop." : "Not to be stopped";
+    console.log(`\n  Running Cloud SQL instance: ${instance.name} (${instance.region}, ${timeZone})\n    ${decision.reason}\n    => ${action}`);
+
+    if (decision.stop) {
+      instancesToStop.push(instance.name);
+    }
+  }
+
+  return instancesToStop;
+}
+
+// Stopping a Cloud SQL instance means setting its activation policy to NEVER.
+// Returns the number of instances actually stopped.
+async function stopSqlInstances(instanceNames, projectId) {
+  const token = await getAccessToken();
+  let countOfSqlStopped = 0;
+
+  const stopPromises = instanceNames.map(async (name) => {
+    console.log(`Stopping Cloud SQL instance ${name}...`);
+    try {
+      const response = await fetch(`${SQL_ADMIN_BASE}/projects/${projectId}/instances/${name}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ settings: { activationPolicy: 'NEVER' } })
+      });
+      if (!response.ok) {
+        console.error(`Error stopping Cloud SQL instance ${name}: ${response.status} ${await response.text()}`);
+        return;
+      }
+      console.log(`Cloud SQL instance ${name} has been stopped.`);
+      countOfSqlStopped += 1;
+    } catch (error) {
+      console.error(`Error stopping Cloud SQL instance ${name}:`, error);
+    }
+  });
+
+  // Wait for all stop requests to complete
+  await Promise.all(stopPromises);
+
+  return countOfSqlStopped;
 }
 
 // ==================================================

@@ -4,6 +4,13 @@
 # Wrapper script to destroy a Nuxeo stack in GCP using Terraform
 # ==============================================================================
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/preflight.sh"
+
+# Reading the Terraform state and destroying the resources both need the right
+# identity, so run the check before anything else.
+nx_check_google_application_credentials
+
 # ==============================================================================
 # Inputs
 # ==============================================================================
@@ -45,6 +52,14 @@ params=(
 echo
 echo "Stack name:       ${nx_stack_name}"
 echo "Workspace name:   ${workspace_name}"
+
+# The Cloud SQL instance holds the whole repository: make it obvious that it,
+# and its data, are about to be deleted.
+db_instance=$(terraform output -raw cloud_sql_instance 2>/dev/null)
+if [ -n "${db_instance}" ]
+then
+  echo "Cloud SQL:        ${db_instance}  <-- THIS DATABASE AND ALL ITS DATA WILL BE DELETED"
+fi
 
 echo
 echo "Here's what will be executed:"
