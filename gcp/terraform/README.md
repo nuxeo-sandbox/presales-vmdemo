@@ -62,15 +62,57 @@ instance and Nuxeo runs on VCS (the SQL storage engine):
   JDBC driver.
 * **PostgreSQL 16** is used: this is the version supported by Nuxeo LTS 2025, see
   the [Nuxeo PostgreSQL documentation](https://doc.nuxeo.com/nxdoc/postgresql/).
-* The VM gets a **static external IP** (`google_compute_address`). That address is
-  the only `authorized_network` of the Cloud SQL instance. A static IP is required
-  here: an ephemeral one changes on every stop/start and would break the database
-  connection after each nightly shutdown.
+* The instance has **no public IP**. Two organization policies are enforced on
+  `nuxeo-presales-apis` and forbid it:
+  `constraints/sql.restrictPublicIp` and `constraints/sql.restrictAuthorizedNetworks`.
+  The database is therefore reached over the **private services access** peering
+  of the `nuxeo-demo-instances` VPC. See [Private connectivity](#private-connectivity).
+* The Docker containers reach that private IP transparently: Docker masquerades
+  their traffic behind the VM's internal address, which routes over the peering.
 * The connection is TLS-only (`ssl_mode = ENCRYPTED_ONLY` on Cloud SQL,
   `sslmode=require` in the JDBC URL).
+* The VM also gets a static external IP. It is not needed by the database, it
+  just keeps the DNS record stable across stop/start cycles.
 * OpenSearch, the OpenSearch dashboards and the Google Cloud Storage blob provider
   are unchanged. The `mongo` container is still started by the compose stack but
   it is **not used** by Nuxeo.
+
+## Private connectivity
+
+The VPC `nuxeo-demo-instances` needs an active private services access peering
+**with an existing allocated IP range**. Beware: the peering can be `ACTIVE`
+while its range has been deleted. Nothing warns you, and the instance creation
+then fails several minutes into the apply with
+`Invalid request: Incorrect Service Networking config`.
+
+This range is a **one-time, project-level prerequisite** and is deliberately
+*not* managed by this Terraform configuration, so that destroying a stack can
+never remove it and break every other stack.
+
+Check it:
+
+```bash
+gcloud services vpc-peerings list --network=nuxeo-demo-instances --project=nuxeo-presales-apis
+gcloud compute addresses list --global --project=nuxeo-presales-apis
+```
+
+The names listed under `reservedPeeringRanges` must all appear in the second
+command. If one is missing, create it once. `10.0.0.0/9` is free: the VPC is in
+auto mode and only uses `10.128.0.0/9`.
+
+```bash
+gcloud compute addresses create nuxeo-demo-instances-ip-range \
+  --global --purpose=VPC_PEERING --addresses=10.60.0.0 --prefix-length=16 \
+  --network=nuxeo-demo-instances --project=nuxeo-presales-apis
+
+gcloud services vpc-peerings update \
+  --service=servicenetworking.googleapis.com \
+  --network=nuxeo-demo-instances \
+  --ranges=nuxeo-demo-instances-ip-range \
+  --project=nuxeo-presales-apis
+```
+
+`create-nuxeo-gcp.sh` runs this check before prompting for anything.
 
 ## Prerequisites
 
@@ -85,11 +127,13 @@ Before the first `apply`, on the `nuxeo-presales-apis` project:
 2. Your Terraform identity needs `roles/cloudsql.admin` (or at least
    `cloudsql.instances.create`, `cloudsql.databases.create` and
    `cloudsql.users.create`) plus `compute.addresses.create`.
-3. Cloud SQL quota must be available in the deployment region.
+3. The private services access range must exist, see
+   [Private connectivity](#private-connectivity).
+4. Cloud SQL quota must be available in the deployment region.
 
-`create-nuxeo-gcp.sh` checks points 1 and 2 before prompting for anything, so a
-missing API or a wrong identity fails in two seconds instead of mid-apply. To
-check by hand:
+`create-nuxeo-gcp.sh` checks points 1 to 3 before prompting for anything, so a
+missing API, a wrong identity or a broken peering fails in two seconds instead
+of mid-apply. To check by hand:
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}\n" \
@@ -138,7 +182,7 @@ terraform workspace select <stack_name>
 ./cloud-sql.sh status   # state, IP, tier
 ./cloud-sql.sh stop     # stop (activation policy NEVER)
 ./cloud-sql.sh start    # start (activation policy ALWAYS)
-./cloud-sql.sh psql     # open a psql session on the Nuxeo database
+./cloud-sql.sh psql     # psql session on the Nuxeo database, run from the VM
 ```
 
 ...or with `gcloud`:
@@ -176,11 +220,15 @@ nxbash                                  # then, inside the container:
   ls /opt/nuxeo/server/lib/postgresql-*.jar
 ```
 
-The VM has the `psql` client installed. The VCS tables (`hierarchy`, `fulltext`,
-`acls`, `versions`, `kv`, `users`, `groups`, ...) must be present:
+The VM has the `psql` client installed. Since the database has no public IP, it
+can only be queried from inside the VPC, so run this **on the VM** (or use
+`./cloud-sql.sh psql`, which does the SSH for you). The VCS tables (`hierarchy`,
+`fulltext`, `acls`, `versions`, `kv`, `users`, `groups`, ...) must be present:
 
 ```bash
-psql "host=<db-host> dbname=nuxeo user=nuxeo sslmode=require" -c '\dt'
+psql "host=$(curl -s -H 'Metadata-Flavor: Google' \
+  http://metadata.google.internal/computeMetadata/v1/instance/attributes/db-host) \
+  dbname=nuxeo user=nuxeo sslmode=require" -c '\dt'
 ```
 
 # Create Resources

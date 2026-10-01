@@ -198,6 +198,15 @@ resource "google_storage_bucket_iam_member" "member" {
 
 # Database resources (Google Cloud SQL for PostgreSQL)
 
+# The instance has no public IP, so it is reached over the private services
+# access peering already configured on this VPC. That peering needs an
+# allocated range to exist; see the README, it is a one-time project-level
+# prerequisite kept out of this configuration on purpose, so that destroying a
+# stack can never remove it.
+data "google_compute_network" "demo_network" {
+  name = "nuxeo-demo-instances"
+}
+
 resource "random_password" "db_password" {
   length = 32
   # Only alphanumerics and "-" so the value is safe in a Java .properties file,
@@ -215,8 +224,8 @@ resource "random_id" "db_suffix" {
   }
 }
 
-# The VM needs a stable external IP address: it is the only address allowed to
-# reach Cloud SQL, and an ephemeral IP would change on every stop/start cycle.
+# Static external IP for the VM. Not required by the database (which is reached
+# over private IP), but it keeps the DNS record stable across stop/start cycles.
 resource "google_compute_address" "nuxeo_ip" {
   name   = "${var.stack_name}-ip"
   region = local.region
@@ -244,13 +253,14 @@ resource "google_sql_database_instance" "nuxeo_db" {
     }
 
     ip_configuration {
-      ipv4_enabled = true
+      # Public IPs are forbidden by constraints/sql.restrictPublicIp, and
+      # authorized networks by constraints/sql.restrictAuthorizedNetworks.
+      # The instance is therefore only reachable over the private services
+      # access peering of the VPC, which the Compute Engine instance is on.
+      ipv4_enabled    = false
+      private_network = data.google_compute_network.demo_network.id
       # Reject any connection that is not encrypted.
       ssl_mode = "ENCRYPTED_ONLY"
-      authorized_networks {
-        name  = var.stack_name
-        value = "${google_compute_address.nuxeo_ip.address}/32"
-      }
     }
 
     # Nuxeo opens at most ~40 connections with the pool sizes set in setup-nuxeo.sh.
@@ -323,7 +333,7 @@ resource "google_compute_instance" "nuxeo_instance" {
     nuxeo-secret : random_password.nuxeo_secret.result
     auto-start : var.auto_start
     npd-branch : var.npd_branch
-    db-host : google_sql_database_instance.nuxeo_db.public_ip_address
+    db-host : google_sql_database_instance.nuxeo_db.private_ip_address
     db-port : "5432"
     db-name : var.db_name
     db-user : var.db_user
@@ -389,14 +399,19 @@ output "nuxeo_instance_ip" {
   value       = google_compute_address.nuxeo_ip.address
 }
 
+output "nuxeo_zone" {
+  description = "Zone of the Compute Engine instance"
+  value       = var.nuxeo_zone
+}
+
 output "cloud_sql_instance" {
   description = "Name of the Cloud SQL instance"
   value       = google_sql_database_instance.nuxeo_db.name
 }
 
-output "cloud_sql_public_ip" {
-  description = "Public IP of the Cloud SQL instance"
-  value       = google_sql_database_instance.nuxeo_db.public_ip_address
+output "cloud_sql_private_ip" {
+  description = "Private IP of the Cloud SQL instance, only reachable from the VPC"
+  value       = google_sql_database_instance.nuxeo_db.private_ip_address
 }
 
 output "cloud_sql_connection_name" {

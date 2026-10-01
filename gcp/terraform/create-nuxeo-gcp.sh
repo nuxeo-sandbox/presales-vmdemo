@@ -10,14 +10,18 @@ source "${SCRIPT_DIR}/preflight.sh"
 # ==============================================================================
 # Pre-flight checks
 # ==============================================================================
-# Both checks guard against 403 errors that would otherwise only show up in the
-# middle of the apply, after the Cloud SQL instance creation has started.
+# All three checks guard against failures that would otherwise only show up in
+# the middle of the apply, after several minutes.
 nx_check_google_application_credentials
 
-if ! nx_check_cloud_sql_access "nuxeo-presales-apis"
+preflight_failed=false
+nx_check_cloud_sql_access "nuxeo-presales-apis" || preflight_failed=true
+nx_check_private_services_access "nuxeo-presales-apis" "nuxeo-demo-instances" || preflight_failed=true
+
+if ${preflight_failed}
 then
   echo
-  echo "This stack cannot be created without access to the Cloud SQL Admin API."
+  echo "This stack cannot be created until the problem(s) above are fixed."
   read -p "Continue anyway? (y|n) [n]: " ignore_db_check
   if [ "${ignore_db_check:-n}" != "y" ]
   then

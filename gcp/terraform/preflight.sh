@@ -133,3 +133,65 @@ nx_check_cloud_sql_access() {
       ;;
   esac
 }
+
+# ------------------------------------------------------------------------------
+# The Cloud SQL instance has no public IP, because of the organization policies
+# constraints/sql.restrictPublicIp and constraints/sql.restrictAuthorizedNetworks.
+# It is reached over the private services access peering of the VPC, which needs
+# an allocated IP range to exist.
+#
+# That range is a one-time project prerequisite, deliberately kept out of the
+# Terraform configuration so that destroying a stack cannot remove it. The
+# peering can be ACTIVE while its range has been deleted, in which case the
+# instance creation fails several minutes into the apply.
+#
+# Returns 0 when a usable range is found, 1 otherwise.
+# ------------------------------------------------------------------------------
+nx_check_private_services_access() {
+  local project="${1:-nuxeo-presales-apis}"
+  local network="${2:-nuxeo-demo-instances}"
+
+  echo "Checking private services access on VPC '${network}'..."
+
+  local ranges
+  ranges=$(gcloud services vpc-peerings list --network="${network}" --project="${project}" \
+             --format="value(reservedPeeringRanges)" 2>/dev/null)
+
+  if [ -z "${ranges}" ]
+  then
+    echo "  FAILED: no private services access peering on '${network}'."
+    echo "  Cloud SQL cannot be reached without it. See the README, section"
+    echo "  'Private connectivity'."
+    return 1
+  fi
+
+  # The peering lists range *names*; each must still exist as a global address.
+  local missing=""
+  local range
+  for range in ${ranges//,/ }
+  do
+    if ! gcloud compute addresses describe "${range}" --global --project "${project}" \
+           --format="value(name)" > /dev/null 2>&1
+    then
+      missing="${missing} ${range}"
+    fi
+  done
+
+  if [ -n "${missing}" ]
+  then
+    echo "  FAILED: the peering references range(s) that no longer exist:${missing}"
+    echo
+    echo "  The peering is ACTIVE but orphaned. Recreate the range once, for the"
+    echo "  whole project (10.0.0.0/9 is free, the VPC only uses 10.128.0.0/9):"
+    echo "    gcloud compute addresses create${missing} \\"
+    echo "      --global --purpose=VPC_PEERING --addresses=10.60.0.0 --prefix-length=16 \\"
+    echo "      --network=${network} --project=${project}"
+    echo "    gcloud services vpc-peerings update \\"
+    echo "      --service=servicenetworking.googleapis.com --network=${network} \\"
+    echo "      --ranges=${missing# } --project=${project}"
+    return 1
+  fi
+
+  echo "  OK: peering active with range(s): ${ranges}"
+  return 0
+}

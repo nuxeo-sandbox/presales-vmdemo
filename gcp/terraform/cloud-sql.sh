@@ -67,23 +67,24 @@ case "${action}" in
     ;;
 
   psql)
-    # Reads the credentials straight from the Terraform outputs, so there is no
-    # need to copy the generated password around.
-    db_host=$(terraform output -raw cloud_sql_public_ip 2>/dev/null)
+    # The instance has no public IP (constraints/sql.restrictPublicIp), so it is
+    # only reachable from inside the VPC: psql runs on the Nuxeo VM over SSH.
+    # Credentials come from the Terraform outputs, nothing to copy around.
+    db_host=$(terraform output -raw cloud_sql_private_ip 2>/dev/null)
     db_name=$(terraform output -raw cloud_sql_database 2>/dev/null)
     db_user=$(terraform output -raw cloud_sql_user 2>/dev/null)
     db_password=$(terraform output -raw cloud_sql_password 2>/dev/null)
+    vm_zone=$(terraform output -raw nuxeo_zone 2>/dev/null)
 
-    if [[ -z "${db_password}" ]]
+    if [[ -z "${db_password}" || -z "${db_host}" ]]
     then
-      echo "Error: could not read the database password from the Terraform state."
+      echo "Error: could not read the database connection details from the Terraform outputs."
       exit 1
     fi
 
-    echo "Connecting to ${db_name} on ${db_host} as ${db_user}..."
-    echo "Note: your current public IP must be an authorized network, otherwise this"
-    echo "      will time out. Only the Nuxeo VM is authorized by default."
-    PGPASSWORD="${db_password}" psql "host=${db_host} port=5432 dbname=${db_name} user=${db_user} sslmode=require"
+    echo "Connecting to '${db_name}' on ${db_host} as '${db_user}', from the ${workspace} VM..."
+    gcloud compute ssh "${workspace}" --zone "${vm_zone}" --project "${gcp_project}" \
+      --command "PGPASSWORD='${db_password}' psql 'host=${db_host} port=5432 dbname=${db_name} user=${db_user} sslmode=require'"
     ;;
 
   *)
