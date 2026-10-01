@@ -1,3 +1,26 @@
+> # WARNING - no stack can be created right now
+>
+> **As of 2026-10-01, the Docker build fails on ffmpeg, so the Nuxeo stack is
+> never created.** This affects **every deployment, AWS and GCP alike, on every
+> branch** - it is not specific to any one of them.
+>
+> The infrastructure comes up and the install log reports success, but
+> `docker ps` is empty and Nuxeo never answers.
+>
+> Cause: broken dependencies in the RPM Fusion EL9 repository, pulled by
+> `build_nuxeo/Dockerfile` in
+> [nuxeo-presales-docker](https://github.com/nuxeo-sandbox/nuxeo-presales-docker):
+>
+> ```
+> nothing provides libgpac.so.12()(64bit) needed by x264-...el9
+> nothing provides libSvtAv1Enc.so.2()(64bit) needed by ffmpeg-libs-7.1.5-1.el9
+> ```
+>
+> **Check whether this has been fixed before you deploy.** Until it is, comment
+> out the `RUN dnf -y install ffmpeg ...` block in
+> `nuxeo-presales-docker/build_nuxeo/Dockerfile` on the VM, then run
+> `stack build && stack up`. ffmpeg is only needed for video conversions.
+
 # Description
 
 Cloud deployment resources used by the Nuxeo Presales Team. These are provided for inspiration and we encourage developers to use them as code samples and learning resources.
