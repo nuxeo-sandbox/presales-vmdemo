@@ -6,6 +6,10 @@ Tooling to automate the creation of a Nuxeo demo instance on GCP via [Terraform]
 > Nuxeo repository database, instead of the MongoDB container.** See
 > [Database: Google Cloud SQL for PostgreSQL](#database-google-cloud-sql-for-postgresql).
 > It is a feasibility test, it is not meant to be merged into `master`.
+>
+> **The Terraform part runs in a single pass, but the Docker build does not.**
+> Read [Known issues](#known-issues) before deploying: you will have to fix the
+> ffmpeg install on the VM by hand to get Nuxeo running.
 
 # Installation
 
@@ -198,8 +202,8 @@ gcloud sql instances patch <instance> --project nuxeo-presales-apis --activation
 
 ## Things to know
 
-* Creating the Cloud SQL instance takes 10 to 15 minutes, so `terraform apply` is
-  much slower than on `master`.
+* Creating the Cloud SQL instance takes about 4 to 5 minutes (measured: 3m44s and
+  4m35s), so `terraform apply` is slower than on `master`.
 * The Cloud SQL instance name carries a random suffix on purpose: a Cloud SQL
   instance name cannot be reused for about a week after deletion, and without the
   suffix a `destroy` followed by an `apply` would fail.
@@ -230,6 +234,128 @@ psql "host=$(curl -s -H 'Metadata-Flavor: Google' \
   http://metadata.google.internal/computeMetadata/v1/instance/attributes/db-host) \
   dbname=nuxeo user=nuxeo sslmode=require" -c '\dt'
 ```
+
+# Known issues
+
+**Read this before deploying.** The Terraform part runs in a single pass, but the
+Docker build currently fails, so the deployment does not go all the way to a
+running Nuxeo without a manual step.
+
+## The Docker build fails on ffmpeg
+
+**Symptom.** `terraform apply` succeeds, `/var/log/nuxeo_install.log` ends with a
+success message, but `docker ps` returns nothing and Nuxeo never answers.
+
+**Cause.** Broken dependencies in the RPM Fusion EL9 repository:
+
+```
+nothing provides libgpac.so.12()(64bit) needed by x264-...el9
+nothing provides libSvtAv1Enc.so.2()(64bit) needed by ffmpeg-libs-7.1.5-1.el9
+```
+
+This comes from `build_nuxeo/Dockerfile` in
+[nuxeo-presales-docker](https://github.com/nuxeo-sandbox/nuxeo-presales-docker)
+`master`, which this branch does not modify. It is **not specific to PostgreSQL**:
+it breaks MongoDB stacks too, on AWS as well as GCP. Pinning an older commit does
+not help, the failure comes from the current state of the upstream repository.
+
+**Workaround**, until it is fixed upstream, on the VM:
+
+```bash
+sudo su - ubuntu
+vi $COMPOSE_DIR/build_nuxeo/Dockerfile
+```
+
+Comment out the whole `RUN dnf -y install ffmpeg ...` block (around line 44), then:
+
+```bash
+stack build
+stack up
+```
+
+ffmpeg is only needed for video conversions. Everything else, including the
+PostgreSQL repository, works without it.
+
+## The install script hides build failures
+
+`setup-nuxeo.sh` has no `set -e` and does not check any exit code. When
+`docker compose build` fails, the script carries on, writes the
+`/var/log/first-run-done` marker and reports a successful installation.
+
+Two consequences:
+
+* the install log looks complete while no container exists;
+* restarting the VM will **not** replay the script, since the marker is there.
+
+So when `docker ps` is empty, do not trust the log. Look for the real error:
+
+```bash
+sudo grep -nE 'did not complete successfully|ERROR' /var/log/nuxeo_install.log
+```
+
+## MongoDB cannot start on the current GCP image
+
+The image runs kernel `7.0.0-1013-gcp`. MongoDB 8.0 refuses to start on kernel
+6.19 and newer ([SERVER-121912](https://jira.mongodb.org/browse/SERVER-121912)),
+so the `mongo` container restarts in a loop forever:
+
+```
+MongoDB cannot start: Linux kernel versions 6.19 and newer has a known
+incompatibility with this version of MongoDB.
+```
+
+**Harmless on this branch**, since Nuxeo uses Cloud SQL and ignores that
+container, but it is noisy. To silence it: `docker compose stop mongo`.
+
+It does mean the GCP image is **unusable for MongoDB stacks**.
+`_common/vm-image-builder/scripts/pin-lts-kernel.sh` addresses exactly this, but
+it is only wired into `aws-ami.pkr.hcl`, and its content is AWS-specific
+(it pins `linux-aws-lts-24.04`, which has no `linux-gcp` equivalent in it).
+
+## Terraform state upload fails with a GCS 503
+
+```
+Error: Failed to upload state to gs://nuxeo-stacks-terraform-state-backend/...:
+googleapi: Error 503: We encountered an internal error. Please try again.
+```
+
+A known transient fault of this backend. The resources are usually created and
+the state usually persisted by a retry. **Check before acting, and never destroy
+in a panic:**
+
+```bash
+terraform state list          # are the resources tracked?
+gsutil ls -l gs://nuxeo-stacks-terraform-state-backend/terraform/state/<stack>.tfstate
+terraform plan ...            # "No changes" means the state is in sync
+```
+
+If the state really was lost, Terraform writes an `errored.tfstate` next to the
+configuration; push it back with `terraform state push errored.tfstate`.
+
+# Not done yet
+
+Deliberately left out to keep this branch focused on proving feasibility. Rough
+order of value:
+
+* **Fix ffmpeg in `nuxeo-presales-docker`.** This is the only thing standing
+  between here and a true one-pass deployment. A good opportunity to also create
+  a branch without the `mongo` container, usable through `NX_NPD_BRANCH`.
+* **Make `setup-nuxeo.sh` fail loudly.** Check the exit codes of
+  `docker compose build` and `up`, do not write the marker on failure, and add a
+  final check that the containers are actually running.
+* **Validate `nuxeo_keep_alive` in `create-nuxeo-gcp.sh`.** A date in the past is
+  currently accepted; it got a VM stopped 48 minutes after creation by the
+  nightly shutdown function.
+* **Pin the kernel in the GCP packer image**, the way `aws-ami.pkr.hcl` does.
+* **Add a `db_engine` variable** (`mongodb` | `postgresql`) so this work can be
+  merged into `master` instead of living on a branch.
+* **Redeploy `scheduled-shutdown` with Cloud SQL support**, and deal with the
+  restart side: nothing starts the database back up, so a stack restarted in the
+  morning will not boot until `./cloud-sql.sh start` is run.
+* **Decide who owns the DNS record.** Terraform and the `add-dns-record` /
+  `remove-dns-record` Cloud Functions both manage it today, which is why the
+  record must be recreated by Terraform *before* starting a stopped VM,
+  otherwise the next apply fails with a 409.
 
 # Create Resources
 

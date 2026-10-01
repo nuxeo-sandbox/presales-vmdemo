@@ -360,7 +360,7 @@ apply_status=$?
 # ==============================================================================
 # Cloud SQL reminder
 # ==============================================================================
-# Creating a Cloud SQL instance takes 10 to 15 minutes, and it keeps billing as
+# Creating a Cloud SQL instance takes about 5 minutes, and it keeps billing as
 # long as it runs. Make sure nobody forgets about it.
 if [ ${apply_status} -ne 0 ]
 then

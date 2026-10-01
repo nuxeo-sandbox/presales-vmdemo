@@ -6,6 +6,12 @@ GCP resources used by the Nuxeo Presales Team. These are provided for inspiratio
 > repository database instead of MongoDB. It is a feasibility test and is not meant
 > to be merged into `master`. See the [terraform README](terraform/README.md#database-google-cloud-sql-for-postgresql).
 >
+> **Before deploying**, read [Known issues](terraform/README.md#known-issues): the
+> Terraform part runs in a single pass, but the Docker build currently fails on
+> ffmpeg (an upstream `nuxeo-presales-docker` problem that also breaks MongoDB
+> stacks), so a manual step on the VM is required to get Nuxeo running.
+> The remaining work is listed in [Not done yet](terraform/README.md#not-done-yet).
+>
 > Mind the cost: a running Cloud SQL instance is billed 24/7, even while the Nuxeo
 > VM is stopped. Destroy the stack as soon as you are done.
 
