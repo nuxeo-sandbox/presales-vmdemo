@@ -327,6 +327,53 @@ terraform workspace select <stack_name>
 This destroys the Cloud SQL instance and its data as well. Do it as soon as the
 test is over, the database is the expensive part of the stack.
 
+## If the destroy fails on the database or the role
+
+Symptom:
+
+```
+Error: failed to delete user nuxeo in instance ...:
+  role "nuxeo" cannot be dropped because some objects depend on it
+  Details: owner of database nuxeo
+Error: failed to delete database "nuxeo". Detail: pq: must be owner of database nuxeo.
+```
+
+Cause: something ran `ALTER DATABASE nuxeo OWNER TO nuxeo`. The Cloud SQL API
+drops databases as `cloudsqlsuperuser`, which is then no longer the owner, and a
+role cannot be dropped while it owns a database. `setup-nuxeo.sh` no longer does
+this, but stacks created before the fix are affected.
+
+**If the VM is still running**, fix it properly, then destroy as usual:
+
+```bash
+gcloud compute ssh <stack_name> --zone <zone> --project nuxeo-presales-apis
+```
+
+```bash
+DB_HOST=$(curl -s -H 'Metadata-Flavor: Google' \
+  http://metadata.google.internal/computeMetadata/v1/instance/attributes/db-host)
+DB_PWD=$(curl -s -H 'Metadata-Flavor: Google' \
+  http://metadata.google.internal/computeMetadata/v1/instance/attributes/db-password)
+PGPASSWORD="$DB_PWD" psql "host=$DB_HOST dbname=nuxeo user=nuxeo sslmode=require" \
+  -c 'ALTER DATABASE nuxeo OWNER TO cloudsqlsuperuser;'
+```
+
+The Nuxeo role is a member of `cloudsqlsuperuser`, so it is allowed to hand the
+database back. Do this **before** stopping the VM: the database has no public IP,
+so without the VM there is no network path to it.
+
+**If the VM is already gone**, drop the two resources from the state and destroy
+the instance, which deletes everything it contains:
+
+```bash
+terraform workspace select <stack_name>
+terraform state rm google_sql_database.nuxeo_db_schema google_sql_user.nuxeo_db_user
+./destroy-nuxeo-gcp.sh
+```
+
+`terraform state rm` changes nothing in GCP, it only makes Terraform forget those
+objects.
+
 ## Script
 
 Use the included script to automate the deletion:

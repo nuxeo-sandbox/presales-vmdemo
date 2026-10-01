@@ -207,11 +207,17 @@ fi
 # probe it here first: a failure shows up immediately in the install log instead
 # of being buried in the Nuxeo server log.
 #
-# We also make the schema ownership explicit. Since PostgreSQL 15 the `public`
-# schema is no longer writable by everyone. The Cloud SQL role is a member of
-# `cloudsqlsuperuser`, which owns the database, so it should already be allowed
-# to create the Nuxeo tables: these statements are a safety net and must never
-# fail the installation.
+# We also grant the Nuxeo role rights on the `public` schema, which PostgreSQL 15
+# stopped opening to everyone. This is only a safety net: the Cloud SQL role is a
+# member of `cloudsqlsuperuser`, which owns the database, so it is already allowed
+# to create the Nuxeo tables. It must never fail the installation.
+#
+# NEVER run `ALTER DATABASE ... OWNER TO` here. Giving the database away to the
+# Nuxeo role makes the stack impossible to destroy: the Cloud SQL API drops
+# databases as `cloudsqlsuperuser` (which would no longer be the owner), and the
+# role itself cannot be dropped while it owns a database. Terraform then fails
+# with "must be owner of database" and "role cannot be dropped because some
+# objects depend on it".
 echo "${INSTALL_LOG_PREFIX} Check Cloud SQL database [${DB_HOST}:${DB_PORT}/${DB_NAME}]" | tee -a ${INSTALL_LOG}
 
 if ! command -v psql > /dev/null 2>&1; then
@@ -235,10 +241,9 @@ else
   if [[ "${DB_READY}" == "true" ]]; then
     echo "${INSTALL_LOG_PREFIX} Check Cloud SQL database => OK" | tee -a ${INSTALL_LOG}
     psql "${PSQL_CONN}" -c "GRANT ALL ON SCHEMA public TO \"${DB_USER}\";" 2>&1 | tee -a ${INSTALL_LOG} || true
-    psql "${PSQL_CONN}" -c "ALTER DATABASE \"${DB_NAME}\" OWNER TO \"${DB_USER}\";" 2>&1 | tee -a ${INSTALL_LOG} || true
   else
     echo "${INSTALL_LOG_PREFIX} WARNING: Cloud SQL database is NOT reachable. Nuxeo will fail to start." | tee -a ${INSTALL_LOG}
-    echo "  Check that ${DB_HOST} allows connections from this VM's external IP." | tee -a ${INSTALL_LOG}
+    echo "  Check that the VM can reach ${DB_HOST} over the private services access peering." | tee -a ${INSTALL_LOG}
   fi
 
   unset PGPASSWORD
