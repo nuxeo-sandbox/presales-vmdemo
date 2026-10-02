@@ -1,15 +1,87 @@
+# TL;DR
+
+Feasibility test: a Nuxeo demo VM on GCP whose repository is a **Google Cloud SQL
+for PostgreSQL 16** instance instead of the usual MongoDB container.<br/>
+Branch `gcp-with-cloud-sql`, not meant to be merged into `master`.
+
+## Run it
+
+```bash
+gcloud auth application-default login
+cd presales-vmdemo/gcp/terraform
+./create-nuxeo-gcp.sh
+```
+
+* The script prompts for everything (stack name, Studio project, customer, zone,
+machine type, NEV, keep-alive, Cloud SQL tier...) and the defaults are fine. Only
+stack name, Studio project and customer have no default.
+
+* It also pre-checks, in a couple of seconds, the four things that would otherwise
+blow up ten minutes into the apply:
+  * the `GOOGLE_APPLICATION_CREDENTIALS` trap,
+  * the Cloud SQL Admin API availability,
+  * your Cloud SQL permissions
+  * and the VPC private services access range.
+
+If a check fails, the message tells you the command to run. Budget
+~15 minutes for the apply, the database alone takes ~5.
+
+## Then check that Nuxeo really started
+
+A successful `terraform apply` does **not** mean Nuxeo is running. `setup-nuxeo.sh`
+has no `set -e`, so a failed Docker build still writes a "successful install" log.
+
+```bash
+gcloud compute ssh <stack_name> --zone <zone> --project nuxeo-presales-apis
+docker ps
+```
+
+If empty => the build failed, whatever the reason (ffmpeg build failed, issue with
+MongoDB version and Linux Kernel, …). **This is not related to this deployment**,
+it's a Nuxeo Presales Docker issue.
+
+Fix the issue (see example below) then
+
+```bash
+stack build
+stack up
+```
+
+Issue example: Failed ffmpeg build. If you don't need ffmpeg at all in your test, then
+edit the `$COMPOSE_DIR/build_nuxeo/Dockerfile` and comment our all the
+RUN dnf -y install ffmpeg block
+
+Details: [Known issues](#known-issues).
+
+## Three things that will cost you money or time
+
+1. **The Cloud SQL instance is billed 24/7, even while the VM is stopped**
+   (~60 USD/month on the default tier). Keep the auto-shutdown answer at `true`,
+   and run `./destroy-nuxeo-gcp.sh` as soon as the test is over.
+   See [Cost: read this](#cost-read-this).
+2. **Nothing starts the database back up.** After a nightly shutdown, run
+   `./cloud-sql.sh start` *before* starting the VM, or Nuxeo will not boot.
+3. **Never destroy in a panic** on a `503` while uploading the Terraform state.
+   It is a transient GCS fault and the resources are usually created. Check with
+   `terraform state list` and `terraform plan` first.
+   See [Terraform state upload fails with a GCS 503](#terraform-state-upload-fails-with-a-gcs-503).
+
+## Noise you can ignore
+
+The `mongo` container restarts in a loop (kernel incompatibility) and is unused on
+this branch. `docker compose stop mongo` silences it.
+
+<br/>
+<hr>
+<br/>
+
 # Description
 
 Tooling to automate the creation of a Nuxeo demo instance on GCP via [Terraform](https://developer.hashicorp.com/terraform).
 
-> **This branch (`gcp-with-cloud-sql`) uses Google Cloud SQL for PostgreSQL as the
-> Nuxeo repository database, instead of the MongoDB container.** See
-> [Database: Google Cloud SQL for PostgreSQL](#database-google-cloud-sql-for-postgresql).
-> It is a feasibility test, it is not meant to be merged into `master`.
->
-> **The Terraform part runs in a single pass, but the Docker build does not.**
-> Read [Known issues](#known-issues) before deploying: you will have to fix the
-> ffmpeg install on the VM by hand to get Nuxeo running.
+> Feasibility branch, see the [TL;DR](#tldr) above. The Nuxeo repository is
+> [Google Cloud SQL for PostgreSQL](#database-google-cloud-sql-for-postgresql),
+> and the Docker build may need a manual fix, see [Known issues](#known-issues).
 
 # Installation
 
@@ -79,7 +151,7 @@ instance and Nuxeo runs on VCS (the SQL storage engine):
   just keeps the DNS record stable across stop/start cycles.
 * OpenSearch, the OpenSearch dashboards and the Google Cloud Storage blob provider
   are unchanged. The `mongo` container is still started by the compose stack but
-  it is **not used** by Nuxeo.
+  it is **not used** by Nuxeo (this branch is a feasibility test).
 
 ## Private connectivity
 
@@ -124,7 +196,11 @@ Before the first `apply`, on the `nuxeo-presales-apis` project:
 
 1. The **Cloud SQL Admin API** (`sqladmin.googleapis.com`) must be enabled. Beware:
    in the GCP Console, "Cloud SQL" and "Cloud SQL Admin API" are two different
-   entries, and only the second one matters here.
+   entries, and only the second one matters here.<br/>
+   Go to the [GCP console](https://console.cloud.google.com/home/dashboard?project=nuxeo-presales-apis),
+   APIs & Services > Enabled APIs & Services. Check you see "Cloud SQL Admin API",
+   and if not, enable it.<br/>
+   You can also do it with the command line:
    ```bash
    gcloud services enable sqladmin.googleapis.com --project nuxeo-presales-apis
    ```
@@ -202,8 +278,7 @@ gcloud sql instances patch <instance> --project nuxeo-presales-apis --activation
 
 ## Things to know
 
-* Creating the Cloud SQL instance takes about 4 to 5 minutes (measured: 3m44s and
-  4m35s), so `terraform apply` is slower than on `master`.
+* Creating the Cloud SQL instance can take several minutes, it is slower than on `master`.
 * The Cloud SQL instance name carries a random suffix on purpose: a Cloud SQL
   instance name cannot be reused for about a week after deletion, and without the
   suffix a `destroy` followed by an `apply` would fail.
@@ -238,15 +313,19 @@ psql "host=$(curl -s -H 'Metadata-Flavor: Google' \
 # Known issues
 
 **Read this before deploying.** The Terraform part runs in a single pass, but the
-Docker build currently fails, so the deployment does not go all the way to a
+Docker build may fail, so the deployment does not go all the way to a
 running Nuxeo without a manual step.
 
-## The Docker build fails on ffmpeg
+## Example: The Docker build fails on ffmpeg
+
+> [!NOTE]
+> When there is an issue because of ffmpeg deployment, it should be fixed in
+> Nuxeo Presales docker tooling. What is describe here is ofr quick testing.
 
 **Symptom.** `terraform apply` succeeds, `/var/log/nuxeo_install.log` ends with a
 success message, but `docker ps` returns nothing and Nuxeo never answers.
 
-**Cause.** Broken dependencies in the RPM Fusion EL9 repository:
+**Typical cause.** Broken dependencies in the RPM Fusion EL9 repository:
 
 ```
 nothing provides libgpac.so.12()(64bit) needed by x264-...el9
@@ -259,22 +338,26 @@ This comes from `build_nuxeo/Dockerfile` in
 it breaks MongoDB stacks too, on AWS as well as GCP. Pinning an older commit does
 not help, the failure comes from the current state of the upstream repository.
 
-**Workaround**, until it is fixed upstream, on the VM:
+**Workaround** when the ffmpeg build fails:
 
 ```bash
 sudo su - ubuntu
 vi $COMPOSE_DIR/build_nuxeo/Dockerfile
 ```
+* In this feasibility test we did not need ffmpeg at all, so: Comment out the whole
+`RUN dnf -y install ffmpeg ...` block (around line 44)
 
-Comment out the whole `RUN dnf -y install ffmpeg ...` block (around line 44), then:
+ffmpeg is only needed for video conversions. Everything else, including the
+PostgreSQL repository, works without it.
+
+* Else, well. Fix it. Adding `--skip-broken` may solve the issue
+
+After changing `Dockerfile`, then:
 
 ```bash
 stack build
 stack up
 ```
-
-ffmpeg is only needed for video conversions. Everything else, including the
-PostgreSQL repository, works without it.
 
 ## The install script hides build failures
 
@@ -435,6 +518,12 @@ db_user | Name of the Nuxeo database role | `nuxeo`
 db_auto_shutdown | Stop the Cloud SQL instance with the VM | false
 
 NB: params are not required. Terraform will prompt you to enter values as needed, but if you want to override any default values you must pass the new value, Terraform won't prompt for values that have a default.
+
+NB: `db_auto_shutdown` defaults to `false` here, whereas `NX_DB_AUTO_SHUTDOWN` in
+`create-nuxeo-gcp.sh` defaults to `true`. The script always passes the value
+explicitly, so this Terraform default only applies when you run `terraform apply`
+by hand — in which case the database is never stopped automatically and keeps
+billing.
 
 Example:
 
