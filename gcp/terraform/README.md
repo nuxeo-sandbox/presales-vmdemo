@@ -4,7 +4,7 @@ Feasibility test: a Nuxeo demo VM on GCP whose repository is a **Google Cloud SQ
 for PostgreSQL 16** instance instead of the usual MongoDB container.<br/>
 Branch `gcp-with-cloud-sql`, not meant to be merged into `master`.
 
-## Run it
+### Run it
 
 ```bash
 gcloud auth application-default login
@@ -26,7 +26,7 @@ blow up ten minutes into the apply:
 If a check fails, the message tells you the command to run. Budget
 ~15 minutes for the apply, the database alone takes ~5.
 
-## Then check that Nuxeo really started
+### Then check that Nuxeo really started
 
 A successful `terraform apply` does **not** mean Nuxeo is running. `setup-nuxeo.sh`
 has no `set -e`, so a failed Docker build still writes a "successful install" log.
@@ -53,7 +53,7 @@ RUN dnf -y install ffmpeg block
 
 Details: [Known issues](#known-issues).
 
-## Three things that will cost you money or time
+### Three things that will cost you money or time
 
 1. **The Cloud SQL instance is billed 24/7, even while the VM is stopped**
    (~60 USD/month on the default tier). Keep the auto-shutdown answer at `true`,
@@ -66,7 +66,7 @@ Details: [Known issues](#known-issues).
    `terraform state list` and `terraform plan` first.
    See [Terraform state upload fails with a GCS 503](#terraform-state-upload-fails-with-a-gcs-503).
 
-## Noise you can ignore
+### Noise you can ignore
 
 The `mongo` container restarts in a loop (kernel incompatibility) and is unused on
 this branch. `docker compose stop mongo` silences it.
