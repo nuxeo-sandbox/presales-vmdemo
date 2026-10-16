@@ -115,12 +115,12 @@
     "GitBranchPresalesDocker": {
       "Type": "String",
       "Default": "master",
-      "Description": "Nuxeo stack setup (https://github.com/nuxeo-sandbox/nuxeo-presales-docker branch)"
+      "Description": "Which branch of https://github.com/nuxeo-sandbox/nuxeo-presales-docker"
     },
     "GitBranch": {
       "Type": "String",
       "Default": "master",
-      "Description": "EC2 instance setup (https://github.com/nuxeo-sandbox/presales-vmdemo branch)"
+      "Description": "Which branch of https://github.com/nuxeo-sandbox/presales-vmdemo"
     },
     "Customer": {
       "Type": "String",
