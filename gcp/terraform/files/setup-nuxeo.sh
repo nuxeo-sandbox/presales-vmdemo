@@ -274,7 +274,7 @@ if [ -n "${NX_STUDIO}" ]; then
 
   # Build / Pull images
   echo "Pulling other images..." | tee -a ${INSTALL_LOG}
-  docker compose --project-directory ${COMPOSE_DIR} --no-ansi pull | tee -a ${INSTALL_LOG}
+  docker compose --project-directory ${COMPOSE_DIR} --no-ansi pull --ignore-buildable | tee -a ${INSTALL_LOG}
 
   if [[ "${AUTO_START}" == "true" ]]; then
     echo "Building images..." | tee -a ${INSTALL_LOG}
