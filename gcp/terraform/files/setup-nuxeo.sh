@@ -44,7 +44,7 @@ TMP_DIR="/tmp/nuxeo"
 STUDIO_USERNAME="nuxeo_presales"
 TEMPLATES="default,mongodb"
 MONGO_VERSION="8.0"
-OPENSEARCH_VERSION="1.3.20"
+OPENSEARCH_VERSION="2"
 OPENSEARCH_IMAGE="opensearchproject/opensearch:"${OPENSEARCH_VERSION}
 OPENSEARCH_DASHBOARDS_IMAGE="opensearchproject/opensearch-dashboards:"${OPENSEARCH_VERSION}
 
@@ -52,7 +52,7 @@ OPENSEARCH_DASHBOARDS_IMAGE="opensearchproject/opensearch-dashboards:"${OPENSEAR
 echo "${INSTALL_LOG_PREFIX} Starting [${STACK_ID}]" > ${INSTALL_LOG}
 
 # set memory settings
-# https://opensearch.org/docs/1.3/install-and-configure/install-opensearch/index/#important-settings
+# https://docs.opensearch.org/2.19/install-and-configure/install-opensearch/index/#important-settings
 # https://www.mongodb.com/docs/manual/administration/production-checklist-operations/#linux
 echo "vm.max_map_count=262144" >> /etc/sysctl.conf && sysctl -p
 
@@ -205,6 +205,10 @@ AUTO_PACKAGES="${AUTO_PACKAGES} platform-explorer"
 AUTO_PACKAGES="${AUTO_PACKAGES} nuxeo-api-playground"
 # Auto install Nuxeo Admin Console for easier administration
 AUTO_PACKAGES="${AUTO_PACKAGES} nuxeo-admin-console"
+# Auto install OpenSearch 2.x search client
+AUTO_PACKAGES="${AUTO_PACKAGES} nuxeo-search-client-opensearch2"
+# Auto install OpenSearch 2.x audit client
+AUTO_PACKAGES="${AUTO_PACKAGES} nuxeo-audit-opensearch2"
 # Make sure to install google storage plugin
 AUTO_PACKAGES="${AUTO_PACKAGES} google-storage"
 
