@@ -256,11 +256,11 @@ then
   then
     echo "scp $user@$instance_id:$src $dest"
     echo
-    scp $user@$instance_id:$src $dest
+    scp "$user@$instance_id:$src" "$dest"
   else
     echo "scp $src $user@$instance_id:$dest"
     echo
-    scp $src $user@$instance_id:$dest
+    scp "$src" "$user@$instance_id:$dest"
   fi
 else
   echo "ssh $user@$instance_id"
