@@ -22,14 +22,18 @@ The [gcp](gcp) folder contains GCP tooling to deploy a demo instance on GCP.
 - [Create a GCP demo instance](gcp/terraform/README.md)
 - [Build a new instance image](_common/vm-image-builder/README.md)
 
-# About Hyland Nuxeo
+# Support
 
-Hyland Nuxeo is an open source Content Services platform, written in Java. Data can be stored in both SQL & NoSQL databases. The development of the Nuxeo Platform is mostly done by Hyland employees with an open development model. The source code, documentation, roadmap, issue tracker, testing, benchmarks are all public.
+**These features are not part of the Nuxeo Production platform.**
 
-Organizations across industries such as financial services, insurance, manufacturing, healthcare, and government use Nuxeo to build a wide range of information management solutions on a single platform. Its schema-flexible metadata and content models let the same platform be adapted to different industries and their requirements.
+These solutions are provided for inspiration and we encourage customers to use them as code samples and learning resources.
 
-More information is available at [https://www.hyland.com/products/nuxeo-platform](https://www.hyland.com/products/nuxeo-platform).
+This is a moving project (no API maintenance, no deprecation process, etc.) If any of these solutions are found to be useful for the Nuxeo Platform in general, they will be integrated directly into platform, not maintained here.
 
-# About Hyland
+# License
 
-[Hyland](https://www.hyland.com) is a leading content services provider that enables thousands of organizations to deliver better experiences to the people they serve. Learn more at [hyland.com](https://www.hyland.com).
+[Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html)
+
+# About Nuxeo
+
+More information is available at [https://www.hyland.com/en/solutions/products/nuxeo-platform](https://www.hyland.com/en/solutions/products/nuxeo-platform).
