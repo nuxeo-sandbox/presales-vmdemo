@@ -83,7 +83,7 @@ resource "google_cloudfunctions2_function" "default" {
   location    = "us-central1"
   description = "A function to remove DNS records for compute instances that are going offline"
   build_config {
-    runtime     = "nodejs20"
+    runtime     = "nodejs24"
     entry_point = "handlerHttp" # Set the entry point
     source {
       storage_source {

@@ -23,7 +23,7 @@ To use the AWS SAM CLI, you need the following tools:
 
 * AWS CLI - [Install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
 * AWS SAM CLI - [Install the AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html).
-* Node.js - [Install Node.js 20](https://nodejs.org/en/), including the npm package management tool.
+* Node.js - [Install Node.js 24](https://nodejs.org/en/), including the npm package management tool.
 * Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community).
 
 # Build and deploy

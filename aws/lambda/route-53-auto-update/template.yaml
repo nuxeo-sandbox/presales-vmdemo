@@ -34,7 +34,7 @@ Resources:
     Properties:
       FunctionName: nuxeo-demo-vm-route53-auto-update-fn
       Description: A Lambda function that update route53 records according to ec2 instances state changes
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Architectures:
       - x86_64
       Handler: src/handlers/updateRoute53Records.updateRoute53Records

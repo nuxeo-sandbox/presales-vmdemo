@@ -71,7 +71,7 @@ Resources:
     Properties:
       FunctionName: nuxeo-scheduled-ec2-shutdown-fn
       Description: A lambda function to shutdown EC2 instances
-      Runtime: nodejs20.x
+      Runtime: nodejs24.x
       Architectures:
       - x86_64
       Handler: src/index.handler
