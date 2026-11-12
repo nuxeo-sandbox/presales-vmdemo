@@ -129,7 +129,7 @@ resource "google_eventarc_trigger" "trigger" {
     cloud_run_service {
       path    = "/"
       region  = "us-central1"
-      service = google_cloudfunctions2_function.default.service_config[0].service
+      service = google_cloudfunctions2_function.default.name
     }
   }
 }
