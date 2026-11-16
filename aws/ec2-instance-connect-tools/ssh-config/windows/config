@@ -1,5 +1,7 @@
 Match host i-* exec "aws-proxy.bat aws-proxy.%h.%r %r %h"
     IdentityFile aws-proxy.%h.%r
+    IdentitiesOnly yes
+    AddKeysToAgent no
     ProxyCommand aws ec2-instance-connect open-tunnel --instance-id %h
     # Remove ephemeral key
     PermitLocalCommand yes

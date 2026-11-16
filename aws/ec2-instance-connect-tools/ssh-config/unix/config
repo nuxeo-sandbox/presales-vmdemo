@@ -1,6 +1,8 @@
 # Match commands that use an EC2 Instance ID as the host.
 Match host i-* exec "aws-proxy.sh %r %h ~/.ssh/aws-proxy.%h.%r"
     IdentityFile ~/.ssh/aws-proxy.%h.%r
+    IdentitiesOnly yes
+    AddKeysToAgent no
     ProxyCommand aws ec2-instance-connect open-tunnel --instance-id %h
     # Remove ephemeral key
     PermitLocalCommand yes
